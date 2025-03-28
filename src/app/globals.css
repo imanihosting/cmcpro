@@ -69,3 +69,31 @@ select:disabled {
     /* The input fields will remain unchanged with white background */
   }
 }
+
+/* Custom calendar styles */
+.calendar {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calendar button {
+  -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Improve text clarity in calendar cells */
+.calendar .text-xs {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  letter-spacing: 0.01em;
+}
+
+/* Enhance contrast for mobile */
+@media (max-width: 640px) {
+  .calendar button {
+    padding: 4px !important;
+    margin-bottom: 2px;
+  }
+  
+  .calendar button span {
+    font-weight: 600;
+  }
+}

@@ -108,7 +108,7 @@ export default function DashboardLayout({
         { href: "/dashboard/parent/bookings", label: "Bookings", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/parent/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
         { href: "/dashboard/parent/calendar", label: "Calendar", icon: <FaCalendarAlt className="h-5 w-5" /> },
-        { href: "/subscription", label: "Subscription", icon: <FaCreditCard className="h-5 w-5" /> },
+        { href: "/dashboard/parent/subscription", label: "Subscription", icon: <FaCreditCard className="h-5 w-5" /> },
         { href: "/dashboard/parent/help", label: "Help & Support", icon: <FaQuestionCircle className="h-5 w-5" /> }
       );
     }

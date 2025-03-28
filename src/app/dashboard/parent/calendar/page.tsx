@@ -1,191 +1,248 @@
 "use client";
 
-import { useState, ReactNode, Fragment } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
+import { format, startOfMonth, endOfMonth, addMonths, parseISO, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { 
   FaCalendarAlt, 
   FaChevronLeft, 
   FaChevronRight,
   FaClock,
   FaMapMarkerAlt,
-  FaChild
+  FaChild,
+  FaCircle,
+  FaTimes,
+  FaSpinner
 } from "react-icons/fa";
 
-interface Booking {
-  id: number;
-  day: number;
-  title: string;
-  time: string;
-  location: string;
-  children: number;
+// Calendar event interface
+interface CalendarChild {
+  id: string;
+  name: string;
+  age: number;
 }
 
+interface CalendarChildminder {
+  id: string;
+  name: string;
+  image: string | null;
+  location: string | null;
+}
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  status: string;
+  bookingType: string;
+  isEmergency: boolean;
+  isRecurring: boolean;
+  recurrencePattern: string | null;
+  color: string;
+  childminder: CalendarChildminder;
+  children: CalendarChild[];
+  allDay: boolean;
+}
+
+// Status color mapping
+const STATUS_COLORS = {
+  PENDING: '#f59e0b',     // Amber
+  CONFIRMED: '#10b981',   // Emerald
+  CANCELLED: '#ef4444',   // Red
+  LATE_CANCELLED: '#ef4444', // Red
+  COMPLETED: '#6b7280',   // Gray
+  EMERGENCY: '#dc2626',   // Bright red
+  DEFAULT: '#6366f1'      // Indigo
+};
+
 export default function CalendarPage() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  
-  // Helper function to get days in a month
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-  
-  // Helper function to get the first day of the month
-  const getFirstDayOfMonth = (year: number, month: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-  
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
+  // Get days for current month view
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const startDate = new Date(monthStart);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Start from Sunday
+    const endDate = new Date(monthEnd);
+    endDate.setDate(endDate.getDate() + (6 - endDate.getDay())); // End on Saturday
+    
+    return eachDayOfInterval({ start: startDate, end: endDate });
+  }, [currentDate]);
+
+  // Fetch calendar events
+  useEffect(() => {
+    async function fetchCalendarEvents() {
+      try {
+        setLoading(true);
+        const monthStart = startOfMonth(currentDate);
+        const monthEnd = endOfMonth(currentDate);
+        const startDateStr = format(monthStart, 'yyyy-MM-dd');
+        const endDateStr = format(monthEnd, 'yyyy-MM-dd');
+        
+        const response = await fetch(
+          `/api/dashboard/parent/calendar?startDate=${startDateStr}&endDate=${endDateStr}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch calendar events');
+        }
+        
+        const data = await response.json();
+        
+        // Convert string dates to Date objects
+        const formattedEvents = data.events.map((event: any) => ({
+          ...event,
+          start: parseISO(event.start),
+          end: parseISO(event.end)
+        }));
+        
+        setEvents(formattedEvents);
+        setError(null);
+      } catch (err) {
+        setError('Error loading calendar events. Please try again.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchCalendarEvents();
+  }, [currentDate]);
+
   // Navigate to previous month
   const prevMonth = () => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentDate(addMonths(currentDate, -1));
   };
   
   // Navigate to next month
   const nextMonth = () => {
-    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentDate(addMonths(currentDate, 1));
   };
   
-  // Format date for display
-  const formatMonth = (date: Date) => {
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  // Navigate to today
+  const goToToday = () => {
+    setCurrentDate(new Date());
   };
   
-  // Placeholder bookings data
-  const bookings: Booking[] = [
-    { id: 1, day: 12, title: "Childcare with Sarah", time: "9:00 AM - 5:00 PM", location: "123 Maple Street", children: 2 },
-    { id: 2, day: 15, title: "Childcare with David", time: "8:30 AM - 3:30 PM", location: "45 Oak Avenue", children: 1 },
-    { id: 3, day: 20, title: "Childcare with Emma", time: "2:00 PM - 6:00 PM", location: "78 Pine Road", children: 2 }
-  ];
+  // Format month for display
+  const formatMonthDisplay = (date: Date) => {
+    return format(date, 'MMMM yyyy');
+  };
 
-  // Generate calendar grid
-  const renderCalendar = () => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const firstDayOfMonth = getFirstDayOfMonth(year, month);
-    
-    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
-    // Create blank cells for days before the first day of the month
-    const blanks: ReactNode[] = [];
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      blanks.push(
-        <div key={`blank-${i}`} className="h-24 border border-gray-200 bg-gray-50"></div>
-      );
-    }
-    
-    // Create cells for days in the month
-    const days: ReactNode[] = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dayBookings = bookings.filter(booking => booking.day === d && currentMonth.getMonth() === new Date().getMonth());
-      
-      days.push(
-        <div key={`day-${d}`} className="h-24 border border-gray-200 p-1 overflow-hidden">
-          <div className="flex justify-between">
-            <span className={`text-sm ${new Date().getDate() === d && new Date().getMonth() === month ? 'bg-violet-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}`}>
-              {d}
-            </span>
-            {dayBookings.length > 0 && (
-              <span className="text-xs bg-violet-100 text-violet-800 font-medium px-1.5 py-0.5 rounded-full">
-                {dayBookings.length}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 space-y-1">
-            {dayBookings.map((booking) => (
-              <div key={booking.id} className="text-xs truncate bg-violet-50 p-1 rounded border-l-2 border-violet-500">
-                {booking.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    
-    // Combine blanks and days
-    const totalSlots = [...blanks, ...days];
-    const rows: ReactNode[][] = [];
-    let cells: ReactNode[] = [];
-    
-    totalSlots.forEach((slot, i) => {
-      if (i % 7 !== 0) {
-        cells.push(slot);
-      } else {
-        if (cells.length > 0) {
-          rows.push(cells);
-        }
-        cells = [];
-        cells.push(slot);
-      }
-      if (i === totalSlots.length - 1) {
-        rows.push(cells);
-      }
-    });
-    
-    return (
-      <div>
-        <div className="grid grid-cols-7 gap-px">
-          {weekdays.map(day => (
-            <div key={day} className="py-2 text-center text-sm font-medium text-gray-500 bg-gray-100">
-              {day}
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-px bg-gray-200">
-          {rows.map((row, rowIndex) => (
-            <Fragment key={`row-${rowIndex}`}>
-              {row.map((cell, cellIndex) => (
-                <Fragment key={`cell-${rowIndex}-${cellIndex}`}>
-                  {cell}
-                </Fragment>
-              ))}
-            </Fragment>
-          ))}
-        </div>
-      </div>
+  // Get events for a specific day
+  const getEventsForDay = (day: Date) => {
+    return events.filter(event => 
+      isSameDay(day, event.start)
     );
   };
-  
-  // Upcoming bookings section
-  const renderUpcomingBookings = () => {
+
+  // Handle event click
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+  };
+
+  // Close event details modal
+  const closeEventDetails = () => {
+    setSelectedEvent(null);
+  };
+
+  // Render event details modal
+  const renderEventDetails = () => {
+    if (!selectedEvent) return null;
+    
     return (
-      <div className="mt-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-3">Upcoming Bookings</h2>
-        <div className="space-y-3">
-          {bookings.map(booking => (
-            <div key={booking.id} className="rounded-lg bg-white p-3 shadow-sm">
-              <h3 className="font-medium text-gray-900">{booking.title}</h3>
-              <div className="mt-2 space-y-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <FaCalendarAlt className="h-4 w-4 text-gray-400" />
-                  <span>April {booking.day}, 2024</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaClock className="h-4 w-4 text-gray-400" />
-                  <span>{booking.time}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="h-4 w-4 text-gray-400" />
-                  <span>{booking.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaChild className="h-4 w-4 text-gray-400" />
-                  <span>{booking.children} {booking.children === 1 ? 'child' : 'children'}</span>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h3 className="text-lg font-bold text-gray-900">Booking Details</h3>
+            <button onClick={closeEventDetails} className="text-gray-500 hover:text-gray-700">
+              <FaTimes className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="p-4 space-y-4">
+            <h4 className="font-bold text-xl text-gray-900">{selectedEvent.title}</h4>
+            
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="mt-1">
+                <FaCircle className="h-4 w-4" style={{ color: selectedEvent.color }} />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">Status</div>
+                <div className="text-sm font-medium text-gray-700">
+                  {selectedEvent.status}
+                  {selectedEvent.isEmergency && ' (Emergency)'}
+                  {selectedEvent.isRecurring && ' (Recurring)'}
                 </div>
               </div>
             </div>
-          ))}
+            
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <FaCalendarAlt className="h-4 w-4 mt-1 text-violet-600" />
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">Date & Time</div>
+                <div className="text-sm font-medium text-gray-700">
+                  {format(selectedEvent.start, 'EEEE, MMMM d, yyyy')}
+                  <br />
+                  <span className="text-violet-700 font-medium">
+                    {format(selectedEvent.start, 'h:mm a')} - {format(selectedEvent.end, 'h:mm a')}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <FaMapMarkerAlt className="h-4 w-4 mt-1 text-violet-600" />
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">Location</div>
+                <div className="text-sm font-medium text-gray-700">{selectedEvent.childminder.location || 'Not specified'}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <FaChild className="h-4 w-4 mt-1 text-violet-600" />
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800">Children</div>
+                <div className="text-sm font-medium space-y-1 text-gray-700">
+                  {selectedEvent.children.map(child => (
+                    <div key={child.id} className="flex justify-between">
+                      <span>{child.name}</span>
+                      <span className="text-gray-500">Age: {child.age}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 border-t flex justify-end">
+            <button
+              onClick={closeEventDetails}
+              className="px-4 py-2 bg-violet-100 text-violet-700 font-medium rounded hover:bg-violet-200 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div>
-      <header className="mb-6">
+    <div className="space-y-6">
+      <header>
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Calendar</h1>
         <p className="mt-1 text-sm text-gray-600">View and manage your childcare schedule</p>
       </header>
 
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">{formatMonth(currentMonth)}</h2>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-3 md:space-y-0">
+        <h2 className="text-xl font-semibold text-gray-900">{formatMonthDisplay(currentDate)}</h2>
+        
         <div className="flex items-center space-x-2">
           <button
             onClick={prevMonth}
@@ -194,7 +251,7 @@ export default function CalendarPage() {
             <FaChevronLeft className="h-5 w-5" />
           </button>
           <button
-            onClick={() => setCurrentMonth(new Date())}
+            onClick={goToToday}
             className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
           >
             Today
@@ -208,11 +265,97 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="mb-6 overflow-hidden rounded-lg bg-white shadow">
-        {renderCalendar()}
+      <div className="mt-4 mb-6 overflow-hidden rounded-lg bg-white shadow">
+        {loading ? (
+          <div className="flex items-center justify-center h-96">
+            <FaSpinner className="w-8 h-8 text-violet-600 animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-96 text-red-500">
+            {error}
+          </div>
+        ) : (
+          <div className="calendar">
+            {/* Calendar header (days of week) */}
+            <div className="grid grid-cols-7 gap-px">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="py-2 text-center text-sm font-semibold text-gray-700 bg-gray-100">
+                  {day}
+                </div>
+              ))}
+            </div>
+            
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-px bg-gray-200">
+              {calendarDays.map(day => {
+                const dayEvents = getEventsForDay(day);
+                const isCurrentMonth = isSameMonth(day, currentDate);
+                
+                return (
+                  <div 
+                    key={day.toString()} 
+                    className={`h-24 sm:h-32 border border-gray-200 p-1 overflow-y-auto ${
+                      isCurrentMonth ? 'bg-white' : 'bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span 
+                        className={`text-sm font-medium inline-flex items-center justify-center w-6 h-6 ${
+                          isToday(day) 
+                            ? 'bg-violet-600 text-white rounded-full font-bold' 
+                            : isCurrentMonth ? 'text-gray-900' : 'text-gray-500'
+                        }`}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                      {dayEvents.length > 0 && (
+                        <span className="text-xs bg-violet-100 text-violet-800 font-bold px-1.5 py-0.5 rounded-full">
+                          {dayEvents.length}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="mt-1 space-y-1.5">
+                      {dayEvents.map(event => (
+                        <button
+                          key={event.id}
+                          onClick={() => handleEventClick(event)}
+                          className="w-full text-left text-xs font-medium truncate p-1.5 rounded border-l-2 hover:bg-gray-50"
+                          style={{ 
+                            borderLeftColor: event.color,
+                            backgroundColor: `${event.color}15`, // Light version of the color
+                            color: '#1F2937', // Dark gray for better readability
+                          }}
+                        >
+                          <span className="font-semibold">{format(event.start, 'h:mm a')}</span> - {event.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {renderUpcomingBookings()}
+      {/* Status color legend */}
+      <div className="rounded-lg bg-white shadow p-4">
+        <h3 className="font-medium text-gray-900 mb-3">Booking Status Legend</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {Object.entries(STATUS_COLORS).map(([status, color]) => (
+            status !== 'DEFAULT' && (
+              <div key={status} className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }}></div>
+                <span className="text-sm font-medium">{status.replace('_', ' ')}</span>
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+
+      {/* Event details modal */}
+      {renderEventDetails()}
     </div>
   );
 } 
