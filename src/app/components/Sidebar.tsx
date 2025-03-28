@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -14,10 +14,18 @@ interface SidebarLink {
 interface SidebarProps {
   links: SidebarLink[];
   isOpen?: boolean;
+  toggleSidebar?: () => void;
 }
 
-export default function Sidebar({ links, isOpen = false }: SidebarProps) {
+export default function Sidebar({ links, isOpen = false, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
+
+  // Close sidebar on path change (mobile)
+  useEffect(() => {
+    if (typeof toggleSidebar === 'function' && isOpen) {
+      toggleSidebar();
+    }
+  }, [pathname, toggleSidebar, isOpen]);
 
   return (
     <div className="h-full overflow-y-auto px-3 py-4">

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { FaExclamationCircle, FaSync } from "react-icons/fa";
+import { FaExclamationCircle, FaHome, FaRedo } from "react-icons/fa";
 
 export default function Error({
   error,
@@ -17,32 +17,33 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center px-4 py-16 text-center">
-      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
-        <FaExclamationCircle className="h-12 w-12 text-red-600" />
-      </div>
-      
-      <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">Something went wrong</h1>
-      
-      <p className="mb-8 max-w-md text-gray-600">
-        We apologize for the inconvenience. An unexpected error has occurred.
-      </p>
-      
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-4 sm:space-y-0">
-        <button
-          onClick={() => reset()}
-          className="flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-        >
-          <FaSync className="mr-2 h-4 w-4" />
-          Try again
-        </button>
-        
-        <Link
-          href="/"
-          className="flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-        >
-          Return to homepage
-        </Link>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="flex justify-center mb-6">
+          <div className="h-20 w-20 flex items-center justify-center rounded-full bg-red-100 text-red-600">
+            <FaExclamationCircle className="h-10 w-10" />
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Something went wrong</h1>
+        <p className="text-gray-600 mb-6">
+          We apologize for the inconvenience. Please try again or return to the homepage.
+        </p>
+        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 justify-center">
+          <button
+            onClick={() => reset()}
+            className="inline-flex items-center px-5 py-2 bg-violet-600 text-white font-medium rounded-md hover:bg-violet-700 transition-colors"
+          >
+            <FaRedo className="mr-2" />
+            Try again
+          </button>
+          <Link
+            href="/"
+            className="inline-flex items-center px-5 py-2 border border-gray-300 bg-white text-gray-700 font-medium rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <FaHome className="mr-2" />
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

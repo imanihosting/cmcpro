@@ -22,6 +22,7 @@ import {
   FaChevronUp,
   FaRegBell
 } from "react-icons/fa";
+import Header from "@/components/Header";
 
 // Define type for sidebar link
 interface SidebarLink {
@@ -62,7 +63,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Check if the user is authenticated
@@ -128,130 +128,26 @@ export default function DashboardLayout({
 
   const sidebarLinks = getSidebarLinks();
 
-  // Handle logout
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
-  };
-
-  // Mobile sidebar render function for performance
-  const renderMobileSidebar = () => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      return null; // Don't render on desktop
-    }
-    
-    return (
-      <>
-        {/* Mobile menu button */}
-        <button
-          type="button"
-          className="md:hidden p-2 text-gray-600 hover:text-violet-600 focus:outline-none"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle menu"
-        >
-          {sidebarOpen ? (
-            <FaTimes className="h-6 w-6" />
-          ) : (
-            <FaBars className="h-6 w-6" />
-          )}
-        </button>
-      </>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Dashboard Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-sm h-16">
-        <div className="flex h-full items-center justify-between px-4">
-          {renderMobileSidebar()}
-          
-          {/* Logo - visible on all screens */}
-          <div className="flex items-center md:ml-0">
-            <Link href="/" className="flex items-center space-x-2 font-bold">
-              <FaBaby className="h-7 w-7 text-violet-600" />
-              <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent text-xl hidden sm:inline-block">
-                ChildminderConnect
-              </span>
-            </Link>
-          </div>
-
-          {/* Center nav links - only visible on desktop */}
-          <nav className="hidden md:block absolute left-1/2 transform -translate-x-1/2">
-            <ul className="flex space-x-6">
-              <li>
-                <Link
-                  href="/about"
-                  className="text-sm font-medium text-gray-700 hover:text-violet-600"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-sm font-medium text-gray-700 hover:text-violet-600"
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Right side items */}
-          <div className="flex items-center space-x-4">
-            {/* Notification bell */}
-            <button className="relative p-1 text-gray-600 hover:text-violet-600 focus:outline-none">
-              <FaRegBell className="h-5 w-5" />
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-            </button>
-            
-            {/* Profile dropdown */}
-            <div className="relative ml-3">
-              <div>
-                <button
-                  type="button"
-                  className="flex items-center space-x-2 text-sm focus:outline-none"
-                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  aria-label="Open profile menu"
-                >
-                  <span className="hidden md:block font-medium text-gray-700">
-                    {session?.user?.name || "User"}
-                  </span>
-                  <FaUserCircle className="h-8 w-8 text-gray-600" />
-                  {profileMenuOpen ? (
-                    <FaChevronUp className="h-3 w-3 text-gray-500" />
-                  ) : (
-                    <FaChevronDown className="h-3 w-3 text-gray-500" />
-                  )}
-                </button>
-              </div>
-              {/* Dropdown menu */}
-              {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                  <Link
-                    href="/dashboard/profile"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setProfileMenuOpen(false)}
-                  >
-                    Profile Settings
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      signOut({ callbackUrl: "/" });
-                    }}
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Use the unified Header component */}
+      <Header />
 
       <div className="pt-16 md:flex">
+        {/* Mobile sidebar toggle for small screens */}
+        <button
+          type="button"
+          className="fixed bottom-4 right-4 z-40 md:hidden flex items-center justify-center h-12 w-12 rounded-full bg-violet-600 text-white shadow-lg focus:outline-none"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? (
+            <FaTimes className="h-5 w-5" />
+          ) : (
+            <FaBars className="h-5 w-5" />
+          )}
+        </button>
+
         {/* Sidebar - using dynamic import to reduce initial load size */}
         <Suspense fallback={<div className="w-64 md:block hidden" />}>
           <aside
@@ -259,7 +155,11 @@ export default function DashboardLayout({
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <Sidebar links={sidebarLinks} isOpen={sidebarOpen} />
+            <Sidebar 
+              links={sidebarLinks} 
+              isOpen={sidebarOpen} 
+              toggleSidebar={() => setSidebarOpen(false)} 
+            />
           </aside>
         </Suspense>
 

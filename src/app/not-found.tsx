@@ -1,38 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { FaExclamationTriangle, FaHome, FaArrowLeft } from "react-icons/fa";
+import { FaExclamationTriangle, FaHome } from "react-icons/fa";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center px-4 py-16 text-center">
-      <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-indigo-100">
-        <FaExclamationTriangle className="h-12 w-12 text-indigo-600" />
-      </div>
-      
-      <h1 className="mb-2 text-3xl font-bold text-gray-900 sm:text-4xl">Page Not Found</h1>
-      
-      <p className="mb-8 max-w-md text-gray-600">
-        We couldn't find the page you're looking for. It might have been moved, 
-        deleted, or perhaps never existed.
-      </p>
-      
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-4 sm:space-y-0">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="flex justify-center mb-6">
+          <div className="h-20 w-20 flex items-center justify-center rounded-full bg-violet-100 text-violet-600">
+            <FaExclamationTriangle className="h-10 w-10" />
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Page Not Found</h1>
+        <p className="text-gray-600 mb-6">
+          The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        </p>
         <Link
           href="/"
-          className="flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          className="inline-flex items-center px-5 py-2 bg-violet-600 text-white font-medium rounded-md hover:bg-violet-700 transition-colors"
         >
-          <FaHome className="mr-2 h-4 w-4" />
-          Go to Homepage
+          <FaHome className="mr-2" />
+          Back to Home
         </Link>
-        
-        <button
-          onClick={() => window.history.back()}
-          className="flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-        >
-          <FaArrowLeft className="mr-2 h-4 w-4" />
-          Go Back
-        </button>
       </div>
     </div>
   );
