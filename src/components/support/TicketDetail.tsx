@@ -15,8 +15,14 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, onBack, onRefresh }
   const [error, setError] = useState('');
   
   // Format messages for display
-  // Ensure messages is always an array
-  const messages = Array.isArray(ticket.messages) ? ticket.messages : [];
+  // Ensure messages is always an array and has valid date objects
+  const messages = Array.isArray(ticket.messages) 
+    ? ticket.messages.map(msg => ({
+        ...msg,
+        // Ensure timestamp is a valid Date
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+      }))
+    : [];
   
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +59,17 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, onBack, onRefresh }
     }
   };
   
+  // Safe function to format dates that handles invalid date values
+  const safeFormatDateTime = (dateValue: any) => {
+    try {
+      if (!dateValue) return '';
+      return formatDateTime(new Date(dateValue));
+    } catch (err) {
+      console.error('Error formatting date:', err);
+      return '';
+    }
+  };
+  
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="border-b border-gray-200 p-4 sm:px-6">
@@ -76,24 +93,24 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, onBack, onRefresh }
       </div>
       
       <div className="p-4 sm:p-6">
-        <h2 className="text-xl font-semibold text-gray-900">{ticket.subject}</h2>
+        <h2 className="text-xl font-semibold text-gray-900 break-words">{ticket.subject}</h2>
         
         <div className="mt-2 flex flex-wrap items-center text-sm text-gray-500">
-          <div className="flex items-center mr-4">
+          <div className="flex items-center mr-4 mb-1">
             <FaTag className="flex-shrink-0 mr-1.5 h-3 w-3 text-gray-400" aria-hidden="true" />
             {ticket.category}
           </div>
-          <div className="flex items-center mr-4">
+          <div className="flex items-center mr-4 mb-1">
             <FaClock className="flex-shrink-0 mr-1.5 h-3 w-3 text-gray-400" aria-hidden="true" />
             Created {formatRelativeTime(ticket.createdAt)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 mb-1">
             Ticket ID: {ticket.id.slice(0, 8).toUpperCase()}
           </div>
         </div>
         
         <div className="mt-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
-          <p className="whitespace-pre-wrap">{ticket.description}</p>
+          <p className="whitespace-pre-wrap break-words">{ticket.description}</p>
         </div>
         
         {messages.length > 0 && (
@@ -106,15 +123,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, onBack, onRefresh }
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div 
-                    className={`p-3 rounded-lg max-w-3/4 ${
+                    className={`p-3 rounded-lg max-w-full sm:max-w-3/4 ${
                       message.sender === 'user' 
                         ? 'bg-violet-100 text-violet-900' 
                         : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     <p className="mt-1 text-xs text-gray-500">
-                      {formatDateTime(message.timestamp)}
+                      {safeFormatDateTime(message.timestamp)}
                     </p>
                   </div>
                 </li>

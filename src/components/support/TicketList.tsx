@@ -33,27 +33,27 @@ const TicketList: React.FC<TicketListProps> = ({ tickets, onSelectTicket, isLoad
           <li key={ticket.id} className="hover:bg-gray-50">
             <button
               onClick={() => onSelectTicket(ticket)}
-              className="w-full text-left px-4 py-4 sm:px-6 focus:outline-none"
+              className="w-full text-left px-3 py-3 sm:px-6 sm:py-4 focus:outline-none"
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-violet-600 truncate">
+              <div className="flex items-center justify-between flex-wrap">
+                <p className="text-sm font-medium text-violet-600 truncate mb-1 sm:mb-0 max-w-full sm:max-w-[65%]">
                   {ticket.subject}
                 </p>
-                <div className="ml-2 flex-shrink-0 flex">
+                <div className="flex-shrink-0 flex">
                   <p className={`px-2 py-1 text-xs rounded-full ${TICKET_STATUS_COLORS[ticket.status]}`}>
                     {ticket.status}
                   </p>
                 </div>
               </div>
               
-              <div className="mt-2 flex justify-between">
-                <div className="flex sm:items-center">
-                  <p className="flex items-center text-sm text-gray-500">
-                    <FaTag className="flex-shrink-0 mr-1.5 h-3 w-3 text-gray-400" aria-hidden="true" />
+              <div className="mt-2 flex flex-wrap justify-between items-center">
+                <div className="flex flex-wrap items-center mb-1 sm:mb-0">
+                  <p className="flex items-center text-xs sm:text-sm text-gray-500 mr-3 mb-1 sm:mb-0">
+                    <FaTag className="flex-shrink-0 mr-1 h-3 w-3 text-gray-400" aria-hidden="true" />
                     {ticket.category}
                   </p>
-                  <p className="flex ml-4 items-center text-sm text-gray-500">
-                    <FaClock className="flex-shrink-0 mr-1.5 h-3 w-3 text-gray-400" aria-hidden="true" />
+                  <p className="flex items-center text-xs sm:text-sm text-gray-500">
+                    <FaClock className="flex-shrink-0 mr-1 h-3 w-3 text-gray-400" aria-hidden="true" />
                     {formatRelativeTime(ticket.createdAt)}
                   </p>
                 </div>

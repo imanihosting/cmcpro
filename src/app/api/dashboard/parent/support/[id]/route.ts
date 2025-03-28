@@ -148,7 +148,7 @@ export async function PATCH(
     messages.push({
       sender: 'user',
       content: body.userReply,
-      timestamp: new Date()
+      timestamp: new Date().toISOString()
     });
     
     // Update the ticket with the new message
