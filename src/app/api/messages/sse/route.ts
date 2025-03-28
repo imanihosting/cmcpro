@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { addConnection, removeConnection } from '@/lib/sse';
 
 // Storage for active SSE connections
 const activeConnections = new Map<string, {
@@ -32,86 +33,44 @@ export const sendMessageToUser = (
   }
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    // Get the authenticated user session
     const session = await getServerSession(authOptions);
     
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    const userId = session.user.id;
+    const { searchParams } = new URL(request.url);
+    const partnerId = searchParams.get('partnerId');
     
-    // Get optional partnerId query param to filter for a specific conversation
-    const partnerId = request.nextUrl.searchParams.get('partnerId') || undefined;
+    // Set up SSE headers
+    const responseHeaders = new Headers();
+    responseHeaders.set('Content-Type', 'text/event-stream');
+    responseHeaders.set('Cache-Control', 'no-cache');
+    responseHeaders.set('Connection', 'keep-alive');
     
-    // Clean up any existing connection for this user
-    if (activeConnections.has(userId)) {
-      const existing = activeConnections.get(userId);
-      if (existing) {
-        try {
-          existing.controller.close();
-        } catch (e) {
-          console.error('Error closing existing SSE connection:', e);
-        }
-      }
-      activeConnections.delete(userId);
-    }
-    
-    // Create a response with appropriate headers for SSE
-    const responseStream = new TransformStream();
-    const writer = responseStream.writable.getWriter();
-    const encoder = new TextEncoder();
-    
-    // Store connection for later use
     let controller: ReadableStreamDefaultController;
     
     const stream = new ReadableStream({
       start(c) {
         controller = c;
-        activeConnections.set(userId, { controller, partnerId });
+        addConnection(session.user.id, controller, partnerId || undefined);
         
         // Send initial connection event
-        controller.enqueue(encoder.encode('event: connected\ndata: {"connected": true}\n\n'));
+        const encoder = new TextEncoder();
+        controller.enqueue(encoder.encode('event: connected\ndata: {}\n\n'));
       },
       cancel() {
-        // Remove connection when client disconnects
-        activeConnections.delete(userId);
+        removeConnection(session.user.id);
       }
     });
     
-    // Set up an automatic ping to keep the connection alive
-    const pingInterval = setInterval(() => {
-      try {
-        if (activeConnections.has(userId)) {
-          const connection = activeConnections.get(userId);
-          if (connection) {
-            connection.controller.enqueue('event: ping\ndata: {}\n\n');
-          }
-        } else {
-          clearInterval(pingInterval);
-        }
-      } catch (error) {
-        console.error('Error sending ping:', error);
-        clearInterval(pingInterval);
-        activeConnections.delete(userId);
-      }
-    }, 30000); // Send ping every 30 seconds
-    
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      }
+    return new NextResponse(stream, {
+      headers: responseHeaders,
     });
-    
   } catch (error) {
-    console.error('[SSE_CONNECT]', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('SSE Error:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 } 

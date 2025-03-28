@@ -376,7 +376,7 @@ function DashboardContent() {
         <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           <Link 
-            href="/dashboard/parent/bookings/new"
+            href="/dashboard/parent/find-childminders"
             className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
           >
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
@@ -416,7 +416,7 @@ function DashboardContent() {
           </Link>
 
           <Link 
-            href="/subscription"
+            href="/dashboard/parent/subscription"
             className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
           >
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
@@ -662,7 +662,7 @@ function DashboardContent() {
             title="Subscription"
             description="Manage your subscription plan, billing details, and payment methods."
             linkText="Manage Subscription"
-            onClick={() => router.push('/subscription')}
+            linkHref="/dashboard/parent/subscription"
             color="purple"
           />
         </div>

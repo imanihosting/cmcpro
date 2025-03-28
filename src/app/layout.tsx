@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import LoadingProvider from "@/components/providers/LoadingProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
       >
         <SessionProvider>
           <LoadingProvider>
+            <Toaster />
             <Header />
             <main className="flex-grow pt-16">{children}</main>
             <Footer />

@@ -59,11 +59,22 @@ export async function POST(req: Request) {
     // Set price based on plan
     const priceId = plan === 'monthly' 
       ? process.env.STRIPE_MONTHLY_PRICE_ID 
-      : process.env.STRIPE_ANNUAL_PRICE_ID;
+      : process.env.STRIPE_YEARLY_PRICE_ID;
     
     if (!priceId) {
       return NextResponse.json(
         { error: 'Price configuration missing' },
+        { status: 500 }
+      );
+    }
+    
+    // Check for APP_URL and use a fallback if not available
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    
+    if (!appUrl.startsWith('http')) {
+      console.error('NEXT_PUBLIC_APP_URL is not properly configured with http/https protocol');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
         { status: 500 }
       );
     }
@@ -80,8 +91,8 @@ export async function POST(req: Request) {
           quantity: 1
         }
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
+      success_url: `${appUrl}/subscription?success=true`,
+      cancel_url: `${appUrl}/subscription?canceled=true`,
       metadata: {
         userId,
         plan

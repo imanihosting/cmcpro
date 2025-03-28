@@ -16,7 +16,8 @@ import {
   FaTachometerAlt,
   FaRegBell,
   FaShieldAlt,
-  FaCreditCard
+  FaCreditCard,
+  FaQuestionCircle
 } from "react-icons/fa";
 
 export default function Header() {
@@ -255,12 +256,39 @@ export default function Header() {
                         <FaCog className="mr-3 h-4 w-4 text-gray-500" />
                         Settings
                       </Link>
+                      <div className="border-t border-gray-100"></div>
+                      {session.user.role === "parent" && (
+                        <Link
+                          href="/dashboard/parent"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
+                          Dashboard
+                        </Link>
+                      )}
+                      {session.user.role === "childminder" && (
+                        <Link
+                          href="/dashboard/childminder"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
+                          Dashboard
+                        </Link>
+                      )}
+                      <Link
+                        href="/dashboard/subscription"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FaCreditCard className="mr-3 h-4 w-4 text-gray-500" />
+                        Subscription
+                      </Link>
+                      <div className="border-t border-gray-100"></div>
                       <button
-                        onClick={() => signOut()}
+                        onClick={() => signOut({ callbackUrl: "/" })}
                         className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-500" />
-                        Sign out
+                        Logout
                       </button>
                     </div>
                   )}
@@ -350,6 +378,28 @@ export default function Header() {
                   Security
                 </Link>
               </li>
+              {session?.user?.role === "childminder" && (
+                <li>
+                  <Link
+                    href="/dashboard/childminder/help"
+                    className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                  >
+                    <FaQuestionCircle className="mr-3 h-4 w-4" />
+                    Help & Support
+                  </Link>
+                </li>
+              )}
+              {session?.user?.role === "parent" && (
+                <li>
+                  <Link
+                    href="/dashboard/parent/help"
+                    className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                  >
+                    <FaQuestionCircle className="mr-3 h-4 w-4" />
+                    Help & Support
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/dashboard/subscription"

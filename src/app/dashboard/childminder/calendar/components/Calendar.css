@@ -1,0 +1,162 @@
+/* Custom styles for the FullCalendar component */
+
+/* Improve text readability in calendar events - make all text black with stronger contrast */
+.fc-event-title, .fc-event-time {
+  font-weight: 800 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4 !important;
+  font-size: 0.95rem !important;
+  color: #000000 !important; /* Force black text on all events */
+  text-shadow: none !important; /* Remove text shadow for cleaner look */
+}
+
+/* Make event background colors more pastel for better text contrast */
+.fc-daygrid-event {
+  padding: 4px 6px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  border-width: 2px !important;
+  background-color: rgba(255, 255, 255, 0.7) !important; /* Add white overlay to all events */
+}
+
+/* Increase font size for better readability */
+.fc .fc-toolbar-title {
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+  color: #1e293b !important;
+}
+
+/* Improve button styling */
+.fc .fc-button {
+  font-weight: 700 !important;
+  padding: 0.6rem 0.9rem !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Improve day header styling */
+.fc .fc-col-header-cell-cushion {
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  padding: 10px 4px !important;
+  color: #1e293b !important;
+}
+
+/* Improve date numbers readability */
+.fc .fc-daygrid-day-number {
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  padding: 8px 10px !important;
+  color: #1e293b !important;
+}
+
+/* Better visibility for time slots */
+.fc-timegrid-slot-label-cushion {
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+}
+
+/* Day grid cell enhancements */
+.fc-daygrid-day-frame {
+  padding-top: 5px !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.5rem !important;
+    margin: 0 !important;
+    padding: 0.5rem 0 !important;
+  }
+
+  .fc .fc-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.85rem !important;
+    padding: 8px 4px !important;
+    font-weight: 800 !important;
+  }
+
+  .fc .fc-daygrid-day-number {
+    font-size: 0.95rem !important;
+    padding: 6px 8px !important;
+    font-weight: 800 !important;
+  }
+
+  /* Larger event text on mobile */
+  .fc-event-title, .fc-event-time {
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    padding: 2px !important;
+  }
+  
+  /* Increase event height on mobile */
+  .fc-daygrid-event {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+  }
+}
+
+/* Make today's date more visible */
+.fc .fc-day-today {
+  background-color: #eff6ff !important;
+  box-shadow: inset 0 0 0 2px #3b82f6 !important;
+}
+
+/* Better styling for more events indicator */
+.fc-daygrid-more-link {
+  font-weight: 700 !important;
+  background-color: #f1f5f9 !important;
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+  margin-top: 4px !important;
+  color: #0f172a !important;
+  font-size: 0.9rem !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+/* Ensure proper spacing in time grid */
+.fc-timegrid-slot {
+  height: 3rem !important;
+}
+
+/* Improve time labels */
+.fc-timegrid-axis-cushion {
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+}
+
+/* Make the current time indicator more visible */
+.fc-timegrid-now-indicator-line {
+  border-color: #ef4444 !important;
+  border-width: 3px !important;
+  z-index: 5 !important;
+}
+
+/* Calendar cell styling */
+.fc-daygrid-day-frame, .fc-timegrid-col-frame {
+  background-color: #ffffff !important;
+}
+
+/* Increase contrast for grid lines */
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: #cbd5e1 !important;
+  border-width: 1px !important;
+}
+
+/* Focus for better visibility when navigating */
+.fc-day:focus, .fc-event:focus {
+  outline: 2px solid #3b82f6 !important;
+} 

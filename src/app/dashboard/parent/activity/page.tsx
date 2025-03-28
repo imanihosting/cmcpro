@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { 
   FaCalendarAlt, 
   FaClock, 
@@ -10,12 +11,16 @@ import {
   FaDownload,
   FaFilter,
   FaSort,
-  FaSearch
+  FaSearch,
+  FaTimes,
+  FaEnvelope,
+  FaShieldAlt,
+  FaSpinner
 } from "react-icons/fa";
 
 interface ActivityItem {
-  id: number;
-  type: "booking" | "payment" | "message" | "profile";
+  id: string;
+  type: "booking" | "payment" | "message" | "profile" | "security" | "other";
   title: string;
   description: string;
   date: string;
@@ -23,86 +28,52 @@ interface ActivityItem {
   amount?: number;
   status?: "completed" | "pending" | "cancelled";
   childminder?: string;
+  timestamp?: Date;
 }
 
 export default function ActivityPage() {
+  const { data: session, status } = useSession();
   const [filter, setFilter] = useState("all");
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // Placeholder activity data
-  const activities: ActivityItem[] = [
-    {
-      id: 1,
-      type: "booking",
-      title: "Booking Confirmed",
-      description: "Childcare booking with Sarah Johnson has been confirmed",
-      date: "April 15, 2024",
-      time: "14:32",
-      childminder: "Sarah Johnson",
-      status: "completed"
-    },
-    {
-      id: 2,
-      type: "payment",
-      title: "Payment Processed",
-      description: "Payment for childcare services with Sarah Johnson",
-      date: "April 15, 2024",
-      time: "14:33",
-      amount: 85.50,
-      status: "completed"
-    },
-    {
-      id: 3,
-      type: "message",
-      title: "New Message",
-      description: "You received a message from David Williams",
-      date: "April 12, 2024",
-      time: "09:15",
-      childminder: "David Williams"
-    },
-    {
-      id: 4,
-      type: "booking",
-      title: "Booking Requested",
-      description: "You requested a booking with Emma Thompson",
-      date: "April 10, 2024",
-      time: "16:45",
-      childminder: "Emma Thompson",
-      status: "pending"
-    },
-    {
-      id: 5,
-      type: "profile",
-      title: "Profile Updated",
-      description: "You updated your children's profiles",
-      date: "April 8, 2024",
-      time: "11:20"
-    },
-    {
-      id: 6,
-      type: "booking",
-      title: "Booking Cancelled",
-      description: "Childcare booking with Michael Brown was cancelled",
-      date: "April 5, 2024",
-      time: "13:10",
-      childminder: "Michael Brown",
-      status: "cancelled"
-    },
-    {
-      id: 7,
-      type: "payment",
-      title: "Subscription Renewed",
-      description: "Your monthly subscription was renewed automatically",
-      date: "April 1, 2024",
-      time: "00:05",
-      amount: 19.99,
-      status: "completed"
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchActivities();
     }
-  ];
+  }, [status, filter]);
 
-  // Filter activities based on selected filter
-  const filteredActivities = filter === "all" 
+  const fetchActivities = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/user/activity?filter=${filter}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity data');
+      }
+      
+      const data = await response.json();
+      setActivities(data.activities || []);
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      setError('Unable to load your activity history. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter activities based on search term
+  const filteredActivities = searchTerm.trim() === '' 
     ? activities 
-    : activities.filter(activity => activity.type === filter);
+    : activities.filter(activity => 
+        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        activity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (activity.childminder && activity.childminder.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
 
   // Render activity icon based on type
   const renderActivityIcon = (type: string) => {
@@ -112,9 +83,11 @@ export default function ActivityPage() {
       case "payment":
         return <FaMoneyBillWave className="h-5 w-5 text-green-600" />;
       case "message":
-        return <FaUser className="h-5 w-5 text-blue-600" />;
+        return <FaEnvelope className="h-5 w-5 text-blue-600" />;
       case "profile":
         return <FaUser className="h-5 w-5 text-orange-600" />;
+      case "security":
+        return <FaShieldAlt className="h-5 w-5 text-red-600" />;
       default:
         return <FaClock className="h-5 w-5 text-gray-600" />;
     }
@@ -136,6 +109,15 @@ export default function ActivityPage() {
       </span>
     );
   };
+
+  // Show loading state
+  if (status === "loading") {
+    return (
+      <div className="flex h-[calc(100vh-120px)] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -200,6 +182,16 @@ export default function ActivityPage() {
               >
                 Profile
               </button>
+              <button
+                onClick={() => setFilter("security")}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  filter === "security"
+                    ? "bg-violet-100 text-violet-800"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Security
+              </button>
             </div>
           </div>
           <div className="relative w-full sm:w-auto">
@@ -209,8 +201,18 @@ export default function ActivityPage() {
             <input
               type="text"
               placeholder="Search activities..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="block w-full rounded-md border border-gray-300 py-1.5 pl-10 pr-3 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 sm:w-64"
             />
+            {searchTerm && (
+              <button
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                onClick={() => setSearchTerm('')}
+              >
+                <FaTimes className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -228,61 +230,82 @@ export default function ActivityPage() {
             </button>
           </div>
         </div>
-        <div className="divide-y divide-gray-200">
-          {filteredActivities.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500">
-              No activities found for the selected filter.
-            </div>
-          ) : (
-            filteredActivities.map((activity) => (
-              <div key={activity.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
-                    {renderActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <h3 className="text-sm font-medium text-gray-900">{activity.title}</h3>
-                      {renderStatusBadge(activity.status)}
+        
+        {isLoading ? (
+          <div className="py-20 text-center">
+            <FaSpinner className="mx-auto h-8 w-8 animate-spin text-violet-600" />
+            <p className="mt-2 text-sm text-gray-500">Loading your activity history...</p>
+          </div>
+        ) : error ? (
+          <div className="py-12 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <button 
+              onClick={fetchActivities}
+              className="mt-3 rounded-md bg-violet-600 px-4 py-2 text-sm text-white shadow-sm hover:bg-violet-700"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {filteredActivities.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500">
+                {searchTerm ? 'No activities matching your search.' : 'No activities found for the selected filter.'}
+              </div>
+            ) : (
+              filteredActivities.map((activity) => (
+                <div key={activity.id} className="p-4 hover:bg-gray-50">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
+                      {renderActivityIcon(activity.type)}
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">{activity.description}</p>
-                    <div className="mt-2 flex items-center text-xs text-gray-500">
-                      <FaCalendarAlt className="mr-1 h-3 w-3" />
-                      <span>{activity.date}</span>
-                      <span className="mx-1">•</span>
-                      <FaClock className="mr-1 h-3 w-3" />
-                      <span>{activity.time}</span>
-                      {activity.amount && (
-                        <>
-                          <span className="mx-1">•</span>
-                          <FaMoneyBillWave className="mr-1 h-3 w-3" />
-                          <span>£{activity.amount.toFixed(2)}</span>
-                        </>
-                      )}
-                      {activity.childminder && (
-                        <>
-                          <span className="mx-1">•</span>
-                          <FaUser className="mr-1 h-3 w-3" />
-                          <span>{activity.childminder}</span>
-                        </>
-                      )}
+                    <div className="flex-1">
+                      <div className="flex items-center">
+                        <h3 className="text-sm font-medium text-gray-900">{activity.title}</h3>
+                        {renderStatusBadge(activity.status)}
+                      </div>
+                      <p className="mt-1 text-sm text-gray-600">{activity.description}</p>
+                      <div className="mt-2 flex items-center text-xs text-gray-500">
+                        <FaCalendarAlt className="mr-1 h-3 w-3" />
+                        <span>{activity.date}</span>
+                        <span className="mx-1">•</span>
+                        <FaClock className="mr-1 h-3 w-3" />
+                        <span>{activity.time}</span>
+                        {activity.amount && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <FaMoneyBillWave className="mr-1 h-3 w-3" />
+                            <span>£{activity.amount.toFixed(2)}</span>
+                          </>
+                        )}
+                        {activity.childminder && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <FaUser className="mr-1 h-3 w-3" />
+                            <span>{activity.childminder}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <button className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
-                      <FaEye className="h-5 w-5" />
-                    </button>
+                    <div className="flex-shrink-0">
+                      <button className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                        <FaEye className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="border-t border-gray-200 px-4 py-3 text-right">
-          <button className="text-sm font-medium text-violet-600 hover:text-violet-700">
-            View All Activity
-          </button>
-        </div>
+              ))
+            )}
+          </div>
+        )}
+        
+        {activities.length > 10 && (
+          <div className="border-t border-gray-200 px-4 py-3 text-right">
+            <button className="text-sm font-medium text-violet-600 hover:text-violet-700">
+              View All Activity
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

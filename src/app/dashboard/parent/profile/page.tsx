@@ -13,7 +13,9 @@ import {
   FaSave,
   FaSpinner,
   FaUpload,
-  FaTimes
+  FaTimes,
+  FaCheck,
+  FaExclamationCircle
 } from "react-icons/fa";
 
 import { 
@@ -149,7 +151,7 @@ export default function ParentProfilePage() {
         }
       });
 
-      showNotification(true, "Profile updated successfully");
+      showNotification(true, "✅ Profile updated successfully! Your changes have been saved.");
       // Scroll to top to ensure notification is visible
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
@@ -217,7 +219,7 @@ export default function ParentProfilePage() {
         }
       });
       
-      showNotification(true, 'Profile picture updated successfully');
+      showNotification(true, '✅ Profile picture updated successfully! Your photo has been saved.');
       setImagePreview(null);
       // Scroll to top to ensure notification is visible
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -247,27 +249,25 @@ export default function ParentProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      {/* Floating Notifications */}
+      {/* Success Notification - Updated for better mobile visibility */}
       {successMessage && (
-        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
-          <div className="rounded-md bg-green-50 p-4 border border-green-200 shadow-lg animate-fade-in-down">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">{successMessage}</p>
+        <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-md transform px-4 transition-all duration-300 ease-in-out">
+          <div className="mt-16 rounded-lg bg-green-100 p-4 shadow-lg animate-fade-in-down">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaCheck className="h-6 w-6 text-green-500" aria-hidden="true" />
               </div>
-              <div className="ml-auto pl-3">
+              <div className="ml-3 w-0 flex-1">
+                <p className="text-base font-medium text-green-800">{successMessage}</p>
+              </div>
+              <div className="ml-4 flex flex-shrink-0">
                 <button
                   type="button"
-                  className="inline-flex rounded-md bg-green-50 text-green-500 hover:text-green-700 focus:outline-none"
                   onClick={() => setSuccessMessage(null)}
+                  className="inline-flex rounded-md bg-green-100 p-1.5 text-green-500 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
-                  <span className="sr-only">Dismiss</span>
-                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                  <span className="sr-only">Close</span>
+                  <FaTimes className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -275,26 +275,25 @@ export default function ParentProfilePage() {
         </div>
       )}
       
+      {/* Error Notification - Updated to match success notification style */}
       {errorMessage && (
-        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
-          <div className="rounded-md bg-red-50 p-4 border border-red-200 shadow-lg animate-fade-in-down">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-red-800">{errorMessage}</p>
+        <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-md transform px-4 transition-all duration-300 ease-in-out">
+          <div className="mt-16 rounded-lg bg-red-100 p-4 shadow-lg animate-fade-in-down">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaExclamationCircle className="h-6 w-6 text-red-500" aria-hidden="true" />
               </div>
-              <div className="ml-auto pl-3">
+              <div className="ml-3 w-0 flex-1">
+                <p className="text-base font-medium text-red-800">{errorMessage}</p>
+              </div>
+              <div className="ml-4 flex flex-shrink-0">
                 <button
                   type="button"
-                  className="inline-flex rounded-md bg-red-50 text-red-500 hover:text-red-700 focus:outline-none"
                   onClick={() => setErrorMessage(null)}
+                  className="inline-flex rounded-md bg-red-100 p-1.5 text-red-500 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                 >
-                  <span className="sr-only">Dismiss</span>
-                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                  <span className="sr-only">Close</span>
+                  <FaTimes className="h-5 w-5" />
                 </button>
               </div>
             </div>

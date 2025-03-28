@@ -16,19 +16,52 @@ export async function GET(req: NextRequest) {
     }
 
     const userId = session.user.id;
+    const userRole = session.user.role;
+
+    // Define common fields to select
+    const commonFields = {
+      id: true,
+      name: true,
+      email: true,
+      profileImage: true,
+      phoneNumber: true,
+      location: true,
+      bio: true,
+      role: true,
+      createdAt: true,
+    };
+
+    // Add childminder-specific fields if user is a childminder
+    const childminderFields = userRole === 'childminder' ? {
+      ageGroupsServed: true,
+      availability: true,
+      careTypes: true,
+      childrenFirstCert: true,
+      educationLevel: true,
+      firstAidCert: true,
+      firstAidCertExpiry: true,
+      gardaVetted: true,
+      languagesSpoken: true,
+      maxChildrenCapacity: true,
+      mealsProvided: true,
+      otherQualifications: true,
+      pickupDropoff: true,
+      qualifications: true,
+      rate: true,
+      rateDetails: true,
+      specialNeedsExp: true,
+      specialNeedsDetails: true,
+      specialties: true,
+      tuslaRegistered: true,
+      tuslaRegistrationNumber: true,
+      yearsOfExperience: true
+    } : {};
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        profileImage: true,
-        phoneNumber: true,
-        location: true,
-        bio: true,
-        role: true,
-        createdAt: true,
+        ...commonFields,
+        ...childminderFields
       },
     });
 
@@ -62,6 +95,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const userId = session.user.id;
+    const userRole = session.user.role;
     const data = await req.json();
 
     // Validate required fields
@@ -75,6 +109,44 @@ export async function PUT(req: NextRequest) {
     // Email can't be changed, so we don't update it
     const { email, ...updatableData } = data;
 
+    // Define select fields based on role
+    const commonSelectFields = {
+      id: true,
+      name: true,
+      email: true,
+      profileImage: true,
+      phoneNumber: true,
+      location: true,
+      role: true,
+    };
+
+    // Add childminder-specific fields to select if user is a childminder
+    const childminderSelectFields = userRole === 'childminder' ? {
+      bio: true,
+      ageGroupsServed: true,
+      availability: true,
+      careTypes: true,
+      childrenFirstCert: true,
+      educationLevel: true,
+      firstAidCert: true,
+      firstAidCertExpiry: true,
+      gardaVetted: true,
+      languagesSpoken: true,
+      maxChildrenCapacity: true,
+      mealsProvided: true,
+      otherQualifications: true,
+      pickupDropoff: true,
+      qualifications: true,
+      rate: true,
+      rateDetails: true,
+      specialNeedsExp: true,
+      specialNeedsDetails: true,
+      specialties: true,
+      tuslaRegistered: true,
+      tuslaRegistrationNumber: true,
+      yearsOfExperience: true
+    } : {};
+
     // Update user data
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -83,13 +155,8 @@ export async function PUT(req: NextRequest) {
         updatedAt: new Date(),
       },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        profileImage: true,
-        phoneNumber: true,
-        location: true,
-        role: true,
+        ...commonSelectFields,
+        ...childminderSelectFields
       },
     });
 

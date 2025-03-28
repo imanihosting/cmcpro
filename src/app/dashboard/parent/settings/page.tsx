@@ -157,7 +157,7 @@ export default function ParentSettingsPage() {
         throw new Error('Failed to update notification preferences');
       }
 
-      showNotification(true, "Notification preferences updated successfully");
+      showNotification(true, "✅ Notification preferences updated successfully! Your communication settings have been saved.");
     } catch (error) {
       showNotification(false, "Failed to update notification preferences");
       console.error('Error updating notification preferences:', error);
@@ -204,7 +204,7 @@ export default function ParentSettingsPage() {
         throw new Error(data.message || 'Failed to update password');
       }
 
-      showNotification(true, data.message || "Password updated successfully");
+      showNotification(true, data.message || "✅ Password updated successfully! Your new password has been saved.");
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -275,7 +275,7 @@ export default function ParentSettingsPage() {
       setTwoFactorEnabled(true);
       setRecoveryCodes(data.recoveryCodes || []);
       setTwoFactorSetupStep("verify");
-      setSuccessMessage("Two-factor authentication enabled successfully");
+      setSuccessMessage("✅ Two-factor authentication enabled successfully! Your account is now more secure.");
     } catch (error) {
       setErrorMessage("Invalid verification code. Please try again.");
       console.error('Error verifying 2FA:', error);
@@ -302,7 +302,7 @@ export default function ParentSettingsPage() {
       setTwoFactorQrCode(null);
       setTwoFactorSecret(null);
       setVerificationCode("");
-      setSuccessMessage("Two-factor authentication disabled successfully");
+      setSuccessMessage("✅ Two-factor authentication disabled successfully! You can re-enable it any time.");
     } catch (error) {
       setErrorMessage("Failed to disable 2FA. Please try again.");
       console.error('Error disabling 2FA:', error);

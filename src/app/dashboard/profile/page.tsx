@@ -11,7 +11,9 @@ import {
   FaMapMarkerAlt, 
   FaImage,
   FaSave,
-  FaSpinner
+  FaSpinner,
+  FaCheck,
+  FaTimes
 } from "react-icons/fa";
 
 import { 
@@ -38,6 +40,29 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: ""
   });
+
+  // Function to clear notifications after a delay
+  const showNotification = (isSuccess: boolean, message: string) => {
+    if (isSuccess) {
+      setSuccessMessage(message);
+      setErrorMessage(null);
+    } else {
+      setErrorMessage(message);
+      setSuccessMessage(null);
+    }
+    
+    // Auto-clear notification after 5 seconds
+    setTimeout(() => {
+      if (isSuccess) {
+        setSuccessMessage(null);
+      } else {
+        setErrorMessage(null);
+      }
+    }, 5000);
+    
+    // Scroll to top to ensure notification is visible
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -83,9 +108,9 @@ export default function ProfilePage() {
         }
       });
 
-      setSuccessMessage("Profile updated successfully");
+      showNotification(true, "✅ Profile updated successfully! Your changes have been saved.");
     } catch (error) {
-      setErrorMessage("Failed to update profile. Please try again.");
+      showNotification(false, "Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +124,7 @@ export default function ProfilePage() {
 
     // Password validation
     if (formData.newPassword !== formData.confirmPassword) {
-      setErrorMessage("New passwords do not match");
+      showNotification(false, "New passwords do not match");
       setIsLoading(false);
       return;
     }
@@ -108,7 +133,7 @@ export default function ProfilePage() {
       // Simulate API call to update password
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setSuccessMessage("Password updated successfully");
+      showNotification(true, "✅ Password updated successfully! Your new password has been saved.");
       setFormData(prevData => ({
         ...prevData,
         currentPassword: "",
@@ -116,7 +141,7 @@ export default function ProfilePage() {
         confirmPassword: ""
       }));
     } catch (error) {
-      setErrorMessage("Failed to update password. Please check your current password.");
+      showNotification(false, "Failed to update password. Please check your current password.");
     } finally {
       setIsLoading(false);
     }
@@ -135,21 +160,53 @@ export default function ProfilePage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Profile Settings</h1>
       
+      {/* Success Notification - Updated for better visibility */}
       {successMessage && (
-        <div className="mb-6 rounded-md bg-green-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">{successMessage}</p>
+        <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-md transform px-4 transition-all duration-300 ease-in-out">
+          <div className="mt-16 rounded-lg bg-green-100 p-4 shadow-lg animate-fade-in-down">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaCheck className="h-6 w-6 text-green-500" aria-hidden="true" />
+              </div>
+              <div className="ml-3 w-0 flex-1">
+                <p className="text-base font-medium text-green-800">{successMessage}</p>
+              </div>
+              <div className="ml-4 flex flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSuccessMessage(null)}
+                  className="inline-flex rounded-md bg-green-100 p-1.5 text-green-500 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                  <span className="sr-only">Close</span>
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
       
+      {/* Error Notification - Updated to match success notification style */}
       {errorMessage && (
-        <div className="mb-6 rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <p className="text-sm font-medium text-red-800">{errorMessage}</p>
+        <div className="fixed inset-x-0 top-0 z-50 mx-auto max-w-md transform px-4 transition-all duration-300 ease-in-out">
+          <div className="mt-16 rounded-lg bg-red-100 p-4 shadow-lg animate-fade-in-down">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaTimes className="h-6 w-6 text-red-500" aria-hidden="true" />
+              </div>
+              <div className="ml-3 w-0 flex-1">
+                <p className="text-base font-medium text-red-800">{errorMessage}</p>
+              </div>
+              <div className="ml-4 flex flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setErrorMessage(null)}
+                  className="inline-flex rounded-md bg-red-100 p-1.5 text-red-500 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  <span className="sr-only">Close</span>
+                  <FaTimes className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
