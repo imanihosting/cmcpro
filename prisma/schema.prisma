@@ -1,0 +1,578 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_token     String? @db.Text
+  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId], map: "Account_userId_fkey")
+}
+
+model Availability {
+  id        String   @id
+  userId    String
+  date      DateTime
+  timeSlot  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "Availability_userId_fkey")
+}
+
+model Booking {
+  id                               String                     @id
+  parentId                         String
+  childminderId                    String
+  startTime                        DateTime
+  endTime                          DateTime
+  status                           Booking_status
+  createdAt                        DateTime                   @default(now())
+  updatedAt                        DateTime
+  cancellationNote                 String?                    @db.Text
+  bookingType                      Booking_bookingType        @default(STANDARD)
+  isEmergency                      Boolean                    @default(false)
+  isRecurring                      Boolean                    @default(false)
+  isWaitlisted                     Boolean                    @default(false)
+  recurrencePattern                Booking_recurrencePattern?
+  cancellationWindow               Int?
+  lastReminderDate                 DateTime?
+  priority                         Int                        @default(0)
+  reminderSent                     Boolean                    @default(false)
+  User_Booking_childminderIdToUser User                       @relation("Booking_childminderIdToUser", fields: [childminderId], references: [id])
+  User_Booking_parentIdToUser      User                       @relation("Booking_parentIdToUser", fields: [parentId], references: [id])
+  BookingChildren                  BookingChildren[]
+
+  @@index([bookingType])
+  @@index([childminderId], map: "Booking_childminderId_fkey")
+  @@index([isRecurring])
+  @@index([isWaitlisted])
+  @@index([parentId], map: "Booking_parentId_fkey")
+  @@index([priority])
+  @@index([startTime])
+  @@index([status])
+}
+
+model BookingChildren {
+  id        String   @id
+  bookingId String
+  childId   String
+  createdAt DateTime @default(now())
+  Booking   Booking  @relation(fields: [bookingId], references: [id])
+  Child     Child    @relation(fields: [childId], references: [id])
+
+  @@unique([bookingId, childId])
+  @@index([bookingId])
+  @@index([childId])
+}
+
+model CalendarSync {
+  id           String   @id
+  userId       String
+  provider     String
+  accessToken  String   @db.Text
+  refreshToken String?  @db.Text
+  expiresAt    DateTime
+  userType     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+
+  @@unique([userId, provider])
+}
+
+model Child {
+  id              String            @id
+  name            String
+  age             Int
+  parentId        String
+  allergies       String?
+  specialNeeds    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  BookingChildren BookingChildren[]
+  User            User              @relation(fields: [parentId], references: [id])
+
+  @@index([name])
+  @@index([parentId], map: "Child_parentId_fkey")
+}
+
+model Document {
+  id                             String          @id
+  userId                         String
+  name                           String
+  type                           String
+  url                            String
+  createdAt                      DateTime        @default(now())
+  updatedAt                      DateTime
+  category                       String?
+  description                    String?         @db.Text
+  fileSize                       Int?
+  reviewDate                     DateTime?
+  reviewerId                     String?
+  status                         Document_status @default(PENDING)
+  User_Document_reviewerIdToUser User?           @relation("Document_reviewerIdToUser", fields: [reviewerId], references: [id])
+  User_Document_userIdToUser     User            @relation("Document_userIdToUser", fields: [userId], references: [id])
+
+  @@index([name])
+  @@index([reviewerId], map: "Document_reviewerId_fkey")
+  @@index([userId], map: "Document_userId_fkey")
+}
+
+model Favorite {
+  id                                String   @id
+  userId                            String
+  childminderId                     String
+  createdAt                         DateTime @default(now())
+  updatedAt                         DateTime
+  User_Favorite_childminderIdToUser User     @relation("Favorite_childminderIdToUser", fields: [childminderId], references: [id], onDelete: Cascade)
+  User_Favorite_userIdToUser        User     @relation("Favorite_userIdToUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, childminderId])
+  @@index([childminderId])
+  @@index([userId])
+}
+
+model Message {
+  id                            String   @id
+  senderId                      String
+  receiverId                    String
+  content                       String   @db.Text
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime
+  read                          Boolean  @default(false)
+  User_Message_receiverIdToUser User     @relation("Message_receiverIdToUser", fields: [receiverId], references: [id])
+  User_Message_senderIdToUser   User     @relation("Message_senderIdToUser", fields: [senderId], references: [id])
+
+  @@index([createdAt])
+  @@index([receiverId], map: "Message_receiverId_fkey")
+  @@index([senderId], map: "Message_senderId_fkey")
+}
+
+model ModerationItem {
+  id        String   @id
+  type      String
+  content   String   @db.Text
+  status    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([type])
+  @@index([userId])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Notification {
+  id        String   @id
+  type      String
+  title     String
+  message   String   @db.Text
+  status    String   @default("UNREAD")
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  userId    String?
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([type])
+  @@index([userId], map: "Notification_userId_fkey")
+}
+
+model PushSubscription {
+  id           String   @id
+  userId       String   @unique
+  subscription Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RecurringAvailability {
+  id        String   @id
+  userId    String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "RecurringAvailability_userId_fkey")
+}
+
+model Report {
+  id                           String        @id
+  type                         Report_type
+  status                       Report_status @default(OPEN)
+  reporterId                   String
+  targetId                     String?
+  description                  String        @db.Text
+  createdAt                    DateTime      @default(now())
+  updatedAt                    DateTime      @default(now())
+  User_Report_reporterIdToUser User          @relation("Report_reporterIdToUser", fields: [reporterId], references: [id], onDelete: Cascade)
+  User_Report_targetIdToUser   User?         @relation("Report_targetIdToUser", fields: [targetId], references: [id])
+
+  @@index([reporterId], map: "Report_reporterId_fkey")
+  @@index([targetId], map: "Report_targetId_fkey")
+}
+
+model Review {
+  id                           String    @id
+  reviewerId                   String
+  revieweeId                   String
+  rating                       Int
+  comment                      String?   @db.Text
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime
+  response                     String?   @db.Text
+  responseDate                 DateTime?
+  User_Review_revieweeIdToUser User      @relation("Review_revieweeIdToUser", fields: [revieweeId], references: [id])
+  User_Review_reviewerIdToUser User      @relation("Review_reviewerIdToUser", fields: [reviewerId], references: [id])
+
+  @@index([revieweeId], map: "Review_revieweeId_fkey")
+  @@index([reviewerId], map: "Review_reviewerId_fkey")
+}
+
+model SecurityEvent {
+  id                                 String   @id
+  type                               String
+  description                        String
+  timestamp                          DateTime @default(now())
+  severity                           String
+  status                             String
+  ipAddress                          String?
+  location                           String?
+  userId                             String?
+  actionTaken                        String?
+  additionalDetails                  String?
+  createdAt                          DateTime @default(now())
+  updatedAt                          DateTime
+  updatedBy                          String?
+  User_SecurityEvent_updatedByToUser User?    @relation("SecurityEvent_updatedByToUser", fields: [updatedBy], references: [id])
+  User_SecurityEvent_userIdToUser    User?    @relation("SecurityEvent_userIdToUser", fields: [userId], references: [id])
+
+  @@index([severity])
+  @@index([status])
+  @@index([timestamp])
+  @@index([updatedBy], map: "SecurityEvent_updatedBy_fkey")
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "Session_userId_fkey")
+}
+
+model Subscription {
+  id                     String    @id
+  userId                 String    @unique
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  status                 String?
+  plan                   String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime
+  stripeCurrentPeriodEnd DateTime?
+  stripePriceId          String?
+  cancelAtPeriodEnd      Boolean   @default(false)
+  User                   User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model SupportTicket {
+  id          String                 @id
+  userId      String
+  userEmail   String
+  userName    String
+  category    String
+  subject     String
+  description String                 @db.Text
+  status      SupportTicket_status   @default(OPEN)
+  priority    SupportTicket_priority @default(MEDIUM)
+  response    String?                @db.Text
+  respondedBy String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime
+  userReply   String?                @db.Text
+  messages    Json?
+  User        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model SystemLog {
+  id        String          @id
+  type      SystemLog_type
+  level     SystemLog_level
+  message   String
+  details   String?         @db.Text
+  source    String?
+  timestamp DateTime        @default(now())
+  userId    String?
+  ipAddress String?
+  userAgent String?         @db.Text
+  path      String?
+  duration  Int?
+
+  @@index([level])
+  @@index([source])
+  @@index([timestamp])
+  @@index([type])
+  @@index([userId])
+}
+
+model User {
+  id                                          String                  @id
+  email                                       String                  @unique
+  name                                        String?
+  role                                        User_role               @default(user)
+  createdAt                                   DateTime                @default(now())
+  updatedAt                                   DateTime
+  ageGroupsServed                             Json?
+  availability                                String?
+  bio                                         String?                 @db.Text
+  careTypes                                   Json?
+  childcareNeeds                              Json?
+  childrenFirstCert                           Boolean?
+  dateOfBirth                                 DateTime?
+  educationLevel                              String?
+  emailVerified                               DateTime?
+  firstAidCert                                Boolean?
+  firstAidCertExpiry                          DateTime?
+  gardaVetted                                 Boolean?
+  gender                                      String?
+  hashed_password                             String?
+  image                                       String?
+  languagesSpoken                             Json?
+  location                                    String?
+  maxChildrenCapacity                         Int?
+  mealsProvided                               Boolean?
+  otherQualifications                         String?
+  phoneNumber                                 String?
+  pickupDropoff                               Boolean?
+  preferences                                 Json?
+  profileImage                                String?
+  qualifications                              String?
+  rate                                        Decimal?                @db.Decimal(10, 2)
+  rateDetails                                 Json?
+  specialNeedsDetails                         String?                 @db.Text
+  specialNeedsExp                             Boolean?
+  specialties                                 String?
+  subscriptionStatus                          User_subscriptionStatus @default(FREE)
+  tuslaRegistered                             Boolean?
+  tuslaRegistrationNumber                     String?
+  yearsOfExperience                           Int?
+  resetToken                                  String?
+  resetTokenExpiry                            DateTime?
+  twoFactorBackupCodes                        Json?
+  twoFactorEnabled                            Boolean                 @default(false)
+  twoFactorSecret                             String?
+  twoFactorVerified                           Boolean                 @default(false)
+  trialActivated                              Boolean                 @default(false)
+  trialEndDate                                DateTime?
+  trialStartDate                              DateTime?
+  is_google_user                              Boolean                 @default(false)
+  Account                                     Account[]
+  Availability                                Availability[]
+  Booking_Booking_childminderIdToUser         Booking[]               @relation("Booking_childminderIdToUser")
+  Booking_Booking_parentIdToUser              Booking[]               @relation("Booking_parentIdToUser")
+  Child                                       Child[]
+  Document_Document_reviewerIdToUser          Document[]              @relation("Document_reviewerIdToUser")
+  Document_Document_userIdToUser              Document[]              @relation("Document_userIdToUser")
+  Favorite_Favorite_childminderIdToUser       Favorite[]              @relation("Favorite_childminderIdToUser")
+  Favorite_Favorite_userIdToUser              Favorite[]              @relation("Favorite_userIdToUser")
+  Message_Message_receiverIdToUser            Message[]               @relation("Message_receiverIdToUser")
+  Message_Message_senderIdToUser              Message[]               @relation("Message_senderIdToUser")
+  ModerationItem                              ModerationItem[]
+  Notification                                Notification[]
+  PushSubscription                            PushSubscription?
+  RecurringAvailability                       RecurringAvailability[]
+  Report_Report_reporterIdToUser              Report[]                @relation("Report_reporterIdToUser")
+  Report_Report_targetIdToUser                Report[]                @relation("Report_targetIdToUser")
+  Review_Review_revieweeIdToUser              Review[]                @relation("Review_revieweeIdToUser")
+  Review_Review_reviewerIdToUser              Review[]                @relation("Review_reviewerIdToUser")
+  SecurityEvent_SecurityEvent_updatedByToUser SecurityEvent[]         @relation("SecurityEvent_updatedByToUser")
+  SecurityEvent_SecurityEvent_userIdToUser    SecurityEvent[]         @relation("SecurityEvent_userIdToUser")
+  Session                                     Session[]
+  Subscription                                Subscription?
+  SupportTicket                               SupportTicket[]
+  UserActivityLog                             UserActivityLog[]
+  UserNote_UserNote_adminIdToUser             UserNote[]              @relation("UserNote_adminIdToUser")
+  UserNote_UserNote_userIdToUser              UserNote[]              @relation("UserNote_userIdToUser")
+  WebhookEvent                                WebhookEvent[]
+
+  @@index([email])
+}
+
+model UserActivityLog {
+  id        String   @id
+  userId    String
+  action    String
+  details   String?  @db.Text
+  timestamp DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model UserNote {
+  id                          String   @id
+  content                     String   @db.Text
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime
+  userId                      String
+  adminId                     String
+  User_UserNote_adminIdToUser User     @relation("UserNote_adminIdToUser", fields: [adminId], references: [id])
+  User_UserNote_userIdToUser  User     @relation("UserNote_userIdToUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model WebhookEvent {
+  id                String    @id
+  checkoutSessionId String    @unique
+  userId            String
+  status            String
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  subscriptionId    String?
+  User              User      @relation(fields: [userId], references: [id])
+
+  @@index([checkoutSessionId])
+  @@index([userId])
+}
+
+model settings {
+  id        String   @id
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+enum Report_type {
+  USER_BEHAVIOR
+  TECHNICAL_ISSUE
+  INAPPROPRIATE_CONTENT
+  OTHER
+}
+
+enum SystemLog_type {
+  API_REQUEST
+  API_RESPONSE
+  ERROR
+  SECURITY
+  PERFORMANCE
+  AUDIT
+  SYSTEM
+  USER
+}
+
+enum Report_status {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SystemLog_level {
+  DEBUG
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum User_role {
+  user
+  admin
+  parent
+  childminder
+}
+
+enum Booking_status {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  LATE_CANCELLED
+  COMPLETED
+}
+
+enum SupportTicket_status {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicket_priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Booking_bookingType {
+  STANDARD
+  EMERGENCY
+  RECURRING
+  FLEXIBLE
+}
+
+enum Document_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Booking_recurrencePattern {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum User_subscriptionStatus {
+  FREE
+  PREMIUM
+}
