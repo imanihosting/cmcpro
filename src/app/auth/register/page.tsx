@@ -18,6 +18,12 @@ import {
   FaExclamationTriangle,
   FaShieldAlt
 } from "react-icons/fa";
+import {
+  inputWithIconClass,
+  textareaClass,
+  textareaWithIconClass,
+  checkboxClass
+} from '@/components/ui/InputStyles';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -222,7 +228,7 @@ export default function RegisterPage() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className={inputWithIconClass}
                       placeholder="Your full name"
                     />
                   </div>
@@ -248,7 +254,7 @@ export default function RegisterPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className={inputWithIconClass}
                       placeholder="your@email.com"
                     />
                   </div>
@@ -274,7 +280,7 @@ export default function RegisterPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className={inputWithIconClass}
                       placeholder="••••••••"
                     />
                   </div>
@@ -300,7 +306,7 @@ export default function RegisterPage() {
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className={inputWithIconClass}
                       placeholder="••••••••"
                     />
                   </div>
@@ -329,7 +335,7 @@ export default function RegisterPage() {
                           required
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          className={inputWithIconClass}
                           placeholder="086 123 4567"
                         />
                       </div>
@@ -356,7 +362,7 @@ export default function RegisterPage() {
                           required
                           value={rate}
                           onChange={(e) => setRate(e.target.value)}
-                          className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          className={inputWithIconClass}
                           placeholder="15.00"
                         />
                       </div>
@@ -381,7 +387,7 @@ export default function RegisterPage() {
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
                           rows={3}
-                          className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                          className={textareaWithIconClass}
                           placeholder="Your full address"
                         />
                       </div>
@@ -398,7 +404,7 @@ export default function RegisterPage() {
                     name="terms"
                     type="checkbox"
                     required
-                    className="h-5 w-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                    className={checkboxClass}
                   />
                 </div>
                 <div className="ml-3 text-sm">

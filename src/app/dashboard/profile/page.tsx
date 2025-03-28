@@ -14,6 +14,13 @@ import {
   FaSpinner
 } from "react-icons/fa";
 
+import { 
+  inputWithIconClass, 
+  textareaClass, 
+  disabledClass,
+  combineInputClasses
+} from '@/components/ui/InputStyles';
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -125,8 +132,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 sm:text-3xl">Profile Settings</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Profile Settings</h1>
       
       {successMessage && (
         <div className="mb-6 rounded-md bg-green-50 p-4">
@@ -168,7 +175,7 @@ export default function ProfilePage() {
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>
@@ -188,7 +195,7 @@ export default function ProfilePage() {
                   value={formData.email}
                   onChange={handleChange}
                   disabled
-                  className="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={combineInputClasses(inputWithIconClass, disabledClass)}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">Email address cannot be changed</p>
@@ -208,7 +215,7 @@ export default function ProfilePage() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>
@@ -227,7 +234,7 @@ export default function ProfilePage() {
                   type="text"
                   value={formData.address}
                   onChange={handleChange}
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>
@@ -243,7 +250,7 @@ export default function ProfilePage() {
                   rows={4}
                   value={formData.bio}
                   onChange={handleChange}
-                  className="block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={textareaClass}
                 />
               </div>
             </div>
@@ -290,7 +297,7 @@ export default function ProfilePage() {
                   value={formData.currentPassword}
                   onChange={handleChange}
                   required
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>
@@ -310,7 +317,7 @@ export default function ProfilePage() {
                   value={formData.newPassword}
                   onChange={handleChange}
                   required
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>
@@ -330,7 +337,7 @@ export default function ProfilePage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="block w-full rounded-md border border-gray-300 py-2 pl-10 pr-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+                  className={inputWithIconClass}
                 />
               </div>
             </div>

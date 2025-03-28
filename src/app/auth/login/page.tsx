@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaEnvelope, FaLock, FaSpinner, FaBaby } from "react-icons/fa";
+import Image from "next/image";
+import { inputWithIconClass, checkboxClass } from '@/components/ui/InputStyles';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,38 +43,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-50 to-white px-4 py-8 sm:px-6 md:py-12">
-      <div className="mx-auto w-full max-w-md">
-        {/* Logo and Brand */}
-        <div className="mb-8 flex justify-center">
-          <div className="flex items-center space-x-2">
-            <FaBaby className="h-8 w-8 text-violet-600" />
-            <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-              ChildminderConnect
-            </span>
-          </div>
+    <div className="flex min-h-screen">
+      {/* Left side - image */}
+      <div className="hidden lg:block lg:w-1/2 bg-violet-100">
+        <div className="flex h-full items-center justify-center">
+          <Image 
+            src="/images/auth/login-illustration.svg" 
+            alt="Login Illustration" 
+            width={600} 
+            height={500} 
+            className="object-cover" 
+          />
         </div>
+      </div>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-xl">
-          {/* Form Header */}
-          <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-5 text-white">
-            <h1 className="text-xl font-bold leading-tight tracking-tight sm:text-2xl">
-              Welcome Back
-            </h1>
-            <p className="mt-1 text-sm text-white/80">
-              Sign in to access your account
+      {/* Right side - login form */}
+      <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-extrabold text-gray-900">Welcome back</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in to your account to continue
             </p>
           </div>
 
-          {/* Form Content */}
-          <div className="p-6 sm:p-8">
-            {error && (
-              <div className="mb-6 rounded-md bg-red-50 p-3 text-sm text-red-600">
-                <p>{error}</p>
-              </div>
-            )}
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="mt-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
                   htmlFor="email"
@@ -92,7 +94,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                    className={inputWithIconClass}
                     placeholder="your@email.com"
                   />
                 </div>
@@ -127,7 +129,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 bg-white py-3 pl-12 pr-4 text-gray-900 shadow-sm transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                    className={inputWithIconClass}
                     placeholder="••••••••"
                   />
                 </div>
@@ -138,7 +140,7 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-5 w-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  className={checkboxClass}
                 />
                 <label
                   htmlFor="remember-me"
@@ -166,16 +168,6 @@ export default function LoginPage() {
               </div>
             </form>
           </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <div className="text-sm text-gray-600">Don't have an account?</div>
-          <Link
-            href="/auth/register"
-            className="mt-2 inline-block font-semibold text-violet-600 hover:text-violet-500"
-          >
-            Create a free account
-          </Link>
         </div>
       </div>
     </div>

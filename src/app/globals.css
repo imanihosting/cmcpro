@@ -19,3 +19,53 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter, Arial, Helvetica, sans-serif);
 }
+
+/* Fix for input text visibility across the site */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="url"],
+textarea,
+select {
+  color: #111827 !important; /* Dark gray/almost black text */
+  background-color: white !important;
+  font-weight: 500;
+  -webkit-text-fill-color: #111827 !important; /* For WebKit browsers */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Fix for WebKit browsers - especially mobile Safari */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important; /* Medium gray for placeholders */
+  opacity: 1 !important;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: #f3f4f6 !important; /* Light gray background for disabled inputs */
+  color: #6b7280 !important; /* Darker gray text for disabled inputs */
+}
+
+/* Remove dark mode override for inputs to maintain white background & dark text at all times */
+@media (prefers-color-scheme: dark) {
+  body.dark-mode {
+    /* These styles will only apply if you enable a dark mode class manually */
+    /* The input fields will remain unchanged with white background */
+  }
+}

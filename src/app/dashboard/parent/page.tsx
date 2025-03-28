@@ -14,7 +14,9 @@ import {
   FaBell,
   FaChartLine,
   FaBookOpen,
-  FaClock
+  FaClock,
+  FaCommentSlash,
+  FaUser
 } from "react-icons/fa";
 import { ReactNode } from "react";
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -590,7 +592,7 @@ function DashboardContent() {
                         </p>
                         <div className="mt-2">
                           <Link
-                            href={`/dashboard/parent/messages/${message.id}`}
+                            href={`/dashboard/parent/messages?conversation=${message.sender.id}`}
                             className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
                           >
                             Read message
