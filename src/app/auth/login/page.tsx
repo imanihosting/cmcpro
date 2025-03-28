@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaEnvelope, FaLock, FaSpinner, FaBaby } from "react-icons/fa";
-import Image from "next/image";
 import { inputWithIconClass, checkboxClass } from '@/components/ui/InputStyles';
 
 export default function LoginPage() {
@@ -43,24 +42,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left side - image */}
-      <div className="hidden lg:block lg:w-1/2 bg-violet-100">
-        <div className="flex h-full items-center justify-center">
-          <Image 
-            src="/images/auth/login-illustration.svg" 
-            alt="Login Illustration" 
-            width={600} 
-            height={500} 
-            className="object-cover" 
-          />
-        </div>
-      </div>
-
-      {/* Right side - login form */}
-      <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Left side - login form */}
+      <div className="flex w-full items-center justify-center px-6 py-12 lg:w-1/2">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center space-x-2">
+                <FaBaby className="h-8 w-8 text-violet-600" />
+                <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
+                  ChildminderConnect
+                </span>
+              </div>
+            </div>
             <h1 className="text-3xl font-extrabold text-gray-900">Welcome back</h1>
             <p className="mt-2 text-sm text-gray-600">
               Sign in to your account to continue
@@ -68,8 +62,8 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-md bg-red-50 p-4 border border-red-200 shadow-sm">
+              <div className="text-sm font-medium text-red-700">{error}</div>
             </div>
           )}
 
@@ -167,6 +161,36 @@ export default function LoginPage() {
                 </button>
               </div>
             </form>
+          </div>
+          
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-600">Don't have an account?</span>{" "}
+            <Link 
+              href="/auth/register" 
+              className="font-medium text-violet-600 hover:text-violet-500"
+            >
+              Register now
+            </Link>
+          </div>
+        </div>
+      </div>
+      
+      {/* Right side - decorative gradient */}
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-r from-violet-600 to-purple-700">
+        <div className="flex h-full flex-col items-center justify-center px-12 text-white">
+          <h2 className="mb-6 text-4xl font-bold">Quality Childcare at Your Fingertips</h2>
+          <p className="mb-8 text-xl opacity-90">
+            Connect with trusted childminders across Ireland for exceptional care
+          </p>
+          <div className="mt-8 grid grid-cols-2 gap-4 text-center">
+            <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
+              <p className="text-3xl font-bold">2,000+</p>
+              <p className="text-sm">Families served</p>
+            </div>
+            <div className="rounded-lg bg-white/10 p-4 backdrop-blur-sm">
+              <p className="text-3xl font-bold">500+</p>
+              <p className="text-sm">Verified childminders</p>
+            </div>
           </div>
         </div>
       </div>

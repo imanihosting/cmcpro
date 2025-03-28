@@ -134,7 +134,7 @@ export const authOptions: NextAuthOptions = {
         name: dbUser.name,
         email: dbUser.email,
         role: dbUser.role,
-        image: dbUser.image,
+        image: dbUser.profileImage || dbUser.image,
         subscriptionStatus: dbUser.subscriptionStatus,
       };
     },

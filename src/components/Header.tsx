@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { 
   FaBaby, 
   FaUserCircle, 
@@ -13,7 +14,9 @@ import {
   FaCog,
   FaUser,
   FaTachometerAlt,
-  FaRegBell
+  FaRegBell,
+  FaShieldAlt,
+  FaCreditCard
 } from "react-icons/fa";
 
 export default function Header() {
@@ -66,6 +69,18 @@ export default function Header() {
     setProfileMenuOpen(!profileMenuOpen);
   };
 
+  // Generate the appropriate profile path based on user role
+  const getProfilePath = () => {
+    if (!session?.user?.role) return "/dashboard/profile";
+    return `/dashboard/${session.user.role}/profile`;
+  };
+
+  // Generate the appropriate settings path based on user role
+  const getSettingsPath = () => {
+    if (!session?.user?.role) return "/dashboard/settings";
+    return `/dashboard/${session.user.role}/settings`;
+  };
+
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-300 ease-in-out ${
@@ -110,387 +125,251 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Desktop navigation - different links for dashboard vs public pages */}
-          <nav className="hidden md:block">
-            <ul className="flex space-x-6">
-              {isDashboardPage ? (
-                // Dashboard nav links
-                <>
-                  <li>
-                    <Link
-                      href="/about"
-                      className="text-sm font-medium text-gray-700 hover:text-violet-600"
-                    >
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/contact"
-                      className="text-sm font-medium text-gray-700 hover:text-violet-600"
-                    >
-                      Contact
-                    </Link>
-                  </li>
-                </>
-              ) : (
-                // Public site nav links
-                <>
-                  <li>
-                    <Link
-                      href="/"
-                      className={`text-sm font-medium ${
-                        pathname === "/"
-                          ? "text-violet-600"
-                          : "text-gray-700 hover:text-violet-600"
-                      }`}
-                    >
-                      Home
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/about"
-                      className={`text-sm font-medium ${
-                        pathname === "/about"
-                          ? "text-violet-600"
-                          : "text-gray-700 hover:text-violet-600"
-                      }`}
-                    >
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/contact"
-                      className={`text-sm font-medium ${
-                        pathname === "/contact"
-                          ? "text-violet-600"
-                          : "text-gray-700 hover:text-violet-600"
-                      }`}
-                    >
-                      Contact
-                    </Link>
-                  </li>
-                </>
-              )}
-
-              {session ? (
-                // Show these links when logged in - but not on dashboard pages as these links are in sidebar
-                !isDashboardPage && (
-                  <li>
-                    <Link
-                      href="/dashboard"
-                      className={`text-sm font-medium ${
-                        pathname?.includes("/dashboard")
-                          ? "text-violet-600"
-                          : "text-gray-700 hover:text-violet-600"
-                      }`}
-                    >
-                      Dashboard
-                    </Link>
-                  </li>
-                )
-              ) : (
-                // Show these links when not logged in
-                !isDashboardPage && (
+          {/* Right side navigation and profile section */}
+          <div className="flex items-center space-x-4">
+            {/* Desktop navigation - different links for dashboard vs public pages */}
+            <nav className="hidden md:block">
+              <ul className="flex items-center space-x-6">
+                {isDashboardPage ? (
+                  // Dashboard nav links
                   <>
                     <li>
                       <Link
-                        href="/auth/login"
+                        href="/about"
+                        className="text-sm font-medium text-gray-700 hover:text-violet-600"
+                      >
+                        About
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/contact"
+                        className="text-sm font-medium text-gray-700 hover:text-violet-600"
+                      >
+                        Contact
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+                  // Public site nav links
+                  <>
+                    <li>
+                      <Link
+                        href="/"
                         className={`text-sm font-medium ${
-                          pathname === "/auth/login"
+                          pathname === "/"
                             ? "text-violet-600"
                             : "text-gray-700 hover:text-violet-600"
                         }`}
                       >
-                        Sign In
+                        Home
                       </Link>
                     </li>
                     <li>
                       <Link
-                        href="/auth/register"
-                        className={`rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 ${
-                          pathname === "/auth/register" ? "bg-violet-700" : ""
+                        href="/about"
+                        className={`text-sm font-medium ${
+                          pathname === "/about"
+                            ? "text-violet-600"
+                            : "text-gray-700 hover:text-violet-600"
                         }`}
                       >
-                        Sign Up
+                        About
                       </Link>
                     </li>
-                  </>
-                )
-              )}
-            </ul>
-          </nav>
-
-          {/* Right side items for logged in users */}
-          {session ? (
-            <div className="flex items-center space-x-4">
-              {/* Notification bell - only show on dashboard */}
-              {isDashboardPage && (
-                <button className="relative p-1 text-gray-600 hover:text-violet-600 focus:outline-none">
-                  <FaRegBell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-                </button>
-              )}
-              
-              {/* Profile dropdown - show for all logged in users */}
-              <div ref={profileMenuRef} className="relative ml-3">
-                <button
-                  type="button"
-                  className="flex items-center space-x-2 text-sm focus:outline-none"
-                  onClick={toggleProfileMenu}
-                  aria-label="Open profile menu"
-                >
-                  <span className="hidden md:block font-medium text-gray-700">
-                    {session?.user?.name || "User"}
-                  </span>
-                  {/* Profile image */}
-                  <div className="h-9 w-9 overflow-hidden rounded-full border-2 border-violet-200 bg-gray-100">
-                    {session?.user?.image ? (
-                      <img 
-                        src={session.user.image} 
-                        alt={session?.user?.name || "User"} 
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-violet-100 text-violet-600">
-                        <FaUserCircle className="h-7 w-7" />
-                      </div>
-                    )}
-                  </div>
-                  {profileMenuOpen ? (
-                    <FaChevronUp className="h-3 w-3 text-gray-500" />
-                  ) : (
-                    <FaChevronDown className="h-3 w-3 text-gray-500" />
-                  )}
-                </button>
-                
-                {/* Dropdown menu */}
-                {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <div className="border-b border-gray-100 px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {session?.user?.name || "User"}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {session?.user?.email || ""}
-                      </p>
-                    </div>
-                    
-                    {!isDashboardPage && (
+                    <li>
                       <Link
-                        href="/dashboard"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setProfileMenuOpen(false)}
+                        href="/contact"
+                        className={`text-sm font-medium ${
+                          pathname === "/contact"
+                            ? "text-violet-600"
+                            : "text-gray-700 hover:text-violet-600"
+                        }`}
                       >
-                        <span className="mr-2 text-gray-500">
-                          <FaTachometerAlt className="h-4 w-4" />
-                        </span>
-                        Dashboard
+                        Contact
                       </Link>
+                    </li>
+                    {session && (
+                      <li>
+                        <Link
+                          href="/dashboard"
+                          className={`text-sm font-medium ${
+                            pathname?.includes("/dashboard")
+                              ? "text-violet-600"
+                              : "text-gray-700 hover:text-violet-600"
+                          }`}
+                        >
+                          Dashboard
+                        </Link>
+                      </li>
                     )}
-                    
-                    <Link
-                      href="/dashboard/profile"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setProfileMenuOpen(false)}
-                    >
-                      <span className="mr-2 text-gray-500">
-                        <FaUser className="h-4 w-4" />
-                      </span>
-                      Profile
-                    </Link>
-                    
-                    <Link
-                      href="/dashboard/settings"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setProfileMenuOpen(false)}
-                    >
-                      <span className="mr-2 text-gray-500">
-                        <FaCog className="h-4 w-4" />
-                      </span>
-                      Settings
-                    </Link>
-                    
-                    <div className="border-t border-gray-100 mt-1"></div>
-                    
-                    <button
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        signOut({ callbackUrl: "/" });
-                      }}
-                      className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <span className="mr-2 text-gray-500">
-                        <FaSignOutAlt className="h-4 w-4" />
-                      </span>
-                      Sign out
-                    </button>
-                  </div>
+                  </>
                 )}
-              </div>
-            </div>
-          ) : (
-            /* Mobile menu button - only show on non-dashboard pages when logged out */
-            !isDashboardPage && (
-              <div className="flex md:hidden">
-                <button
-                  type="button"
-                  onClick={toggleMobileMenu}
-                  className="inline-flex h-12 w-12 touch-manipulation items-center justify-center rounded-md text-gray-600 transition-colors hover:bg-violet-50 hover:text-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-500 active:bg-violet-100"
-                  aria-expanded={mobileMenuOpen}
-                  aria-controls="mobile-menu"
-                >
-                  <span className="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
-                  <svg
-                    className="h-7 w-7"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
+              </ul>
+            </nav>
+
+            {/* Profile section */}
+            <div className="flex items-center space-x-4">
+              {session ? (
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    onClick={toggleProfileMenu}
+                    className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                    />
-                  </svg>
-                </button>
-              </div>
-            )
-          )}
+                    <div className="relative h-8 w-8 rounded-full bg-violet-100">
+                      {session.user?.image ? (
+                        <Image
+                          src={session.user.image}
+                          alt="Profile"
+                          fill
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        <FaUserCircle className="h-8 w-8 text-violet-600" />
+                      )}
+                    </div>
+                    <span className="hidden md:inline-block text-sm font-medium text-gray-700">
+                      {session.user?.name || 'User'}
+                    </span>
+                    {profileMenuOpen ? (
+                      <FaChevronUp className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <FaChevronDown className="h-4 w-4 text-gray-500" />
+                    )}
+                  </button>
+
+                  {/* Profile dropdown menu */}
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                      <Link
+                        href={getProfilePath()}
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FaUser className="mr-3 h-4 w-4 text-gray-500" />
+                        Profile
+                      </Link>
+                      <Link
+                        href={getSettingsPath()}
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FaCog className="mr-3 h-4 w-4 text-gray-500" />
+                        Settings
+                      </Link>
+                      <button
+                        onClick={() => signOut()}
+                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-500" />
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/auth/login"
+                    className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="hidden md:inline-block rounded-md border border-violet-600 px-4 py-2 text-sm font-medium text-violet-600 hover:bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div 
+      {isDashboardPage && mobileMenuOpen && (
+        <div
           ref={mobileMenuRef}
-          className="absolute top-full left-0 right-0 z-50 w-full animate-fadeIn bg-white shadow-lg md:hidden" 
-          id="mobile-menu"
+          className="md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50"
         >
-          <div className="space-y-1 pb-3 pt-2">
-            {!isDashboardPage && (
-              <Link
-                href="/"
-                className={`block w-full px-4 py-3 text-base font-medium ${
-                  pathname === "/"
-                    ? "bg-violet-50 text-violet-600"
-                    : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-            )}
-            
-            <Link
-              href="/about"
-              className={`block w-full px-4 py-3 text-base font-medium ${
-                pathname === "/about"
-                  ? "bg-violet-50 text-violet-600"
-                  : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-              }`}
+          <div className="h-16 flex items-center justify-between px-4 border-b">
+            <span className="font-semibold text-gray-900">Menu</span>
+            <button
               onClick={() => setMobileMenuOpen(false)}
+              className="p-2 rounded-md text-gray-500 hover:text-violet-600 focus:outline-none"
             >
-              About
-            </Link>
-            
-            <Link
-              href="/contact"
-              className={`block w-full px-4 py-3 text-base font-medium ${
-                pathname === "/contact"
-                  ? "bg-violet-50 text-violet-600"
-                  : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            
-            {session ? (
-              <>
-                {!isDashboardPage && (
-                  <Link
-                    href="/dashboard"
-                    className={`block w-full px-4 py-3 text-base font-medium ${
-                      pathname?.includes("/dashboard")
-                        ? "bg-violet-50 text-violet-600"
-                        : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                )}
-                
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <nav className="px-4 py-4">
+            <ul className="space-y-2">
+              <li>
                 <Link
-                  href="/dashboard/profile"
-                  className={`block w-full px-4 py-3 text-base font-medium ${
-                    pathname === "/dashboard/profile"
-                      ? "bg-violet-50 text-violet-600"
-                      : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
+                  href="/dashboard"
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
                 >
+                  <FaTachometerAlt className="mr-3 h-4 w-4" />
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={getProfilePath()}
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                >
+                  <FaUser className="mr-3 h-4 w-4" />
                   Profile
                 </Link>
-                
+              </li>
+              <li>
                 <Link
-                  href="/dashboard/settings"
-                  className={`block w-full px-4 py-3 text-base font-medium ${
-                    pathname === "/dashboard/settings"
-                      ? "bg-violet-50 text-violet-600"
-                      : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
+                  href={getSettingsPath()}
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
                 >
+                  <FaCog className="mr-3 h-4 w-4" />
                   Settings
                 </Link>
-                
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    signOut({ callbackUrl: "/" });
-                  }}
-                  className="block w-full px-4 py-3 text-left text-base font-medium text-gray-700 hover:bg-violet-50 hover:text-violet-600"
+              </li>
+              <li>
+                <Link
+                  href="/dashboard/notifications"
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
                 >
-                  Sign Out
+                  <FaRegBell className="mr-3 h-4 w-4" />
+                  Notifications
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard/security"
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                >
+                  <FaShieldAlt className="mr-3 h-4 w-4" />
+                  Security
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dashboard/subscription"
+                  className="flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                >
+                  <FaCreditCard className="mr-3 h-4 w-4" />
+                  Subscription
+                </Link>
+              </li>
+              <li>
+                <button
+                  onClick={() => signOut()}
+                  className="flex w-full items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
+                >
+                  <FaSignOutAlt className="mr-3 h-4 w-4" />
+                  Sign out
                 </button>
-              </>
-            ) : (
-              !isDashboardPage && (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className={`block w-full px-4 py-3 text-base font-medium ${
-                      pathname === "/auth/login"
-                        ? "bg-violet-50 text-violet-600"
-                        : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  
-                  <Link
-                    href="/auth/register"
-                    className={`block w-full px-4 py-3 text-base font-medium ${
-                      pathname === "/auth/register"
-                        ? "bg-violet-50 text-violet-600"
-                        : "text-gray-700 hover:bg-violet-50 hover:text-violet-600"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )
-            )}
-          </div>
+              </li>
+            </ul>
+          </nav>
         </div>
       )}
     </header>

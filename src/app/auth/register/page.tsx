@@ -128,13 +128,13 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-xl">
+        <div className="overflow-hidden rounded-xl bg-white shadow-lg border border-gray-200">
           {/* Form Header */}
           <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-5 text-white">
             <h1 className="text-xl font-bold leading-tight tracking-tight sm:text-2xl">
               Create Your Account
             </h1>
-            <p className="mt-1 text-sm text-white/80">
+            <p className="mt-1 text-sm text-white/90">
               Join our community of parents and childminders
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                 type="button"
                 className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 text-center text-sm font-medium transition-all ${
                   role === User_role.parent
-                    ? "bg-violet-600 text-white"
+                    ? "bg-violet-600 text-white shadow-md"
                     : "bg-white text-gray-700 shadow-sm hover:bg-gray-100"
                 }`}
                 onClick={() => setRole(User_role.parent)}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 type="button"
                 className={`flex flex-1 items-center justify-center space-x-2 rounded-lg px-4 py-3 text-center text-sm font-medium transition-all ${
                   role === User_role.childminder
-                    ? "bg-violet-600 text-white"
+                    ? "bg-violet-600 text-white shadow-md"
                     : "bg-white text-gray-700 shadow-sm hover:bg-gray-100"
                 }`}
                 onClick={() => setRole(User_role.childminder)}
@@ -172,7 +172,7 @@ export default function RegisterPage() {
           {/* Form Content */}
           <div className="p-6 sm:p-8">
             {error && (
-              <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-600 border border-red-200 shadow-sm">
                 <div className="flex items-center">
                   <FaExclamationTriangle className="mr-2 h-5 w-5 text-red-500" />
                   <p className="font-medium">{error}</p>
@@ -182,7 +182,7 @@ export default function RegisterPage() {
 
             {/* Safety Warning for Parents */}
             {showSafetyNotice && (
-              <div className="mb-6 rounded-lg bg-yellow-50 p-4 text-sm">
+              <div className="mb-6 rounded-lg bg-yellow-50 p-4 text-sm border border-yellow-200 shadow-sm">
                 <div className="flex">
                   <div className="mr-3 flex-shrink-0">
                     <FaShieldAlt className="h-5 w-5 text-yellow-600" />

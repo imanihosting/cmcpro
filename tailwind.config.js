@@ -30,6 +30,7 @@ module.exports = {
       animation: {
         fadeIn: 'fadeIn 0.2s ease-in-out',
         fadeOut: 'fadeOut 0.2s ease-in-out',
+        'fade-in-down': 'fade-in-down 0.5s ease-out',
         pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         spinSlow: 'spin 3s linear infinite',
         spinReverse: 'spinReverse 2s linear infinite',
@@ -42,6 +43,10 @@ module.exports = {
         fadeOut: {
           '0%': { opacity: 1, transform: 'translateY(0)' },
           '100%': { opacity: 0, transform: 'translateY(-10px)' },
+        },
+        'fade-in-down': {
+          '0%': { opacity: 0, transform: 'translateY(-20px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' }
         },
         spinReverse: {
           '0%': { transform: 'rotate(0deg)' },
