@@ -119,7 +119,29 @@ export async function PATCH(
     // Parse existing messages or create a new array
     let messages = [];
     if (ticket.messages) {
-      messages = JSON.parse(JSON.stringify(ticket.messages));
+      try {
+        // If it's already an array, use it
+        if (Array.isArray(ticket.messages)) {
+          messages = [...ticket.messages];
+        } 
+        // If it's a string (JSON), parse it
+        else if (typeof ticket.messages === 'string') {
+          messages = JSON.parse(ticket.messages);
+        } 
+        // If it's an object but not an array (Prisma JSON field)
+        else {
+          messages = JSON.parse(JSON.stringify(ticket.messages));
+        }
+        
+        // Final check to ensure messages is an array
+        if (!Array.isArray(messages)) {
+          messages = [];
+        }
+      } catch (err) {
+        // If parsing fails, start with an empty array
+        console.error('Error parsing messages:', err);
+        messages = [];
+      }
     }
     
     // Add new message

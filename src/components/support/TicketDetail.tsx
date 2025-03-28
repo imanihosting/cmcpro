@@ -15,7 +15,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, onBack, onRefresh }
   const [error, setError] = useState('');
   
   // Format messages for display
-  const messages = ticket.messages || [];
+  // Ensure messages is always an array
+  const messages = Array.isArray(ticket.messages) ? ticket.messages : [];
   
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
