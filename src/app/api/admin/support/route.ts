@@ -112,13 +112,13 @@ export async function GET(req: NextRequest) {
 
 // Schema for ticket creation
 const createTicketSchema = z.object({
-  subject: z.string().min(5).max(100),
-  description: z.string().min(10),
-  category: z.string().min(1),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-  userId: z.string().uuid().optional(),
-  userEmail: z.string().email().optional(),
-  userName: z.string().optional(),
+  subject: z.string().min(5, "Subject must be at least 5 characters").max(100, "Subject cannot exceed 100 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  category: z.string().min(1, "Category is required"),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional().default('MEDIUM'),
+  userId: z.string().uuid("Invalid user ID format").optional().or(z.literal('')).or(z.literal(undefined)),
+  userEmail: z.string().email("Invalid email format").optional().or(z.literal('')).or(z.literal(undefined)),
+  userName: z.string().optional().or(z.literal('')).or(z.literal(undefined)),
 });
 
 export async function POST(req: NextRequest) {
@@ -133,11 +133,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    console.log('Request body:', body);
     
     // Validate input
     const validatedData = createTicketSchema.safeParse(body);
     
     if (!validatedData.success) {
+      const formattedErrors = validatedData.error.format();
+      console.error('Validation errors:', JSON.stringify(formattedErrors));
       return NextResponse.json(
         { 
           success: false, 
@@ -148,7 +151,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { subject, description, category, priority, userId, userEmail, userName } = validatedData.data;
+    const { subject, description, category, priority } = validatedData.data;
+    
+    // Clean up empty strings to undefined for optional fields
+    const userId = validatedData.data.userId ? validatedData.data.userId : undefined;
+    const userEmail = validatedData.data.userEmail ? validatedData.data.userEmail : undefined;
+    const userName = validatedData.data.userName ? validatedData.data.userName : undefined;
+    
+    // Either userId or userEmail must be provided
+    if (!userId && !userEmail) {
+      return NextResponse.json(
+        { success: false, message: 'Either userId or userEmail is required' },
+        { status: 400 }
+      );
+    }
     
     // Create the ticket
     const ticketData: any = {
@@ -157,44 +173,48 @@ export async function POST(req: NextRequest) {
       description,
       category,
       status: SupportTicket_status.OPEN,
-      priority: priority as SupportTicket_priority || SupportTicket_priority.MEDIUM,
+      priority: priority as SupportTicket_priority,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     // If userId is provided, connect to the user
     if (userId) {
-      ticketData.userId = userId;
-      // Get user details if not provided
-      if (!userEmail || !userName) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { email: true, name: true }
-        });
-        
-        if (!user) {
-          return NextResponse.json(
-            { success: false, message: 'User not found' },
-            { status: 404 }
-          );
-        }
-        
-        ticketData.userEmail = userEmail || user.email;
-        ticketData.userName = userName || user.name || user.email.split('@')[0];
-      } else {
-        ticketData.userEmail = userEmail;
-        ticketData.userName = userName;
+      // Check if user exists first
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true }
+      });
+      
+      if (!userExists) {
+        return NextResponse.json(
+          { success: false, message: 'User not found with the provided ID' },
+          { status: 404 }
+        );
       }
+      
+      ticketData.userId = userId;
+      
+      // Use provided values or fallback to user data
+      ticketData.userEmail = userEmail || userExists.email;
+      ticketData.userName = userName || userExists.name || userExists.email.split('@')[0];
     } else if (userEmail) {
       // If only email is provided (no user ID)
-      ticketData.userId = session.user.id; // Use admin's ID as fallback
-      ticketData.userEmail = userEmail;
-      ticketData.userName = userName || userEmail.split('@')[0];
-    } else {
-      return NextResponse.json(
-        { success: false, message: 'Either userId or userEmail is required' },
-        { status: 400 }
-      );
+      // Try to find a user with this email
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: userEmail },
+        select: { id: true, name: true }
+      });
+      
+      if (userByEmail) {
+        ticketData.userId = userByEmail.id;
+        ticketData.userEmail = userEmail;
+        ticketData.userName = userName || userByEmail.name || userEmail.split('@')[0];
+      } else {
+        // No matching user, just use the provided email
+        ticketData.userEmail = userEmail;
+        ticketData.userName = userName || userEmail.split('@')[0];
+      }
     }
     
     // Store message as JSON
@@ -205,6 +225,8 @@ export async function POST(req: NextRequest) {
       content: description,
       timestamp: new Date().toISOString()
     }]);
+    
+    console.log('Creating ticket with data:', JSON.stringify(ticketData));
     
     // Create the ticket
     const newTicket = await prisma.supportTicket.create({

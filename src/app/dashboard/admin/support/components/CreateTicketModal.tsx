@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
 import {
   FaTimes,
   FaSpinner,
@@ -56,6 +55,7 @@ export default function CreateTicketModal({
     { value: "BILLING", label: "Billing" },
     { value: "FEATURE", label: "Feature Request" },
     { value: "ACCOUNT", label: "Account" },
+    { value: "CONTACT", label: "Contact" },
     { value: "OTHER", label: "Other" },
   ];
 
@@ -80,8 +80,8 @@ export default function CreateTicketModal({
       return;
     }
     
-    if (!description.trim()) {
-      setError("Description is required");
+    if (!description.trim() || description.length < 10) {
+      setError("Description must be at least 10 characters");
       return;
     }
     
@@ -91,8 +91,13 @@ export default function CreateTicketModal({
     }
     
     // If not selecting a user, email is required
-    if (!userId && !userEmail.trim()) {
-      setError("Either select a user or enter a user email");
+    if (!showUserSearch && !userEmail.trim()) {
+      setError("Email is required when entering user manually");
+      return;
+    }
+    
+    if (showUserSearch && !userId) {
+      setError("Please select a user from the search results");
       return;
     }
     
@@ -100,19 +105,50 @@ export default function CreateTicketModal({
     setError("");
     
     try {
-      // Prepare ticket data
-      const ticketData = {
+      // Prepare ticket data - start with base fields
+      const ticketData: any = {
         subject,
         description,
         category,
         priority,
-        userId: userId || undefined,
-        userEmail: userEmail || undefined,
-        userName: userName || undefined,
       };
       
-      // Create ticket
-      const response = await axios.post("/api/admin/support", ticketData);
+      // Add user information based on entry method
+      if (showUserSearch && userId) {
+        // If using search, include the user ID
+        ticketData.userId = userId;
+      } else {
+        // If manual entry, only include email and name
+        ticketData.userEmail = userEmail;
+        if (userName) {
+          ticketData.userName = userName;
+        }
+      }
+
+      console.log("Submitting ticket data:", ticketData);
+      
+      // Create ticket using fetch
+      const response = await fetch("/api/admin/support", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ticketData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        if (data.errors && Array.isArray(data.errors)) {
+          // Format validation errors
+          const errorMessages = data.errors.map(
+            (err: any) => `${err.path.join('.')}: ${err.message}`
+          ).join(', ');
+          throw new Error(`Validation failed: ${errorMessages}`);
+        } else {
+          throw new Error(data.message || "Failed to create ticket");
+        }
+      }
       
       toast.success("Support ticket created successfully");
       
@@ -126,11 +162,11 @@ export default function CreateTicketModal({
       setUserName("");
       
       // Close modal and notify parent
-      onTicketCreated(response.data.data);
+      onTicketCreated(data.data);
       onClose();
     } catch (err) {
       console.error("Error creating ticket:", err);
-      setError("Failed to create ticket. Please try again.");
+      setError(`Failed to create ticket: ${err instanceof Error ? err.message : 'Unknown error'}`);
       toast.error("Failed to create ticket");
     } finally {
       setLoading(false);
@@ -149,8 +185,14 @@ export default function CreateTicketModal({
     setIsSearching(true);
     
     try {
-      const response = await axios.get(`/api/admin/users/search?q=${query}`);
-      setUserSearchResults(response.data.users || []);
+      const response = await fetch(`/api/admin/users/search?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to search users");
+      }
+      
+      const data = await response.json();
+      setUserSearchResults(data.users || []);
     } catch (err) {
       console.error("Error searching users:", err);
       toast.error("Failed to search users");
@@ -176,8 +218,9 @@ export default function CreateTicketModal({
       // Switching to user search, clear manual fields
       setUserEmail("");
       setUserName("");
+      setUserId("");
     } else {
-      // Switching to manual entry, clear user ID
+      // Switching to manual entry, clear user ID and ensure it's not used
       setUserId("");
     }
   };
