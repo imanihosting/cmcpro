@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaUserCog, FaChartBar, FaCreditCard, FaFileAlt, FaUsers, FaTicketAlt, FaCalendarCheck, FaExclamationTriangle, FaComment, FaChartLine } from "react-icons/fa";
+import { FaUserCog, FaChartBar, FaCreditCard, FaFileAlt, FaUsers, FaTicketAlt, FaCalendarCheck, FaExclamationTriangle, FaComment, FaChartLine, FaShieldAlt } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -423,6 +423,16 @@ export default function AdminDashboard() {
             <div>
               <h3 className="text-base font-semibold text-gray-900">System Logs</h3>
               <p className="text-sm text-gray-600">View and search system logs</p>
+            </div>
+          </Link>
+          
+          <Link href="/dashboard/admin/security-settings" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-red-100 text-red-600">
+              <FaShieldAlt className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Security Settings</h3>
+              <p className="text-sm text-gray-600">Manage platform-wide security configurations</p>
             </div>
           </Link>
         </div>

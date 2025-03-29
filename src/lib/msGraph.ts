@@ -170,6 +170,25 @@ export async function sendNotificationEmail(user: User, subject: string, content
           color: white;
           padding: 10px 20px;
           border-radius: 5px 5px 0 0;
+          display: flex;
+          align-items: center;
+        }
+        .logo {
+          display: flex;
+          align-items: center;
+          font-weight: bold;
+          font-size: 20px;
+        }
+        .logo-icon {
+          margin-right: 10px;
+          font-size: 24px;
+        }
+        .logo-text {
+          background: linear-gradient(to right, #9333ea, #7c3aed);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          display: inline-block;
+          font-weight: bold;
         }
         .content {
           padding: 20px;
@@ -185,7 +204,10 @@ export async function sendNotificationEmail(user: User, subject: string, content
     <body>
       <div class="container">
         <div class="header">
-          <h2>Childminder Connect</h2>
+          <div class="logo">
+            <span class="logo-icon">👶</span>
+            <span class="logo-text">ChildminderConnect</span>
+          </div>
         </div>
         <div class="content">
           <p>Hello ${user.name || 'there'},</p>

@@ -145,7 +145,7 @@ export default function HelpSupportPage() {
     },
     {
       question: "How do payments work?",
-      answer: "Payments are processed securely through our platform. You can add your payment methods in the 'Subscription' section. When you book a childminder, the payment will be processed based on the rates agreed upon. You can view your payment history and receipts in the 'Activity' section."
+      answer: "ChildMinderConnect only charges a monthly subscription fee for using our platform. When you book a childminder, you pay them directly for their services. Our platform does not process or handle payments between you and childminders. You can manage your subscription details in the 'Subscription' section of your dashboard."
     },
     {
       question: "What should I do if I have a problem with a childminder?",
@@ -203,23 +203,7 @@ export default function HelpSupportPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-              <div className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                  <FaBook className="h-6 w-6" />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-gray-900">User Guides</h3>
-                <p className="text-xs text-gray-600">Step-by-step guides on using the platform</p>
-              </div>
-              
-              <div className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                  <FaVideo className="h-6 w-6" />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-gray-900">Video Tutorials</h3>
-                <p className="text-xs text-gray-600">Watch tutorials on key features</p>
-              </div>
-              
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                   <FaComment className="h-6 w-6" />

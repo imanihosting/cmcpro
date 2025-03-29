@@ -24,7 +24,8 @@ import {
   FaCog,
   FaHistory,
   FaFileAlt,
-  FaChartLine
+  FaChartLine,
+  FaShieldAlt
 } from "react-icons/fa";
 import Header from "@/components/Header";
 
@@ -92,6 +93,19 @@ export default function DashboardLayout({
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('overflow-hidden', 'md:overflow-auto');
+    } else {
+      document.body.classList.remove('overflow-hidden', 'md:overflow-auto');
+    }
+    
+    return () => {
+      document.body.classList.remove('overflow-hidden', 'md:overflow-auto');
+    };
+  }, [sidebarOpen]);
+
   // Show loading state while checking authentication
   if (status === "loading") {
     return <LoadingSpinner />;
@@ -145,6 +159,7 @@ export default function DashboardLayout({
         { href: "/dashboard/admin/support", label: "Support Tickets", icon: <FaQuestionCircle className="h-5 w-5" /> },
         { href: "/dashboard/admin/monitoring", label: "API Monitoring", icon: <FaChartLine className="h-5 w-5" /> },
         { href: "/dashboard/admin/logs", label: "System Logs", icon: <FaFileAlt className="h-5 w-5" /> },
+        { href: "/dashboard/admin/security-settings", label: "Security Settings", icon: <FaShieldAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
       );
     }
@@ -164,36 +179,42 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Use the unified Header component */}
-      <Header />
+      {/* Use the unified Header component, passing sidebar state and toggle function */}
+      <Header sidebarOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="pt-16 md:flex">
-        {/* Mobile sidebar toggle for small screens */}
-        <button
-          type="button"
-          className="fixed bottom-4 right-4 z-40 md:hidden flex items-center justify-center h-12 w-12 rounded-full bg-violet-600 text-white shadow-lg focus:outline-none"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label="Toggle sidebar"
-        >
-          {sidebarOpen ? (
-            <FaTimes className="h-5 w-5" />
-          ) : (
-            <FaBars className="h-5 w-5" />
-          )}
-        </button>
+        {/* Mobile sidebar backdrop overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 z-40 md:hidden" 
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Sidebar - using dynamic import to reduce initial load size */}
         <Suspense fallback={<div className="w-64 md:block hidden" />}>
           <aside
-            className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white pt-16 shadow-lg transition-transform duration-300 md:pt-16 md:translate-x-0 md:static md:z-0 ${
+            className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white pt-16 shadow-lg transition-transform duration-300 md:pt-16 md:translate-x-0 md:static md:z-0 ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             }`}
           >
-            <Sidebar 
-              links={sidebarLinks} 
-              isOpen={sidebarOpen} 
-              toggleSidebar={() => setSidebarOpen(false)} 
-            />
+            {/* Instead of using Sidebar component, render menu items directly for faster loading and reliability */}
+            <nav className="h-full overflow-y-auto">
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {sidebarLinks.map((link, i) => (
+                  <Link
+                    key={i}
+                    href={link.href}
+                    className="flex items-center px-4 py-2 text-base font-medium rounded-md text-gray-700 hover:bg-violet-50 hover:text-violet-600 transition-colors duration-150"
+                    onClick={link.onClick || (() => setSidebarOpen(false))}
+                  >
+                    <span className="mr-3">{link.icon}</span>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
           </aside>
         </Suspense>
 

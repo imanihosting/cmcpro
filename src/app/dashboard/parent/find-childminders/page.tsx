@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaStar, FaThumbsUp } from "react-icons/fa";
 import SearchFiltersComponent from "./components/SearchFilters";
 import ChildminderCard from "./components/ChildminderCard";
 import Pagination from "./components/Pagination";
@@ -15,6 +15,10 @@ export default function FindChildminders() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // State for recommended childminders
+  const [recommendedChildminders, setRecommendedChildminders] = useState<Childminder[]>([]);
+  const [isLoadingRecommended, setIsLoadingRecommended] = useState(true);
   
   // State for search filters
   const [filters, setFilters] = useState<SearchFilters>({
@@ -93,6 +97,32 @@ export default function FindChildminders() {
       }
     }
   }, [searchParams]);
+
+  // Fetch recommended childminders when component mounts
+  useEffect(() => {
+    const fetchRecommendedChildminders = async () => {
+      if (status !== "authenticated") return;
+      
+      try {
+        setIsLoadingRecommended(true);
+        const response = await fetch('/api/childminders/recommended');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch recommended childminders');
+        }
+        
+        const data = await response.json();
+        setRecommendedChildminders(data.data || []);
+      } catch (err) {
+        console.error('Error fetching recommended childminders:', err);
+        // Don't set an error state for recommendations as it's not critical
+      } finally {
+        setIsLoadingRecommended(false);
+      }
+    };
+
+    fetchRecommendedChildminders();
+  }, [status]);
 
   // Update URL with current filters
   const updateUrl = useCallback((currentFilters: SearchFilters) => {
@@ -208,6 +238,45 @@ export default function FindChildminders() {
           </div>
         )}
       </header>
+
+      {/* Recommended Childminders Section */}
+      {!isSearched && (
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <FaThumbsUp className="mr-2 text-violet-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Recommended for You</h2>
+          </div>
+          
+          {isLoadingRecommended ? (
+            <div className="py-10 flex justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+            </div>
+          ) : recommendedChildminders.length > 0 ? (
+            <div className="space-y-6">
+              {recommendedChildminders.map(childminder => (
+                <ChildminderCard 
+                  key={childminder.id} 
+                  childminder={childminder} 
+                  isRecommended={true}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 p-6 rounded-lg text-center">
+              <p className="text-gray-600">
+                We don't have enough information to make personalized recommendations yet.
+                Try searching for childminders or complete your profile to get better matches.
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/parent/profile')}
+                className="mt-4 inline-flex items-center text-sm font-medium text-violet-600 hover:text-violet-800"
+              >
+                Complete Your Profile
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search filters */}
       <SearchFiltersComponent 

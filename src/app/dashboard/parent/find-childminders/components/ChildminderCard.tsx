@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaStar, FaCheck, FaMapMarkerAlt, FaEuroSign, FaCalendarAlt } from 'react-icons/fa';
+import { FaStar, FaCheck, FaMapMarkerAlt, FaEuroSign, FaCalendarAlt, FaThumbsUp } from 'react-icons/fa';
 import { Childminder, DAYS_OF_WEEK } from '../types';
 
 interface ChildminderCardProps {
   childminder: Childminder;
+  isRecommended?: boolean;
 }
 
-export default function ChildminderCard({ childminder }: ChildminderCardProps) {
+export default function ChildminderCard({ childminder, isRecommended = false }: ChildminderCardProps) {
   // Format the childminder's rate for display
   const formatRate = (rate: number | null) => {
     if (rate === null || rate === undefined) return 'Rate not specified';
@@ -61,7 +62,14 @@ export default function ChildminderCard({ childminder }: ChildminderCardProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md">
+    <div className={`overflow-hidden rounded-lg bg-white shadow-sm transition-all duration-200 hover:shadow-md ${isRecommended ? 'border-2 border-violet-400' : ''}`}>
+      {isRecommended && (
+        <div className="bg-violet-100 px-4 py-2 flex items-center">
+          <FaThumbsUp className="mr-2 h-4 w-4 text-violet-600" />
+          <span className="text-sm font-medium text-violet-800">Recommended Match</span>
+        </div>
+      )}
+      
       <div className="p-4">
         {/* Header with image and basic info */}
         <div className="flex items-start space-x-4">

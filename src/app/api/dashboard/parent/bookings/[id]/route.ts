@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Booking_status } from '@prisma/client';
+import { sendBookingStatusNotification } from '@/lib/notifications';
 
 // GET: Fetch a single booking by ID
 export async function GET(
@@ -173,21 +174,67 @@ export async function PATCH(
         return NextResponse.json({ error: 'Cannot cancel a completed booking' }, { status: 400 });
       }
       
+      // Store previous status for notification
+      const previousStatus = booking.status;
+      
       // Determine if this is a late cancellation
       const now = new Date();
       const bookingStart = new Date(booking.startTime);
       const hoursUntilBooking = (bookingStart.getTime() - now.getTime()) / (1000 * 60 * 60);
       const isLateCancellation = hoursUntilBooking < 24;
       
+      // Determine new status
+      const newStatus: Booking_status = isLateCancellation ? 'LATE_CANCELLED' : 'CANCELLED';
+      
       // Update the booking status
       const updatedBooking = await prisma.booking.update({
         where: { id: bookingId },
         data: {
-          status: isLateCancellation ? 'LATE_CANCELLED' : 'CANCELLED',
+          status: newStatus,
           cancellationNote: cancellationNote || null,
           updatedAt: new Date()
         }
       });
+      
+      // Create notification for the childminder
+      await prisma.notification.create({
+        data: {
+          id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
+          userId: booking.childminderId,
+          type: 'BOOKING_CANCELLED',
+          title: 'Booking Cancelled',
+          message: `A booking for ${new Date(booking.startTime).toLocaleDateString()} has been cancelled by the parent.`,
+          status: 'UNREAD',
+          metadata: JSON.stringify({
+            bookingId: booking.id,
+            parentId: session.user.id,
+            parentName: session.user.name,
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+            cancellationNote: cancellationNote || null
+          }),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+      
+      // Fetch the complete booking with user information to send email notification
+      const completeBooking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          User_Booking_parentIdToUser: true,
+          User_Booking_childminderIdToUser: true
+        }
+      });
+  
+      // Send email notification if booking is found
+      if (completeBooking) {
+        await sendBookingStatusNotification(
+          completeBooking,
+          previousStatus,
+          newStatus
+        );
+      }
       
       return NextResponse.json({ 
         success: true, 

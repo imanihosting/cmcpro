@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Booking_status } from '@prisma/client';
+import { sendBookingStatusNotification } from '@/lib/notifications';
+import crypto from 'crypto';
 
 export async function GET(
   request: Request,
@@ -169,6 +171,9 @@ export async function PATCH(
       );
     }
     
+    // Store previous status for notification
+    const previousStatus = booking.status;
+    
     // Update booking status based on action
     const newStatus: Booking_status = action === 'accept' ? 'CONFIRMED' : 'CANCELLED';
     
@@ -201,17 +206,36 @@ export async function PATCH(
           : `Your booking for ${new Date(booking.startTime).toLocaleDateString()} has been declined.`,
         status: 'UNREAD',
         userId: booking.parentId,
-        metadata: {
+        metadata: JSON.stringify({
           bookingId: booking.id,
           childminderId: session.user.id,
           childminderName: session.user.name,
           startTime: booking.startTime,
           endTime: booking.endTime,
           cancellationNote: action === 'decline' ? cancellationNote : null
-        },
+        }),
+        createdAt: new Date(),
         updatedAt: new Date()
       }
     });
+    
+    // Fetch the complete booking with user information to send email notification
+    const completeBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        User_Booking_parentIdToUser: true,
+        User_Booking_childminderIdToUser: true
+      }
+    });
+
+    // Send email notification if booking is found
+    if (completeBooking) {
+      await sendBookingStatusNotification(
+        completeBooking,
+        previousStatus,
+        newStatus
+      );
+    }
     
     return NextResponse.json({
       message: action === 'accept' ? 'Booking confirmed successfully' : 'Booking declined successfully',

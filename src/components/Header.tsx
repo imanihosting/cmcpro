@@ -18,10 +18,18 @@ import {
   FaShieldAlt,
   FaCreditCard,
   FaQuestionCircle,
-  FaChartLine
+  FaChartLine,
+  FaBars,
+  FaTimes
 } from "react-icons/fa";
 
-export default function Header() {
+// Define props for Header component
+interface HeaderProps {
+  sidebarOpen?: boolean;
+  toggleSidebar?: () => void;
+}
+
+export default function Header({ sidebarOpen, toggleSidebar }: HeaderProps = {}) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -63,7 +71,11 @@ export default function Header() {
 
   const toggleMobileMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    setMobileMenuOpen(!mobileMenuOpen);
+    if (toggleSidebar) {
+      toggleSidebar();
+    } else {
+      setMobileMenuOpen(!mobileMenuOpen);
+    }
   };
 
   const toggleProfileMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -98,24 +110,28 @@ export default function Header() {
                 type="button"
                 onClick={toggleMobileMenu}
                 className="md:hidden mr-3 p-2 rounded-md text-gray-600 hover:text-violet-600 focus:outline-none"
-                aria-expanded={mobileMenuOpen}
+                aria-expanded={sidebarOpen !== undefined ? sidebarOpen : mobileMenuOpen}
                 aria-label="Toggle menu"
               >
-                <svg
-                  className="h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                  />
-                </svg>
+                {sidebarOpen !== undefined ? (
+                  sidebarOpen ? <FaTimes className="h-6 w-6" /> : <FaBars className="h-6 w-6" />
+                ) : (
+                  <svg
+                    className="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+                    />
+                  </svg>
+                )}
               </button>
             )}
             
@@ -321,7 +337,7 @@ export default function Header() {
       </div>
 
       {/* Mobile menu */}
-      {isDashboardPage && mobileMenuOpen && (
+      {isDashboardPage && mobileMenuOpen && !toggleSidebar && (
         <div
           ref={mobileMenuRef}
           className="md:hidden fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50"
@@ -417,7 +433,7 @@ export default function Header() {
               </li>
               <li>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => signOut({ callbackUrl: "/" })}
                   className="flex w-full items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-violet-50 hover:text-violet-600"
                 >
                   <FaSignOutAlt className="mr-3 h-4 w-4" />

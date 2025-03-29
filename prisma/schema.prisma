@@ -491,13 +491,26 @@ model settings {
   updatedAt DateTime
 }
 
+model SecuritySetting {
+  id          String   @id
+  key         String   @unique
+  value       String
+  description String   @db.Text
+  type        String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
 model PasswordResetToken {
   id        String   @id @default(uuid())
   email     String
-  userId    String?
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())
+  userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
