@@ -65,7 +65,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -97,7 +96,7 @@ export async function GET(request: Request) {
           id: uuidv4(), // Generate a unique conversation ID (in a production app, you might want to store this)
           partnerId: partner.id,
           participant: partner.name || partner.email,
-          avatar: partner.profileImage || partner.image,
+          avatar: partner.profileImage || null,
           role: partner.role,
           lastMessage: lastMessage?.content || '',
           timestamp: lastMessage ? formatTimestamp(lastMessage.createdAt) : '',

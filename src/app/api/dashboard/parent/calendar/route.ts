@@ -48,7 +48,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            image: true,
+            profileImage: true,
             location: true
           }
         },
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       const childminder = {
         id: booking.User_Booking_childminderIdToUser.id,
         name: booking.User_Booking_childminderIdToUser.name || 'Unknown',
-        image: booking.User_Booking_childminderIdToUser.image,
+        image: booking.User_Booking_childminderIdToUser.profileImage,
         location: booking.User_Booking_childminderIdToUser.location
       };
       
@@ -110,9 +110,11 @@ export async function GET(request: Request) {
       
       return {
         id: booking.id,
-        title: `Childcare with ${childminder.name}`,
-        start: booking.startTime,
-        end: booking.endTime,
+        title: booking.User_Booking_childminderIdToUser.name ? 
+          `Booking with ${booking.User_Booking_childminderIdToUser.name}` : 
+          'Booking',
+        start: booking.startTime.toISOString(),
+        end: booking.endTime.toISOString(),
         status: booking.status,
         bookingType: booking.bookingType,
         isEmergency: booking.isEmergency,

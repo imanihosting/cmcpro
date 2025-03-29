@@ -42,6 +42,7 @@ type BookingWithRelations = {
     email: string;
     image: string | null;
     phoneNumber: string | null;
+    profileImage: string | null;
   };
   BookingChildren: Array<{
     Child: {
@@ -150,7 +151,7 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
+            profileImage: true,
             phoneNumber: true
           }
         },
@@ -195,7 +196,7 @@ export async function GET(request: Request) {
         id: booking.User_Booking_parentIdToUser.id,
         name: booking.User_Booking_parentIdToUser.name || null,
         email: booking.User_Booking_parentIdToUser.email,
-        image: booking.User_Booking_parentIdToUser.image,
+        image: booking.User_Booking_parentIdToUser.profileImage,
         phoneNumber: booking.User_Booking_parentIdToUser.phoneNumber
       };
       

@@ -140,7 +140,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -153,7 +152,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -193,14 +191,14 @@ export async function GET(request: Request) {
               name: user1.name || user1.email,
               email: user1.email,
               role: user1.role,
-              avatar: user1.profileImage || user1.image
+              avatar: user1.profileImage || null
             },
             {
               id: user2.id,
               name: user2.name || user2.email,
               email: user2.email,
               role: user2.role,
-              avatar: user2.profileImage || user2.image
+              avatar: user2.profileImage || null
             }
           ],
           lastMessage: lastMessage?.content || '',

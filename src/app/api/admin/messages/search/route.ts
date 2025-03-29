@@ -44,7 +44,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -54,7 +53,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -104,13 +102,13 @@ export async function GET(request: Request) {
         sender: {
           id: sender.id,
           name: sender.name || sender.email,
-          avatar: sender.profileImage || sender.image,
+          image: sender.profileImage || null,
           role: sender.role
         },
         receiver: {
           id: receiver.id,
           name: receiver.name || receiver.email,
-          avatar: receiver.profileImage || receiver.image,
+          image: receiver.profileImage || null,
           role: receiver.role
         }
       };

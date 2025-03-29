@@ -41,7 +41,7 @@ export async function GET() {
           select: {
             id: true,
             name: true,
-            image: true,
+            profileImage: true,
             role: true
           }
         },
@@ -49,7 +49,7 @@ export async function GET() {
           select: {
             id: true,
             name: true,
-            image: true,
+            profileImage: true,
             role: true
           }
         }
@@ -73,7 +73,7 @@ export async function GET() {
           id: message.id,
           partnerId: partner.id,
           participant: partner.name,
-          avatar: partner.image || null,
+          avatar: partner.profileImage || null,
           lastMessage: message.content,
           timestamp: message.createdAt,
           unreadCount: !isUserSender && !message.read ? 1 : 0,

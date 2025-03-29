@@ -41,7 +41,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true,
             role: true
           }
@@ -66,7 +65,7 @@ export async function GET(request: Request) {
       sender: {
         id: message.User_Message_senderIdToUser.id,
         name: message.User_Message_senderIdToUser.name || message.User_Message_senderIdToUser.email,
-        image: message.User_Message_senderIdToUser.profileImage || message.User_Message_senderIdToUser.image,
+        image: message.User_Message_senderIdToUser.profileImage || null,
         role: message.User_Message_senderIdToUser.role,
         isCurrentUser: message.senderId === userId
       }

@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       select: {
         id: true,
         name: true,
-        image: true,
+        profileImage: true,
         role: true
       }
     });
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            image: true
+            profileImage: true
           }
         }
       }
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
       sender: {
         id: message.User_Message_senderIdToUser.id,
         name: message.User_Message_senderIdToUser.name,
-        image: message.User_Message_senderIdToUser.image,
+        image: message.User_Message_senderIdToUser.profileImage || null,
         isCurrentUser: message.senderId === session.user.id
       }
     }));
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
       partner: {
         id: partner.id,
         name: partner.name,
-        image: partner.image
+        image: partner.profileImage || null
       },
       pagination: {
         total: totalMessages,

@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
             name: true,
             email: true,
             role: true,
+            profileImage: true
           },
         },
       },
@@ -238,6 +239,7 @@ export async function POST(req: NextRequest) {
             name: true,
             email: true,
             role: true,
+            profileImage: true
           },
         },
       },

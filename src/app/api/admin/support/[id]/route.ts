@@ -52,7 +52,12 @@ export async function GET(
     if (ticket.respondedBy) {
       assignedAdmin = await prisma.user.findUnique({
         where: { id: ticket.respondedBy },
-        select: { id: true, name: true, email: true }
+        select: { 
+          id: true, 
+          name: true, 
+          email: true, 
+          profileImage: true
+        }
       });
     }
     
@@ -61,7 +66,13 @@ export async function GET(
     if (ticket.userId && ticket.userId !== '00000000-0000-0000-0000-000000000000') {
       submitter = await prisma.user.findUnique({
         where: { id: ticket.userId },
-        select: { id: true, name: true, email: true, role: true }
+        select: { 
+          id: true, 
+          name: true, 
+          email: true, 
+          role: true, 
+          profileImage: true
+        }
       });
     }
     
@@ -71,7 +82,7 @@ export async function GET(
       assignedAdmin,
       submitter: submitter || {
         name: ticket.userName,
-        email: ticket.userEmail
+        email: ticket.userEmail,
       }
     });
     

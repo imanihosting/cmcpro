@@ -40,7 +40,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         id: true,
         name: true,
         bio: true,
-        image: true,
+        profileImage: true,
         location: true,
         rate: true,
         yearsOfExperience: true,
@@ -132,7 +132,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       id: childminder.id,
       name: childminder.name,
       bio: childminder.bio,
-      image: childminder.image,
+      image: childminder.profileImage,
       location: childminder.location,
       contact: {
         email: childminder.email,

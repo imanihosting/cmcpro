@@ -46,7 +46,6 @@ export async function GET(request: Request) {
         id: true,
         name: true,
         email: true,
-        image: true,
         profileImage: true,
         role: true
       }
@@ -73,7 +72,6 @@ export async function GET(request: Request) {
             id: true,
             name: true,
             email: true,
-            image: true,
             profileImage: true
           }
         }
@@ -103,7 +101,7 @@ export async function GET(request: Request) {
       sender: {
         id: message.User_Message_senderIdToUser.id,
         name: message.User_Message_senderIdToUser.name || message.User_Message_senderIdToUser.email,
-        image: message.User_Message_senderIdToUser.profileImage || message.User_Message_senderIdToUser.image,
+        image: message.User_Message_senderIdToUser.profileImage || null,
         isCurrentUser: message.senderId === userId
       }
     }));
@@ -123,7 +121,7 @@ export async function GET(request: Request) {
       partner: {
         id: partner.id,
         name: partner.name || partner.email,
-        image: partner.profileImage || partner.image
+        image: partner.profileImage || null
       },
       messages: formattedMessages,
       pagination: {
