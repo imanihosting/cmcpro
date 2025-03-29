@@ -15,7 +15,8 @@ import {
   FaEnvelope,
   FaBell,
   FaQuestionCircle,
-  FaHistory
+  FaHistory,
+  FaFilePdf
 } from "react-icons/fa";
 import { format } from "date-fns";
 
@@ -301,6 +302,20 @@ export default function ChildminderDashboard() {
             className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
           >
             View Messages <FaArrowRight className="ml-1 h-3 w-3" />
+          </button>
+        </div>
+        
+        <div className="rounded-lg bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+            <FaFilePdf className="h-5 w-5" />
+          </div>
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">Documents</h2>
+          <p className="mb-4 text-sm text-gray-600">Upload and manage your verification documents, certifications, and qualifications.</p>
+          <button 
+            onClick={() => router.push('/dashboard/childminder/documents')}
+            className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            Manage Documents <FaArrowRight className="ml-1 h-3 w-3" />
           </button>
         </div>
         

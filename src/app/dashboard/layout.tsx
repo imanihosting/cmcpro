@@ -22,7 +22,8 @@ import {
   FaChevronUp,
   FaRegBell,
   FaCog,
-  FaHistory
+  FaHistory,
+  FaFileAlt
 } from "react-icons/fa";
 import Header from "@/components/Header";
 
@@ -122,6 +123,7 @@ export default function DashboardLayout({
       links.push(
         { href: "/dashboard/childminder/bookings", label: "Bookings", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
+        { href: "/dashboard/childminder/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/calendar", label: "Calendar", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/activity", label: "Activity", icon: <FaHistory className="h-5 w-5" /> },
         { href: "/dashboard/childminder/profile", label: "Profile", icon: <FaUserCircle className="h-5 w-5" /> },
