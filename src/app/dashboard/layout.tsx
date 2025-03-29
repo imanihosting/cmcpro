@@ -132,6 +132,18 @@ export default function DashboardLayout({
         { href: "/dashboard/childminder/help", label: "Help & Support", icon: <FaQuestionCircle className="h-5 w-5" /> }
       );
     }
+    
+    // Add admin links
+    if (session.user.role === "admin") {
+      links.push(
+        { href: "/dashboard/admin/users", label: "User Management", icon: <FaUserCircle className="h-5 w-5" /> },
+        { href: "/dashboard/admin/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
+        { href: "/dashboard/admin/subscriptions", label: "Subscriptions", icon: <FaCreditCard className="h-5 w-5" /> },
+        { href: "/dashboard/admin/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
+        { href: "/dashboard/admin/support", label: "Support Tickets", icon: <FaQuestionCircle className="h-5 w-5" /> },
+        { href: "/dashboard/admin/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
+      );
+    }
 
     // Add common links at the end
     links.push({ 
