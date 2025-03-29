@@ -416,6 +416,7 @@ model User {
   Message_Message_senderIdToUser              Message[]               @relation("Message_senderIdToUser")
   ModerationItem                              ModerationItem[]
   Notification                                Notification[]
+  PasswordResetToken                          PasswordResetToken[]
   PushSubscription                            PushSubscription?
   RecurringAvailability                       RecurringAvailability[]
   Report_Report_reporterIdToUser              Report[]                @relation("Report_reporterIdToUser")
@@ -488,6 +489,19 @@ model settings {
   data      Json
   createdAt DateTime @default(now())
   updatedAt DateTime
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  userId    String?
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
 }
 
 enum Report_type {

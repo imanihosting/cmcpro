@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 import { mkdir } from "fs/promises";
+import { sendProfileUpdateNotification } from "@/lib/notifications";
 
 // POST /api/user/profile-image - Upload a profile image
 export async function POST(req: NextRequest) {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     const fileUrl = `/uploads/profiles/${fileName}`;
 
     // Update user profile in database
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { 
         profileImage: fileUrl,
@@ -88,8 +89,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Send profile image update notification
+    await sendProfileUpdateNotification(updatedUser, 'PROFILE_IMAGE');
+
     return NextResponse.json({ 
-      message: "Profile image uploaded successfully",
+      message: "✅ Profile picture updated successfully! Your photo has been saved.",
       imageUrl: fileUrl
     });
   } catch (error) {

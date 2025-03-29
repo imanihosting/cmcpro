@@ -1,17 +1,18 @@
-import { hash } from "bcrypt";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { User_role, User_subscriptionStatus } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { sendWelcomeEmail } from "@/lib/notifications";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { name, email, password, role } = await req.json();
 
     // Validate input
     if (!name || !email || !password || !role) {
       return NextResponse.json(
-        { message: "All fields are required" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -23,8 +24,8 @@ export async function POST(req: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { message: "Email already in use" },
-        { status: 400 }
+        { error: "Email already in use" },
+        { status: 409 }
       );
     }
 
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // Hash password
-    const hashedPassword = await hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const now = new Date();
     const trialEndDate = new Date();
     trialEndDate.setDate(now.getDate() + 30); // 30 days trial
@@ -61,17 +62,31 @@ export async function POST(req: Request) {
       },
     });
 
+    // Send welcome email
+    await sendWelcomeEmail(user);
+
+    // Log the registration
+    await db.userActivityLog.create({
+      data: {
+        id: uuidv4(),
+        userId: user.id,
+        action: "USER_REGISTERED",
+        details: "User registration completed",
+        timestamp: new Date()
+      }
+    });
+
     // We'll handle creation of specific role-based profiles through the dashboard
     // after login, as this requires understanding the exact schema requirements
 
-    return NextResponse.json(
-      { message: "User created successfully" },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: "Registration successful! You can now log in."
+    });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Error in user registration:", error);
     return NextResponse.json(
-      { message: "Something went wrong" },
+      { error: "Failed to register user" },
       { status: 500 }
     );
   }

@@ -4,6 +4,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import { db } from "@/lib/db";
 import { User_role, User_subscriptionStatus } from "@prisma/client";
+import { sendNotificationEmail } from "./msGraph";
+import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcryptjs";
 
 // Add these type declarations to extend the default types
 declare module "next-auth" {
@@ -139,4 +142,112 @@ export const authOptions: NextAuthOptions = {
       };
     },
   },
+};
+
+export const generatePasswordResetToken = async (email: string) => {
+  const token = uuidv4();
+  const expires = new Date(Date.now() + 3600 * 1000); // 1 hour
+
+  // Database operations need to be adjusted for the actual schema
+  try {
+    const existingToken = await db.passwordResetToken.findFirst({
+      where: { email }
+    });
+
+    if (existingToken) {
+      await db.passwordResetToken.delete({
+        where: { id: existingToken.id }
+      });
+    }
+
+    const passwordResetToken = await db.passwordResetToken.create({
+      data: {
+        id: uuidv4(),
+        email,
+        token,
+        expires
+      }
+    });
+
+    return passwordResetToken;
+  } catch (error) {
+    console.error("Error generating reset token:", error);
+    throw new Error("Failed to generate reset token");
+  }
+};
+
+export const sendPasswordResetEmail = async (email: string) => {
+  try {
+    const user = await db.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const passwordResetToken = await generatePasswordResetToken(email);
+
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${passwordResetToken.token}`;
+
+    const content = `
+      <p>You have requested to reset your password.</p>
+      <p>Click the button below to reset your password:</p>
+      <p><a href="${resetLink}" style="display: inline-block; background-color: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+      <p>If you did not request this password reset, please ignore this email.</p>
+      <p>This link will expire in 1 hour.</p>
+    `;
+
+    await sendNotificationEmail(user, "Reset Your Password", content);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    return { success: false, error: "Failed to send reset email" };
+  }
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  try {
+    const passwordResetToken = await db.passwordResetToken.findUnique({
+      where: { token }
+    });
+
+    if (!passwordResetToken) {
+      return { success: false, error: "Invalid token" };
+    }
+
+    const hasExpired = new Date(passwordResetToken.expires) < new Date();
+
+    if (hasExpired) {
+      await db.passwordResetToken.delete({
+        where: { id: passwordResetToken.id }
+      });
+      return { success: false, error: "Token has expired" };
+    }
+
+    const user = await db.user.findUnique({
+      where: { email: passwordResetToken.email }
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await db.user.update({
+      where: { id: user.id },
+      data: { hashed_password: hashedPassword }
+    });
+
+    await db.passwordResetToken.delete({
+      where: { id: passwordResetToken.id }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return { success: false, error: "Failed to reset password" };
+  }
 }; 

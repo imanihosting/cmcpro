@@ -29,10 +29,22 @@ export default function ContactPage() {
     setErrorMessage(null);
 
     try {
-      // Simulate API call to send message
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Send form data to the API
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
       
-      setSuccessMessage("Your message has been sent successfully. We'll get back to you soon!");
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+      
+      setSuccessMessage(data.message || "Your message has been sent successfully. We'll get back to you soon!");
       setFormData({
         name: "",
         email: "",
@@ -40,7 +52,12 @@ export default function ContactPage() {
         message: ""
       });
     } catch (error) {
-      setErrorMessage("Failed to send your message. Please try again later.");
+      console.error("Error sending contact form:", error);
+      setErrorMessage(
+        error instanceof Error 
+          ? error.message 
+          : "Failed to send your message. Please try again later."
+      );
     } finally {
       setIsLoading(false);
     }

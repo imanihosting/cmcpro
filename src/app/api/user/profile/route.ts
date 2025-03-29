@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { sendProfileUpdateNotification } from "@/lib/notifications";
 
 // GET /api/user/profile - Get current user profile
 export async function GET(req: NextRequest) {
@@ -171,7 +172,13 @@ export async function PUT(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(updatedUser);
+    // Send profile update notification
+    await sendProfileUpdateNotification(updatedUser as any, 'PROFILE');
+
+    return NextResponse.json({
+      ...updatedUser,
+      message: "✅ Profile updated successfully! Your changes have been saved."
+    });
   } catch (error) {
     console.error("Error in PUT /api/user/profile:", error);
     return NextResponse.json(
