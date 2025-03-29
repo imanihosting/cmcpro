@@ -314,6 +314,21 @@ export default function AdminDashboard() {
           <div className="rounded-lg bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 flex items-center">
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
+                <FaCalendarCheck className="h-5 w-5" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Bookings</h2>
+            </div>
+            <p className="mb-4 text-sm text-gray-800">Monitor and manage bookings on the platform</p>
+            <button 
+              onClick={() => router.push('/dashboard/admin/bookings')}
+              className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto">
+              Manage Bookings
+            </button>
+          </div>
+          
+          <div className="rounded-lg bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+            <div className="mb-3 flex items-center">
+              <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
                 <FaChartBar className="h-5 w-5" />
               </div>
               <h2 className="text-lg font-bold text-gray-900">Analytics</h2>

@@ -137,6 +137,7 @@ export default function DashboardLayout({
     if (session.user.role === "admin") {
       links.push(
         { href: "/dashboard/admin/users", label: "User Management", icon: <FaUserCircle className="h-5 w-5" /> },
+        { href: "/dashboard/admin/bookings", label: "Bookings", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
         { href: "/dashboard/admin/subscriptions", label: "Subscriptions", icon: <FaCreditCard className="h-5 w-5" /> },
         { href: "/dashboard/admin/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
