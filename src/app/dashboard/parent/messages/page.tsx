@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FaUserCircle, FaSearch, FaEllipsisH, FaPaperPlane } from "react-icons/fa";
+import { FaUserCircle, FaSearch, FaEllipsisH, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 import { v4 as uuidv4 } from 'uuid';
 
 interface User {
@@ -47,6 +47,7 @@ export default function MessagesPage() {
   const initialConversationId = searchParams ? searchParams.get('conversation') : null;
   
   const [activeConversation, setActiveConversation] = useState<string | null>(initialConversationId);
+  const [showListMobile, setShowListMobile] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationsLoading, setConversationsLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -210,12 +211,18 @@ export default function MessagesPage() {
     }
     
     setActiveConversation(partnerId);
+    setShowListMobile(false);
     
     // Update the URL with the conversation ID without reloading the page
     const newUrl = `/dashboard/parent/messages?conversation=${partnerId}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
     
     fetchMessages(partnerId);
+  };
+  
+  // Handle back button on mobile
+  const handleBackToList = () => {
+    setShowListMobile(true);
   };
   
   // Scroll to the bottom of the messages
@@ -325,9 +332,10 @@ export default function MessagesPage() {
   };
   
   return (
-    <div className="flex h-[calc(100vh-11rem)] flex-col md:flex-row">
-      {/* Conversations sidebar */}
-      <div className="w-full border-r border-gray-200 md:w-80">
+    <div className="flex flex-1 overflow-hidden">
+      <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col bg-white ${ 
+        showListMobile ? 'flex' : 'hidden md:flex' 
+      }`}>
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-900">Messages</h1>
           
@@ -345,7 +353,7 @@ export default function MessagesPage() {
           </div>
         </div>
         
-        <div className="h-[calc(100%-5rem)] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {conversationsLoading ? (
             <div className="flex items-center justify-center h-20">
               <p className="text-gray-500">Loading conversations...</p>
@@ -405,26 +413,34 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* Active conversation */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col bg-white ${ 
+        showListMobile ? 'hidden md:flex' : 'flex' 
+      }`}>
         {activeConversation !== null && partner !== null ? (
           <>
             <div className="flex items-center justify-between border-b border-gray-200 p-4">
-              <div className="flex items-center">
+               <div className="flex items-center flex-1 min-w-0">
+                 <button
+                  onClick={handleBackToList}
+                  className="md:hidden p-2 -ml-2 mr-2 rounded-full hover:bg-gray-100"
+                  aria-label="Back to conversations"
+                >
+                  <FaArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
                 {partner.image ? (
                   <img 
                     src={partner.image} 
                     alt={partner.name}
-                    className="h-8 w-8 rounded-full"
+                    className="h-8 w-8 rounded-full flex-shrink-0"
                   />
                 ) : (
-                  <FaUserCircle className="h-8 w-8 text-gray-400" />
+                  <FaUserCircle className="h-8 w-8 text-gray-400 flex-shrink-0" />
                 )}
-                <h2 className="ml-3 text-lg font-medium text-gray-900">
+                <h2 className="ml-3 text-lg font-medium text-gray-900 truncate">
                   {partner.name}
                 </h2>
               </div>
-              <button className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+              <button className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0">
                 <FaEllipsisH className="h-5 w-5" />
               </button>
             </div>
@@ -460,7 +476,6 @@ export default function MessagesPage() {
                   </div>
                 ))
               )}
-              {/* Element for scrolling to the bottom */}
               <div ref={messageEndRef} />
             </div>
             
@@ -485,8 +500,8 @@ export default function MessagesPage() {
             </div>
           </>
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-gray-500">
+          <div className="flex h-full items-center justify-center"> 
+            <p className="text-gray-500"> 
               {conversationsLoading 
                 ? "Loading conversations..." 
                 : conversations.length === 0 

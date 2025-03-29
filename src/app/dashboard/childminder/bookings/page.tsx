@@ -50,7 +50,9 @@ export default function ChildminderBookings() {
         queryParams.append('status', filters.status);
       }
       
-      queryParams.append('timeframe', filters.timeframe);
+      if (filters.timeframe) {
+        queryParams.append('timeframe', filters.timeframe);
+      }
       
       if (filters.startDate) {
         queryParams.append('startDate', filters.startDate.toISOString());
@@ -126,7 +128,7 @@ export default function ChildminderBookings() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: 'ACCEPT',
+          action: 'accept',
         }),
       });
       
