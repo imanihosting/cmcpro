@@ -415,6 +415,16 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-600">Monitor API performance</p>
             </div>
           </Link>
+          
+          <Link href="/dashboard/admin/logs" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              <FaFileAlt className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">System Logs</h3>
+              <p className="text-sm text-gray-600">View and search system logs</p>
+            </div>
+          </Link>
         </div>
       </div>
       

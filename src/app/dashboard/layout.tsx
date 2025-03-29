@@ -144,6 +144,7 @@ export default function DashboardLayout({
         { href: "/dashboard/admin/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/support", label: "Support Tickets", icon: <FaQuestionCircle className="h-5 w-5" /> },
         { href: "/dashboard/admin/monitoring", label: "API Monitoring", icon: <FaChartLine className="h-5 w-5" /> },
+        { href: "/dashboard/admin/logs", label: "System Logs", icon: <FaFileAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
       );
     }
