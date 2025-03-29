@@ -13,6 +13,8 @@ const nextConfig = {
         hostname: 'localhost',
       }
     ],
+    // Disable image optimization as it may be causing issues with local files
+    unoptimized: true,
   },
   // Don't try to statically optimize everything
   output: 'standalone',

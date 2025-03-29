@@ -17,7 +17,8 @@ import {
   FaRegBell,
   FaShieldAlt,
   FaCreditCard,
-  FaQuestionCircle
+  FaQuestionCircle,
+  FaChartLine
 } from "react-icons/fa";
 
 export default function Header() {
@@ -241,7 +242,7 @@ export default function Header() {
 
                   {/* Profile dropdown menu */}
                   {profileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                       <Link
                         href={getProfilePath()}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -256,33 +257,38 @@ export default function Header() {
                         <FaCog className="mr-3 h-4 w-4 text-gray-500" />
                         Settings
                       </Link>
-                      <div className="border-t border-gray-100"></div>
-                      {session.user.role === "parent" && (
-                        <Link
-                          href="/dashboard/parent"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
-                          Dashboard
-                        </Link>
-                      )}
-                      {session.user.role === "childminder" && (
-                        <Link
-                          href="/dashboard/childminder"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
-                          Dashboard
-                        </Link>
-                      )}
+                      
+                      {/* Add dashboard link */}
                       <Link
-                        href="/dashboard/subscription"
+                        href={`/dashboard/${session.user.role}`}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        <FaCreditCard className="mr-3 h-4 w-4 text-gray-500" />
-                        Subscription
+                        <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
+                        Dashboard
                       </Link>
-                      <div className="border-t border-gray-100"></div>
+                      
+                      {/* Show admin-specific options for admin users */}
+                      {session.user.role === "admin" && (
+                        <>
+                          <hr className="my-1 border-gray-200" />
+                          <Link
+                            href="/dashboard/admin/monitoring"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaChartLine className="mr-3 h-4 w-4 text-gray-500" />
+                            API Monitoring
+                          </Link>
+                          <Link
+                            href="/dashboard/admin/users"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <FaUserCircle className="mr-3 h-4 w-4 text-gray-500" />
+                            User Management
+                          </Link>
+                        </>
+                      )}
+                      
+                      <hr className="my-1 border-gray-200" />
                       <button
                         onClick={() => signOut({ callbackUrl: "/" })}
                         className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
