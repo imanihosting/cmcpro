@@ -23,7 +23,8 @@ import {
   FaRegBell,
   FaCog,
   FaHistory,
-  FaFileAlt
+  FaFileAlt,
+  FaChartLine
 } from "react-icons/fa";
 import Header from "@/components/Header";
 
@@ -142,6 +143,7 @@ export default function DashboardLayout({
         { href: "/dashboard/admin/subscriptions", label: "Subscriptions", icon: <FaCreditCard className="h-5 w-5" /> },
         { href: "/dashboard/admin/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/support", label: "Support Tickets", icon: <FaQuestionCircle className="h-5 w-5" /> },
+        { href: "/dashboard/admin/monitoring", label: "API Monitoring", icon: <FaChartLine className="h-5 w-5" /> },
         { href: "/dashboard/admin/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
       );
     }

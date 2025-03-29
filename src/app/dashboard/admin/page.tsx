@@ -3,8 +3,9 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaUserCog, FaChartBar, FaCreditCard, FaFileAlt, FaUsers, FaTicketAlt, FaCalendarCheck, FaExclamationTriangle, FaComment } from "react-icons/fa";
+import { FaUserCog, FaChartBar, FaCreditCard, FaFileAlt, FaUsers, FaTicketAlt, FaCalendarCheck, FaExclamationTriangle, FaComment, FaChartLine } from "react-icons/fa";
 import { format } from "date-fns";
+import Link from "next/link";
 
 // Define types for the dashboard data
 interface DashboardData {
@@ -368,6 +369,52 @@ export default function AdminDashboard() {
               Manage Documents
             </button>
           </div>
+        </div>
+      </div>
+      
+      {/* Admin Tools Section */}
+      <div className="mb-8">
+        <h2 className="mb-4 text-xl font-bold text-gray-900">Admin Tools</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/dashboard/admin/users" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              <FaUsers className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">User Management</h3>
+              <p className="text-sm text-gray-600">Manage users and roles</p>
+            </div>
+          </Link>
+          
+          <Link href="/dashboard/admin/documents" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-amber-100 text-amber-600">
+              <FaFileAlt className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Documents</h3>
+              <p className="text-sm text-gray-600">Review and manage documents</p>
+            </div>
+          </Link>
+          
+          <Link href="/dashboard/admin/subscriptions" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
+              <FaCreditCard className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Subscriptions</h3>
+              <p className="text-sm text-gray-600">Manage subscription plans</p>
+            </div>
+          </Link>
+          
+          <Link href="/dashboard/admin/monitoring" className="flex items-center rounded-lg bg-white p-5 shadow-sm transition-all hover:shadow-md">
+            <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-md bg-green-100 text-green-600">
+              <FaChartLine className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">API Monitoring</h3>
+              <p className="text-sm text-gray-600">Monitor API performance</p>
+            </div>
+          </Link>
         </div>
       </div>
       
