@@ -1,12 +1,8 @@
-"use client";
-
+import "@/app/globals.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import "./globals.css";
-import { SessionProvider } from "@/components/providers/SessionProvider";
-import LoadingProvider from "@/components/providers/LoadingProvider";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Toaster } from "react-hot-toast";
+import type { Metadata, Viewport } from "next";
+import { Providers } from "./providers";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,31 +16,39 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+export const metadata: Metadata = {
+  title: "CMC Pro",
+  description: "Childminder Connection - Connecting parents with childminders",
+  applicationName: "CMC Pro",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="theme-color" content="#4f46e5" />
-        <title>ChildminderConnect</title>
-        <meta name="description" content="Connect with trusted childminders in your area" />
         <link rel="icon" href="/next.svg" type="image/svg+xml" />
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased flex min-h-screen flex-col`}
       >
-        <SessionProvider>
-          <LoadingProvider>
-            <Toaster />
-            <Header />
-            <main className="flex-grow pt-16">{children}</main>
-            <Footer />
-          </LoadingProvider>
-        </SessionProvider>
+        <Providers>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </Providers>
       </body>
     </html>
   );
