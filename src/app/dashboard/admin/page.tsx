@@ -347,8 +347,10 @@ export default function AdminDashboard() {
               <h2 className="text-lg font-bold text-gray-900">Subscriptions</h2>
             </div>
             <p className="mb-4 text-sm text-gray-800">Manage user subscriptions and payments</p>
-            <button className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto">
-              Manage Plans
+            <button 
+              onClick={() => router.push('/dashboard/admin/subscriptions')}
+              className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto">
+              Manage Subscriptions
             </button>
           </div>
           
@@ -357,11 +359,13 @@ export default function AdminDashboard() {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
                 <FaFileAlt className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">Verification</h2>
+              <h2 className="text-lg font-bold text-gray-900">Documents</h2>
             </div>
-            <p className="mb-4 text-sm text-gray-800">Review and approve verification documents</p>
-            <button className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto">
-              Review Documents
+            <p className="mb-4 text-sm text-gray-800">Review and manage verification documents</p>
+            <button 
+              onClick={() => router.push('/dashboard/admin/documents')}
+              className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto">
+              Manage Documents
             </button>
           </div>
         </div>
