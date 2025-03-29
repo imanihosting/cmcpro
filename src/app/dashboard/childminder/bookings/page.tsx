@@ -119,7 +119,9 @@ export default function ChildminderBookings() {
   
   // Handle accept booking
   const handleAcceptBooking = async () => {
-    if (!selectedBooking) return;
+    if (!selectedBooking) {
+      return;
+    }
     
     try {
       const response = await fetch(`/api/dashboard/childminder/bookings/${selectedBooking.id}`, {
@@ -133,7 +135,7 @@ export default function ChildminderBookings() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to accept booking');
+        throw new Error(`Failed to accept booking (status: ${response.status})`);
       }
       
       // Update local state
