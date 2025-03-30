@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import dynamic from 'next/dynamic';
+import { useMaintenanceMode } from "@/lib/MaintenanceContext";
 import { 
   FaBaby, 
   FaTachometerAlt, 
@@ -25,7 +26,8 @@ import {
   FaHistory,
   FaFileAlt,
   FaChartLine,
-  FaShieldAlt
+  FaShieldAlt,
+  FaTools
 } from "react-icons/fa";
 import Header from "@/components/Header";
 
@@ -65,9 +67,34 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session, status } = useSession();
+  const { isInMaintenance, isLoading: maintenanceLoading, checkMaintenanceMode } = useMaintenanceMode();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  // Maintenance mode check - prevent all dashboard access for non-admins
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (status === "authenticated") {
+        const isAdmin = session?.user?.role === "admin";
+        
+        // Force re-check maintenance status to ensure we have the latest
+        await checkMaintenanceMode();
+        
+        // If maintenance mode is on and user is not admin, redirect to maintenance page
+        if (isInMaintenance && !isAdmin) {
+          router.push("/maintenance");
+          return;
+        }
+      }
+      setIsChecking(false);
+    };
+
+    if (status !== "loading" && !maintenanceLoading) {
+      checkAccess();
+    }
+  }, [status, session, isInMaintenance, maintenanceLoading, router, checkMaintenanceMode]);
 
   useEffect(() => {
     // Check if the user is authenticated
@@ -106,8 +133,8 @@ export default function DashboardLayout({
     };
   }, [sidebarOpen]);
 
-  // Show loading state while checking authentication
-  if (status === "loading") {
+  // Show loading state while checking authentication or maintenance status
+  if (status === "loading" || isChecking) {
     return <LoadingSpinner />;
   }
 
@@ -159,6 +186,7 @@ export default function DashboardLayout({
         { href: "/dashboard/admin/support", label: "Support Tickets", icon: <FaQuestionCircle className="h-5 w-5" /> },
         { href: "/dashboard/admin/monitoring", label: "API Monitoring", icon: <FaChartLine className="h-5 w-5" /> },
         { href: "/dashboard/admin/logs", label: "System Logs", icon: <FaFileAlt className="h-5 w-5" /> },
+        { href: "/dashboard/admin/maintenance", label: "Maintenance Mode", icon: <FaTools className="h-5 w-5" /> },
         { href: "/dashboard/admin/security-settings", label: "Security Settings", icon: <FaShieldAlt className="h-5 w-5" /> },
         { href: "/dashboard/admin/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
       );

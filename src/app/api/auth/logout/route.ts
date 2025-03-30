@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { cookies } from 'next/headers';
 
 // POST /api/auth/logout - Logout a user
 export async function POST(req: NextRequest) {
@@ -47,6 +48,11 @@ export async function POST(req: NextRequest) {
 
     // For NextAuth, actual session invalidation happens client-side
     // through signOut() which calls the built-in /api/auth/signout endpoint
+    
+    // Clear the session cookie
+    const cookieStore = cookies();
+    cookieStore.delete('next-auth.session-token');
+    cookieStore.delete('__Secure-next-auth.session-token');
     
     return NextResponse.json({
       success: true,
