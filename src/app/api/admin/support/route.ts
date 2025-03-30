@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { SupportTicket_status, SupportTicket_priority } from '@prisma/client';
+import { sendTicketCreationNotification } from '@/lib/ticketNotifications';
 
 export async function GET(req: NextRequest) {
   try {
@@ -244,6 +245,14 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Send email notifications
+    try {
+      await sendTicketCreationNotification(newTicket);
+    } catch (emailError) {
+      console.error('Error sending ticket notification emails:', emailError);
+      // Continue with the response even if email sending fails
+    }
 
     return NextResponse.json({
       success: true,

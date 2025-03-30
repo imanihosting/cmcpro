@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { SupportTicket_status, SupportTicket_priority } from '@prisma/client';
+import { sendTicketMessageNotification } from '@/lib/ticketNotifications';
 
 // GET handler to retrieve a specific support ticket by ID
 export async function GET(
@@ -175,6 +176,7 @@ export async function PATCH(
     }
     
     // Handle new admin message
+    let newMessage = null;
     if (body.message) {
       // Parse existing messages or create a new array
       let messages = [];
@@ -205,15 +207,22 @@ export async function PATCH(
       }
       
       // Add new message from admin
-      messages.push({
+      newMessage = {
         sender: 'admin',
+        content: body.message,
+        senderName: session.user.name || 'Admin'
+      };
+      
+      // Full message data for storage
+      const fullMessageData = {
+        ...newMessage,
         senderRole: 'admin',
         senderId: session.user.id,
         senderEmail: session.user.email || '',
-        senderName: session.user.name || 'Admin',
-        content: body.message,
         timestamp: new Date().toISOString()
-      });
+      };
+      
+      messages.push(fullMessageData);
       
       // Update data with new messages
       updateData.messages = messages;
@@ -229,6 +238,16 @@ export async function PATCH(
       },
       data: updateData
     });
+    
+    // Send email notification if a new message was added
+    if (newMessage) {
+      try {
+        await sendTicketMessageNotification(updatedTicket, newMessage);
+      } catch (emailError) {
+        console.error('Error sending ticket message notification:', emailError);
+        // Continue with the response even if email sending fails
+      }
+    }
     
     return NextResponse.json(updatedTicket);
     

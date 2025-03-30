@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { User_role } from '@prisma/client';
+import { sendTicketMessageNotification } from "@/lib/ticketNotifications";
 
 // GET handler to retrieve a specific support ticket by ID
 export async function GET(
@@ -76,69 +77,47 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Get the authenticated user session
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Check if the user is a childminder
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-    
-    if (!user || user.role !== User_role.childminder) {
-      return NextResponse.json({ error: 'Access denied. Childminder role required.' }, { status: 403 });
+    // Verify the user has childminder role
+    if (session.user.role !== 'childminder') {
+      return NextResponse.json({ error: 'Childminder access required' }, { status: 403 });
     }
     
-    // Get ticket ID from URL params
     const { id } = params;
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Ticket ID is required' },
-        { status: 400 }
-      );
-    }
     
     // Parse request body
     const body = await request.json();
     
-    // Validate required fields
-    if (!body.userReply) {
+    if (!body.userReply || typeof body.userReply !== 'string' || body.userReply.trim() === '') {
       return NextResponse.json(
-        { error: 'Missing required field: userReply' },
+        { error: 'User reply message is required' },
         { status: 400 }
       );
     }
     
-    // Find the ticket
+    // Check if ticket exists and belongs to the user
     const ticket = await prisma.supportTicket.findUnique({
       where: {
-        id: id
+        id: id,
+        userId: session.user.id,
       }
     });
     
-    // Check if ticket exists
     if (!ticket) {
       return NextResponse.json(
-        { error: 'Support ticket not found' },
+        { error: 'Support ticket not found or does not belong to you' },
         { status: 404 }
       );
     }
     
-    // Check if the user is authorized to update this ticket
-    if (ticket.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized to update this ticket' },
-        { status: 403 }
-      );
-    }
-    
-    // Parse existing messages or create a new array
+    // Parse existing messages or create new array
     let messages = [];
+    
     if (ticket.messages) {
       try {
         // If it's already an array, use it
@@ -166,11 +145,14 @@ export async function PATCH(
     }
     
     // Add new message
-    messages.push({
+    const newMessage = {
       sender: 'user',
       content: body.userReply,
+      senderName: session.user.name || 'Childminder',
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    messages.push(newMessage);
     
     // Update the ticket with the new message
     const updatedTicket = await prisma.supportTicket.update({
@@ -183,6 +165,14 @@ export async function PATCH(
         updatedAt: new Date()
       }
     });
+    
+    // Send email notification to admins
+    try {
+      await sendTicketMessageNotification(updatedTicket, newMessage);
+    } catch (emailError) {
+      console.error('Error sending ticket message notification:', emailError);
+      // Continue with the response even if email sending fails
+    }
     
     return NextResponse.json(updatedTicket);
   } catch (error) {

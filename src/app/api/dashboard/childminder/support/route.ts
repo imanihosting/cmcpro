@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { SupportTicket_status, SupportTicket_priority, User_role } from '@prisma/client';
+import { sendTicketCreationNotification } from "@/lib/ticketNotifications";
 
 // GET handler to retrieve all support tickets for the authenticated childminder
 export async function GET(request: Request) {
@@ -89,14 +90,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Check if the user is a childminder
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-    
-    if (!user || user.role !== User_role.childminder) {
-      return NextResponse.json({ error: 'Access denied. Childminder role required.' }, { status: 403 });
+    // Verify the user has childminder role
+    if (session.user.role !== 'childminder') {
+      return NextResponse.json({ error: 'Childminder access required' }, { status: 403 });
     }
     
     // Parse request body
@@ -116,16 +112,40 @@ export async function POST(request: Request) {
         id: uuidv4(),
         userId: session.user.id,
         userEmail: session.user.email || '',
-        userName: session.user.name || 'Anonymous User',
+        userName: session.user.name || 'Anonymous Childminder',
         subject: body.subject,
         description: body.description,
         category: body.category,
         status: SupportTicket_status.OPEN,
         priority: body.priority ? body.priority : SupportTicket_priority.MEDIUM,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        messages: JSON.stringify([{
+          sender: 'user',
+          senderName: session.user.name || 'Childminder',
+          content: body.description,
+          timestamp: new Date().toISOString()
+        }])
+      },
+      include: {
+        User: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
       }
     });
+    
+    // Send email notification
+    try {
+      await sendTicketCreationNotification(newTicket);
+    } catch (emailError) {
+      console.error('Error sending ticket creation notification:', emailError);
+      // Continue with the response even if email sending fails
+    }
     
     return NextResponse.json(newTicket, { status: 201 });
   } catch (error) {

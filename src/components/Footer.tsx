@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaBaby } from "react-icons/fa";
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-8 sm:py-10">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-8">
-          <div className="mb-2 md:mb-0">
-            <h3 className="mb-3 text-base font-bold text-white sm:text-lg">ChildminderConnect</h3>
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-6">
+            <Link href="/" className="flex items-center justify-center space-x-2 font-bold hover:opacity-90 transition-opacity mb-3">
+              <FaBaby className="h-7 w-7 text-violet-400" />
+              <span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent text-xl">
+                ChildminderConnect
+              </span>
+            </Link>
             <p className="mb-4 text-sm sm:text-base">
               Connecting parents with trusted childminders in your local area.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex justify-center space-x-4">
               <a href="#" className="text-gray-400 hover:text-white" aria-label="Facebook">
                 <FaFacebook className="h-5 w-5" />
               </a>
@@ -29,9 +34,9 @@ export default function Footer() {
             </div>
           </div>
           
-          <div>
+          <div className="mb-6">
             <h4 className="mb-3 text-sm font-semibold text-white sm:text-base">Quick Links</h4>
-            <ul className="space-y-2 text-sm sm:text-base">
+            <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm sm:text-base">
               <li>
                 <Link href="/" className="inline-block transition-colors duration-200 hover:text-white">
                   Home
@@ -59,61 +64,9 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          
-          <div>
-            <h4 className="mb-3 text-sm font-semibold text-white sm:text-base">For Parents</h4>
-            <ul className="space-y-2 text-sm sm:text-base">
-              <li>
-                <Link href="/dashboard/parent" className="inline-block transition-colors duration-200 hover:text-white">
-                  Parent Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="inline-block transition-colors duration-200 hover:text-white">
-                  Finding a Childminder
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="inline-block transition-colors duration-200 hover:text-white">
-                  Book a Childminder
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="inline-block transition-colors duration-200 hover:text-white">
-                  Safety Standards
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="mb-3 text-sm font-semibold text-white sm:text-base">For Childminders</h4>
-            <ul className="space-y-2 text-sm sm:text-base">
-              <li>
-                <Link href="/dashboard/childminder" className="inline-block transition-colors duration-200 hover:text-white">
-                  Childminder Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="inline-block transition-colors duration-200 hover:text-white">
-                  Join as Childminder
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard/profile" className="inline-block transition-colors duration-200 hover:text-white">
-                  Manage Profile
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="inline-block transition-colors duration-200 hover:text-white">
-                  Resources
-                </Link>
-              </li>
-            </ul>
-          </div>
         </div>
         
-        <div className="mt-8 border-t border-gray-800 pt-6 text-center text-sm sm:pt-8 sm:text-base">
+        <div className="mt-6 border-t border-gray-800 pt-6 text-center text-sm sm:pt-8 sm:text-base">
           <p>
             &copy; {new Date().getFullYear()} ChildminderConnect. All rights reserved.
           </p>

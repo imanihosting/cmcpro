@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { SupportTicket_status, SupportTicket_priority } from '@prisma/client';
+import { sendTicketCreationNotification } from "@/lib/ticketNotifications";
 
 // GET handler to retrieve all support tickets for the authenticated parent
 export async function GET(request: Request) {
@@ -103,9 +104,33 @@ export async function POST(request: Request) {
         status: SupportTicket_status.OPEN,
         priority: body.priority ? body.priority : SupportTicket_priority.MEDIUM,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        messages: JSON.stringify([{
+          sender: 'user',
+          senderName: session.user.name || 'User',
+          content: body.description,
+          timestamp: new Date().toISOString()
+        }])
+      },
+      include: {
+        User: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
       }
     });
+    
+    // Send email notification
+    try {
+      await sendTicketCreationNotification(newTicket);
+    } catch (emailError) {
+      console.error('Error sending ticket creation notification:', emailError);
+      // Continue with the response even if email sending fails
+    }
     
     return NextResponse.json(newTicket, { status: 201 });
   } catch (error) {

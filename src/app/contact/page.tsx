@@ -114,8 +114,8 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Phone</h3>
                   <p className="mt-1 text-gray-600">
-                    <a href="tel:+353123456789" className="hover:text-indigo-600">
-                      +353 (1) 234 5678
+                    <a href="tel:061511044" className="hover:text-indigo-600">
+                      061 511 044
                     </a>
                   </p>
                   <p className="text-sm text-gray-500">Monday to Friday, 9am to 5pm</p>
