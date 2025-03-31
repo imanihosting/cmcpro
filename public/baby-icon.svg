@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 24">
+  <!-- Blue circular background -->
+  <circle cx="12" cy="12" r="12" fill="#3b82f6"/>
+  <!-- Baby icon in white -->
+  <g stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M9 12h.01"></path>
+    <path d="M15 12h.01"></path>
+    <path d="M10 16c.5.3 1.5.5 2 .5s1.5-.2 2-.5"></path>
+    <path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 5 6.3"></path>
+    <path d="M8 9h8"></path>
+    <path d="M8 13v2"></path>
+    <path d="M16 13v2"></path>
+    <path d="M12 2v2"></path>
+  </g>
+</svg> 
