@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useMaintenanceMode } from '@/lib/MaintenanceContext';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Logo from "@/components/Logo";
 
 export default function MaintenancePage() {
   const { isInMaintenance, maintenanceMessage, maintenanceEndTime, isLoading } = useMaintenanceMode();
@@ -52,7 +53,7 @@ export default function MaintenancePage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md overflow-hidden">
         <div className="bg-violet-600 p-4 flex justify-center">
-          <FaBaby className="h-12 w-12 text-white" />
+          <Logo />
         </div>
         
         <div className="p-6 text-center">

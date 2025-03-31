@@ -16,7 +16,9 @@ import {
   FaMapMarkerAlt, 
   FaEuroSign,
   FaExclamationTriangle,
-  FaShieldAlt
+  FaShieldAlt,
+  FaCheck,
+  FaInfoCircle
 } from "react-icons/fa";
 import {
   inputWithIconClass,
@@ -24,6 +26,7 @@ import {
   textareaWithIconClass,
   checkboxClass
 } from '@/components/ui/InputStyles';
+import Logo from "@/components/Logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -118,14 +121,11 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-gray-50 to-white px-4 py-8 sm:px-6 md:py-12">
       <div className="mx-auto max-w-2xl">
-        {/* Logo and Brand */}
-        <div className="mb-6 flex justify-center">
-          <div className="flex items-center space-x-2">
-            <FaBaby className="h-8 w-8 text-violet-600" />
-            <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-              ChildminderConnect
-            </span>
+        <div className="text-center">
+          <div className="mb-6 flex justify-center">
+            <Logo />
           </div>
+          <h1 className="text-3xl font-extrabold text-gray-900">Create your account</h1>
         </div>
 
         <div className="overflow-hidden rounded-xl bg-white shadow-lg border border-gray-200">

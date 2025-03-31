@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaBaby } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import Logo from "@/components/Logo";
 
 export default function Footer() {
   return (
@@ -9,11 +10,8 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8 sm:py-10">
         <div className="flex flex-col items-center text-center">
           <div className="mb-6">
-            <Link href="/" className="flex items-center justify-center space-x-2 font-bold hover:opacity-90 transition-opacity mb-3">
-              <FaBaby className="h-7 w-7 text-violet-400" />
-              <span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent text-xl">
-                ChildminderConnect
-              </span>
+            <Link href="/" className="mb-3 flex justify-center">
+              <Logo />
             </Link>
             <p className="mb-4 text-sm sm:text-base">
               Connecting parents with trusted childminders in your local area.
@@ -50,6 +48,11 @@ export default function Footer() {
               <li>
                 <Link href="/contact" className="inline-block transition-colors duration-200 hover:text-white">
                   Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/safety" className="inline-block transition-colors duration-200 hover:text-white">
+                  Safety & Verification
                 </Link>
               </li>
               <li>

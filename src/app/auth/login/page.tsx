@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaEnvelope, FaLock, FaSpinner, FaBaby, FaTools } from "react-icons/fa";
 import { inputWithIconClass, checkboxClass } from '@/components/ui/InputStyles';
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -243,12 +244,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <div className="mb-6 flex justify-center">
-              <div className="flex items-center space-x-2">
-                <FaBaby className="h-8 w-8 text-violet-600" />
-                <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-2xl font-bold text-transparent">
-                  ChildminderConnect
-                </span>
-              </div>
+              <Logo />
             </div>
             <h1 className="text-3xl font-extrabold text-gray-900">Welcome back</h1>
             <p className="mt-2 text-sm text-gray-600">

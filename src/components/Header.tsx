@@ -6,7 +6,6 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { 
-  FaBaby, 
   FaUserCircle, 
   FaChevronDown, 
   FaChevronUp,
@@ -22,6 +21,7 @@ import {
   FaBars,
   FaTimes
 } from "react-icons/fa";
+import Logo from "@/components/Logo";
 
 // Define props for Header component
 interface HeaderProps {
@@ -135,11 +135,8 @@ export default function Header({ sidebarOpen, toggleSidebar }: HeaderProps = {})
               </button>
             )}
             
-            <Link href="/" className="flex items-center space-x-2 font-bold hover:opacity-90 transition-opacity" aria-label="ChildminderConnect Home">
-              <FaBaby className="h-7 w-7 text-violet-600" />
-              <span className="bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent text-xl">
-                ChildminderConnect
-              </span>
+            <Link href="/" aria-label="ChildminderConnect Home">
+              <Logo />
             </Link>
           </div>
 
@@ -157,6 +154,14 @@ export default function Header({ sidebarOpen, toggleSidebar }: HeaderProps = {})
                         className="text-sm font-medium text-gray-700 hover:text-violet-600"
                       >
                         About
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/safety"
+                        className="text-sm font-medium text-gray-700 hover:text-violet-600"
+                      >
+                        Safety
                       </Link>
                     </li>
                     <li>
@@ -193,6 +198,18 @@ export default function Header({ sidebarOpen, toggleSidebar }: HeaderProps = {})
                         }`}
                       >
                         About
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/safety"
+                        className={`text-sm font-medium ${
+                          pathname === "/safety"
+                            ? "text-violet-600"
+                            : "text-gray-700 hover:text-violet-600"
+                        }`}
+                      >
+                        Safety
                       </Link>
                     </li>
                     <li>
