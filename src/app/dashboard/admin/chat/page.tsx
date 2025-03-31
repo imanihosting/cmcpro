@@ -159,7 +159,7 @@ export default function AdminChatDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Live Chat Support</h1>
+      <h1 className="text-2xl font-bold mb-6 text-indigo-800 border-b pb-3">Live Chat Support</h1>
       
       <div className="bg-white rounded-lg shadow-md">
         <div className="flex">
@@ -170,7 +170,7 @@ export default function AdminChatDashboard() {
                 <button 
                   onClick={() => setFilter("ACTIVE")}
                   className={`px-3 py-1 rounded text-sm ${filter === "ACTIVE" 
-                    ? "bg-blue-600 text-white" 
+                    ? "bg-indigo-600 text-white" 
                     : "bg-gray-100 text-gray-700"}`}
                 >
                   Active
@@ -178,7 +178,7 @@ export default function AdminChatDashboard() {
                 <button 
                   onClick={() => setFilter("CLOSED")}
                   className={`px-3 py-1 rounded text-sm ${filter === "CLOSED" 
-                    ? "bg-blue-600 text-white" 
+                    ? "bg-indigo-600 text-white" 
                     : "bg-gray-100 text-gray-700"}`}
                 >
                   Closed
@@ -192,7 +192,7 @@ export default function AdminChatDashboard() {
             <div className="overflow-y-auto h-[calc(100vh-280px)]">
               {loading ? (
                 <div className="flex justify-center items-center h-32">
-                  <Loader className="w-6 h-6 text-blue-600 animate-spin" />
+                  <Loader className="w-6 h-6 text-indigo-600 animate-spin" />
                 </div>
               ) : activeSessions.length === 0 ? (
                 <div className="p-4 text-center text-gray-500">
@@ -204,12 +204,12 @@ export default function AdminChatDashboard() {
                     key={session.id}
                     onClick={() => setSelectedSession(session.id)}
                     className={`p-3 border-b cursor-pointer hover:bg-gray-50 ${
-                      selectedSession === session.id ? "bg-blue-50" : ""
+                      selectedSession === session.id ? "bg-indigo-50" : ""
                     }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">{getSessionName(session)}</h3>
+                        <h3 className="font-medium text-indigo-700">{getSessionName(session)}</h3>
                         <p className="text-sm text-gray-500 mt-1">
                           {getLastMessagePreview(session)}
                         </p>
@@ -245,12 +245,12 @@ export default function AdminChatDashboard() {
             ) : (
               <>
                 {/* Chat Header */}
-                <div className="p-4 border-b flex justify-between items-center">
+                <div className="p-4 border-b flex justify-between items-center bg-indigo-50">
                   <div>
-                    <h2 className="font-medium">
-                      {activeSessions.find(s => s.id === selectedSession)
+                    <h2 className="font-semibold text-lg text-indigo-800">
+                      Chat with: {activeSessions.find(s => s.id === selectedSession)
                         ? getSessionName(activeSessions.find(s => s.id === selectedSession)!)
-                        : "Chat"
+                        : "Unknown User"
                       }
                     </h2>
                   </div>
@@ -278,17 +278,17 @@ export default function AdminChatDashboard() {
                       <div
                         className={`max-w-[80%] rounded-lg p-3 ${
                           message.senderType === "AGENT"
-                            ? "bg-blue-600 text-white"
+                            ? "bg-indigo-600 text-white"
                             : message.senderType === "SYSTEM"
                             ? "bg-gray-200 text-gray-700 italic mx-auto max-w-[90%]"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {message.senderType !== "SYSTEM" && (
-                          <div className="font-medium text-sm mb-1">
+                          <div className="font-medium text-sm mb-1 border-b pb-1">
                             {message.senderType === "AGENT" 
-                              ? "Agent" 
-                              : message.Sender?.name || "User"}
+                              ? `Agent: ${message.Sender?.name || message.Sender?.email || "Admin"}` 
+                              : `User: ${message.Sender?.name || message.Sender?.email || "Unknown User"}`}
                           </div>
                         )}
                         <div>{message.content}</div>
@@ -302,7 +302,7 @@ export default function AdminChatDashboard() {
                 </div>
                 
                 {/* Message Input */}
-                <div className="p-4 border-t">
+                <div className="p-4 border-t bg-gray-50">
                   <div className="flex">
                     <input
                       type="text"
@@ -315,7 +315,7 @@ export default function AdminChatDashboard() {
                         }
                       }}
                       placeholder="Type your message..."
-                      className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       disabled={activeSessions.find(s => s.id === selectedSession)?.status === "CLOSED"}
                     />
                     <button
@@ -324,7 +324,7 @@ export default function AdminChatDashboard() {
                       className={`px-4 py-2 rounded-r-lg flex items-center justify-center ${
                         sendingMessage || !newMessage.trim() || activeSessions.find(s => s.id === selectedSession)?.status === "CLOSED"
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700"
                       }`}
                     >
                       {sendingMessage ? (

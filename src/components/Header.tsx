@@ -19,9 +19,17 @@ import {
   FaQuestionCircle,
   FaChartLine,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaComment
 } from "react-icons/fa";
 import Logo from "@/components/Logo";
+import dynamic from "next/dynamic";
+
+// Dynamically load the ChatNotificationBadge to reduce initial load size
+const ChatNotificationBadge = dynamic(() => import('@/components/ChatNotificationBadge'), {
+  ssr: false,
+  loading: () => null
+});
 
 // Define props for Header component
 interface HeaderProps {
@@ -246,92 +254,106 @@ export default function Header({ sidebarOpen, toggleSidebar }: HeaderProps = {})
             {/* Profile section */}
             <div className="flex items-center space-x-4">
               {session ? (
-                <div className="relative" ref={profileMenuRef}>
-                  <button
-                    onClick={toggleProfileMenu}
-                    className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2"
-                  >
-                    <div className="relative h-8 w-8 rounded-full bg-violet-100">
-                      {session.user?.image ? (
-                        <Image
-                          src={session.user.image}
-                          alt="Profile"
-                          fill
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        <FaUserCircle className="h-8 w-8 text-violet-600" />
-                      )}
-                    </div>
-                    <span className="hidden md:inline-block text-sm font-medium text-gray-700">
-                      {session.user?.name || 'User'}
-                    </span>
-                    {profileMenuOpen ? (
-                      <FaChevronUp className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <FaChevronDown className="h-4 w-4 text-gray-500" />
-                    )}
-                  </button>
-
-                  {/* Profile dropdown menu */}
-                  {profileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                      <Link
-                        href={getProfilePath()}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FaUser className="mr-3 h-4 w-4 text-gray-500" />
-                        Profile
-                      </Link>
-                      <Link
-                        href={getSettingsPath()}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FaCog className="mr-3 h-4 w-4 text-gray-500" />
-                        Settings
-                      </Link>
-                      
-                      {/* Add dashboard link */}
-                      <Link
-                        href={`/dashboard/${session.user.role}`}
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
-                        Dashboard
-                      </Link>
-                      
-                      {/* Show admin-specific options for admin users */}
-                      {session.user.role === "admin" && (
-                        <>
-                          <hr className="my-1 border-gray-200" />
-                          <Link
-                            href="/dashboard/admin/monitoring"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <FaChartLine className="mr-3 h-4 w-4 text-gray-500" />
-                            API Monitoring
-                          </Link>
-                          <Link
-                            href="/dashboard/admin/users"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <FaUserCircle className="mr-3 h-4 w-4 text-gray-500" />
-                            User Management
-                          </Link>
-                        </>
-                      )}
-                      
-                      <hr className="my-1 border-gray-200" />
-                      <button
-                        onClick={() => signOut({ callbackUrl: "/" })}
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-500" />
-                        Logout
-                      </button>
-                    </div>
+                <>
+                  {/* Show chat notification badge for admin users */}
+                  {session.user.role === "admin" && (
+                    <ChatNotificationBadge className="hidden md:flex" />
                   )}
-                </div>
+                  
+                  <div className="relative" ref={profileMenuRef}>
+                    <button
+                      onClick={toggleProfileMenu}
+                      className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2"
+                    >
+                      <div className="relative h-8 w-8 rounded-full bg-violet-100">
+                        {session.user?.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt="Profile"
+                            fill
+                            className="rounded-full object-cover"
+                          />
+                        ) : (
+                          <FaUserCircle className="h-8 w-8 text-violet-600" />
+                        )}
+                      </div>
+                      <span className="hidden md:inline-block text-sm font-medium text-gray-700">
+                        {session.user?.name || 'User'}
+                      </span>
+                      {profileMenuOpen ? (
+                        <FaChevronUp className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <FaChevronDown className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+
+                    {/* Profile dropdown menu */}
+                    {profileMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                        <Link
+                          href={getProfilePath()}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaUser className="mr-3 h-4 w-4 text-gray-500" />
+                          Profile
+                        </Link>
+                        <Link
+                          href={getSettingsPath()}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaCog className="mr-3 h-4 w-4 text-gray-500" />
+                          Settings
+                        </Link>
+                        
+                        {/* Add dashboard link */}
+                        <Link
+                          href={`/dashboard/${session.user.role}`}
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-500" />
+                          Dashboard
+                        </Link>
+                        
+                        {/* Show admin-specific options for admin users */}
+                        {session.user.role === "admin" && (
+                          <>
+                            <hr className="my-1 border-gray-200" />
+                            <Link
+                              href="/dashboard/admin/monitoring"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <FaChartLine className="mr-3 h-4 w-4 text-gray-500" />
+                              API Monitoring
+                            </Link>
+                            <Link
+                              href="/dashboard/admin/users"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <FaUserCircle className="mr-3 h-4 w-4 text-gray-500" />
+                              User Management
+                            </Link>
+                            <Link
+                              href="/dashboard/admin/chat"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <FaComment className="mr-3 h-4 w-4 text-gray-500" />
+                              Live Chat
+                            </Link>
+                          </>
+                        )}
+                        
+                        <hr className="my-1 border-gray-200" />
+                        <button
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-500" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <div className="flex items-center space-x-4">
                   <Link
