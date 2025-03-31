@@ -37,8 +37,7 @@ export default function Home() {
             </h1>
             
             <p className="mb-8 text-lg text-white/80 sm:text-xl max-w-xl mx-auto lg:mx-0">
-              Connect with verified, trusted childminders across Ireland. 
-              Skip the long waiting lists and find the perfect care for your children.
+              From one parent to another, we know how stressful it can be to find the right childminder. With waiting lists stretching up to two years, we created Childminder Connect—an Irish-owned platform that pairs you with a trusted minder, quickly and easily.
             </p>
             
             <div className="mb-8 flex flex-col justify-center gap-4 sm:flex-row">

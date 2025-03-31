@@ -51,18 +51,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/safety" className="inline-block transition-colors duration-200 hover:text-white">
-                  Safety & Verification
+                <Link href="/terms" className="inline-block transition-colors duration-200 hover:text-white">
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link href="/auth/login" className="inline-block transition-colors duration-200 hover:text-white">
-                  Sign In
-                </Link>
-              </li>
-              <li>
-                <Link href="/auth/register" className="inline-block transition-colors duration-200 hover:text-white">
-                  Sign Up
+                <Link href="/privacy" className="inline-block transition-colors duration-200 hover:text-white">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
