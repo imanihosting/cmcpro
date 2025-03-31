@@ -432,6 +432,9 @@ model User {
   UserNote_UserNote_adminIdToUser             UserNote[]              @relation("UserNote_adminIdToUser")
   UserNote_UserNote_userIdToUser              UserNote[]              @relation("UserNote_userIdToUser")
   WebhookEvent                                WebhookEvent[]
+  ChatSession_ChatSession_userIdToUser        ChatSession[]           @relation("ChatSession_userIdToUser")
+  ChatSession_ChatSession_agentIdToUser       ChatSession[]           @relation("ChatSession_agentIdToUser")
+  ChatMessage                                 ChatMessage[]
 
   @@index([email])
 }
@@ -515,6 +518,42 @@ model PasswordResetToken {
 
   @@index([token])
   @@index([userId])
+}
+
+model ChatSession {
+  id              String        @id @default(uuid())
+  userId          String?
+  visitorId       String?       // For unauthenticated users
+  status          String        @default("ACTIVE") // ACTIVE, CLOSED, TRANSFERRED
+  agentId         String?       // Admin/agent handling the chat
+  startedAt       DateTime      @default(now())
+  endedAt         DateTime?
+  lastActivity    DateTime      @default(now())
+  metadata        Json?         // Store additional info like page URL, etc.
+  chatMessages    ChatMessage[]
+  User            User?         @relation("ChatSession_userIdToUser", fields: [userId], references: [id], onDelete: SetNull)
+  Agent           User?         @relation("ChatSession_agentIdToUser", fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([status])
+  @@index([lastActivity])
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  sessionId     String
+  senderId      String?     // Can be null for system messages
+  senderType    String      // USER, AGENT, SYSTEM
+  content       String      @db.Text
+  timestamp     DateTime    @default(now())
+  isRead        Boolean     @default(false)
+  chatSession   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  Sender        User?       @relation(fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([senderId])
+  @@index([timestamp])
 }
 
 enum Report_type {
