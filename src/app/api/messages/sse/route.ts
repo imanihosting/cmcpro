@@ -10,12 +10,13 @@ const activeConnections = new Map<string, {
 }>();
 
 // Helper to send a message to a specific user
-export const sendMessageToUser = (
+// This is an internal function, not exported as part of the route handlers
+function sendMessageToUser(
   userId: string, 
   data: any, 
   eventType: string = 'message',
   partnerId?: string
-) => {
+) {
   const connection = activeConnections.get(userId);
   if (connection) {
     // If partnerId is specified and doesn't match the connection's filter, don't send
@@ -31,7 +32,10 @@ export const sendMessageToUser = (
       activeConnections.delete(userId);
     }
   }
-};
+}
+
+// Create a separate file for exporting this functionality if needed externally
+// e.g., create src/lib/message-helpers.ts for this purpose
 
 export async function GET(request: Request) {
   try {

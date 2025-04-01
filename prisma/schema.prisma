@@ -403,6 +403,9 @@ model User {
   trialEndDate                                DateTime?
   trialStartDate                              DateTime?
   is_google_user                              Boolean                 @default(false)
+  lastMinuteAvailable                         Boolean                 @default(false)
+  lastMinuteRadius                            Int?                    @default(5)
+  lastOnline                                  DateTime?
   Account                                     Account[]
   Availability                                Availability[]
   Booking_Booking_childminderIdToUser         Booking[]               @relation("Booking_childminderIdToUser")
@@ -437,6 +440,8 @@ model User {
   UserNote_UserNote_adminIdToUser             UserNote[]              @relation("UserNote_adminIdToUser")
   UserNote_UserNote_userIdToUser              UserNote[]              @relation("UserNote_userIdToUser")
   WebhookEvent                                WebhookEvent[]
+  lastMinuteRecurringSlots                    LastMinuteRecurringSlot[]
+  lastMinuteOneTimeSlots                      LastMinuteOneTimeSlot[]
 
   @@index([email])
 }
@@ -559,23 +564,54 @@ model ChatMessage {
 }
 
 model Recommendation {
-  id              String   @id
-  parentId        String
-  childminderId   String
-  score           Float    @db.Float
-  reasons         Json?
-  isCollaborative Boolean  @default(false)
-  isViewed        Boolean  @default(false)
-  isClicked       Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  childminder     User     @relation("ChildminderRecommendations", fields: [childminderId], references: [id], onDelete: Cascade)
-  parent          User     @relation("ParentRecommendations", fields: [parentId], references: [id], onDelete: Cascade)
+  id                 String   @id
+  parentId           String
+  childminderId      String
+  score              Int
+  reasons            Json
+  isViewed           Boolean  @default(false)
+  isClicked          Boolean  @default(false)
+  isCollaborative    Boolean  @default(false)
+  isEmergency        Boolean  @default(false)
+  recommendationType String   @default("STANDARD")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+  parent             User     @relation("ParentRecommendations", fields: [parentId], references: [id], onDelete: Cascade)
+  childminder        User     @relation("ChildminderRecommendations", fields: [childminderId], references: [id], onDelete: Cascade)
 
-  @@index([parentId])
   @@index([childminderId])
+  @@index([isViewed])
+  @@index([parentId])
+  @@index([recommendationType])
   @@index([score])
-  @@index([createdAt])
+}
+
+model LastMinuteRecurringSlot {
+  id        String   @id @default(uuid())
+  userId    String
+  dayOfWeek Int      // 0-6 where 0 is Sunday
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dayOfWeek])
+}
+
+model LastMinuteOneTimeSlot {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
 }
 
 enum Report_type {

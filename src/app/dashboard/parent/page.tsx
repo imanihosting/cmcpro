@@ -22,6 +22,8 @@ import { ReactNode } from "react";
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatDistanceToNow } from 'date-fns';
 import AIRecommendations from '@/components/dashboard/parent/AIRecommendations';
+import { FiSearch, FiCalendar } from "react-icons/fi";
+import { AlertTriangle } from "lucide-react";
 
 // Define types for the components
 interface DashboardCardProps {
@@ -372,71 +374,38 @@ function DashboardContent() {
         </div>
       </section>
       
-      {/* Quick actions section */}
-      <section className="mb-8">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          <Link 
-            href="/dashboard/parent/find-childminders"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-              <FaCalendarAlt className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">New Booking</span>
-          </Link>
+      {/* Quick actions */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DashboardCard
+            icon={<FiSearch className="h-5 w-5" />}
+            title="Find Childminders"
+            description="Search and browse our directory of trusted childminders"
+            linkText="Find Now"
+            linkHref="/dashboard/parent/find-childminders"
+            color="violet"
+          />
           
-          <Link 
-            href="/dashboard/parent/find-childminders"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-              <FaSearch className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">Find Childminders</span>
-          </Link>
+          <DashboardCard
+            icon={<FiCalendar className="h-5 w-5" />}
+            title="Book Childcare"
+            description="Schedule regular childcare with your preferred childminders"
+            linkText="Book Now"
+            linkHref="/dashboard/parent/bookings/create"
+            color="indigo"
+          />
           
-          <Link 
-            href="/dashboard/parent/messages"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-              <FaComments className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">Messages</span>
-          </Link>
-
-          <Link 
-            href="/dashboard/parent/children"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-              <FaChild className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">My Children</span>
-          </Link>
-
-          <Link 
-            href="/dashboard/parent/subscription"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-              <FaCreditCard className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">Subscription</span>
-          </Link>
-
-          <Link 
-            href="/dashboard/parent/help"
-            className="flex flex-col items-center justify-center rounded-lg bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]"
-          >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-              <FaQuestionCircle className="h-5 w-5" />
-            </div>
-            <span className="text-sm font-medium text-gray-900">Help & Support</span>
-          </Link>
+          <DashboardCard
+            icon={<AlertTriangle className="h-5 w-5" />}
+            title="Emergency Childcare"
+            description="Need urgent childcare? Request immediate help from available childminders"
+            linkText="Request Now"
+            linkHref="/dashboard/parent/emergency-booking"
+            color="purple"
+          />
         </div>
-      </section>
+      </div>
       
       {/* Main content grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -8,7 +8,7 @@ export default function Dashboard() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const subscriptionSuccess = searchParams.get('subscription') === 'success';
+  const subscriptionSuccess = searchParams?.get('subscription') === 'success';
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(5);
 

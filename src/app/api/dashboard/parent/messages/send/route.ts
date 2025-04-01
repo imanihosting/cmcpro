@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
-import { sendMessageToUser } from '@/app/api/messages/sse/route';
+import { sendMessageToUser } from '@/lib/sse';
 
 interface SendMessageRequest {
   receiverId: string;
@@ -119,17 +119,15 @@ export async function POST(request: Request) {
     // Send to receiver
     sendMessageToUser(
       receiverId,
-      notificationForRecipient,
       'new-message',
-      senderId
+      notificationForRecipient
     );
     
     // Also send to sender for multi-device sync
     sendMessageToUser(
       senderId,
-      formattedMessage,
       'new-message',
-      receiverId
+      formattedMessage
     );
     
     return NextResponse.json({ message: formattedMessage }, { status: 201 });

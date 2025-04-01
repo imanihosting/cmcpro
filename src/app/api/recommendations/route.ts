@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import * as ml from '@/lib/ml';
+import { Prisma } from '@prisma/client';
 
 /**
  * GET /api/recommendations
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
     const parentId = session.user.id;
 
     // Check for existing recommendations that are less than 24 hours old
-    const recentRecommendations = await prisma.recommendation.findMany({
+    const recentRecommendations = await (prisma as any).recommendation.findMany({
       where: {
         parentId,
         createdAt: {
@@ -83,7 +84,7 @@ export async function GET(request: Request) {
     // If we have recent recommendations, return them
     if (recentRecommendations.length > 0) {
       // Mark recommendations as viewed
-      await prisma.recommendation.updateMany({
+      await (prisma as any).recommendation.updateMany({
         where: {
           parentId,
           isViewed: false
@@ -94,11 +95,11 @@ export async function GET(request: Request) {
       });
 
       // Format the response
-      const formattedRecommendations = recentRecommendations.map(rec => {
+      const formattedRecommendations = recentRecommendations.map((rec: any) => {
         // Calculate average rating
-        const ratings = rec.childminder.Review_Review_revieweeIdToUser.map(review => review.rating);
+        const ratings = rec.childminder.Review_Review_revieweeIdToUser.map((review: any) => review.rating);
         const averageRating = ratings.length > 0 
-          ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+          ? ratings.reduce((sum: number, rating: number) => sum + rating, 0) / ratings.length 
           : 0;
 
         return {
@@ -229,33 +230,70 @@ export async function GET(request: Request) {
       status: booking.status,
     }));
 
-    const childminderProfiles: ml.ChildminderProfile[] = childminders.map(cm => ({
-      id: cm.id,
-      name: cm.name,
-      bio: cm.bio,
-      location: cm.location,
-      rate: cm.rate,
-      yearsOfExperience: cm.yearsOfExperience,
-      ageGroupsServed: cm.ageGroupsServed as string[] | null,
-      languagesSpoken: cm.languagesSpoken as string[] | null,
-      specialNeedsExp: cm.specialNeedsExp,
-      firstAidCert: cm.firstAidCert,
-      gardaVetted: cm.gardaVetted,
-      tuslaRegistered: cm.tuslaRegistered,
-      reviewRatings: cm.Review_Review_revieweeIdToUser.map(review => review.rating),
-    }));
+    // Convert db childminder to ML-compatible format
+    const childminderProfiles = childminders.map(cm => {
+      // Create a properly formatted ChildminderProfile object
+      const profile: ml.ChildminderProfile = {
+        id: cm.id,
+        name: cm.name || "", // Ensure name is never null
+        bio: cm.bio,
+        location: cm.location,
+        rate: cm.rate as unknown as number, // Cast to number to satisfy TypeScript
+        yearsOfExperience: cm.yearsOfExperience,
+        ageGroupsServed: cm.ageGroupsServed as string[] | null,
+        languagesSpoken: cm.languagesSpoken as string[] | null,
+        specialNeedsExp: cm.specialNeedsExp,
+        firstAidCert: cm.firstAidCert,
+        gardaVetted: cm.gardaVetted,
+        tuslaRegistered: cm.tuslaRegistered,
+        reviewRatings: cm.Review_Review_revieweeIdToUser.map(review => review.rating)
+      };
+      return profile;
+    });
 
     // Generate content-based recommendations
     const contentBasedRecommendations = ml.filterChildmindersByPreferences(
       parentProfile,
       childminderProfiles,
       formattedBookings
-    ).slice(0, 5); // Get top 5 recommendations
+    );
+
+    console.log('All potential recommendations:', contentBasedRecommendations.map(rec => rec.id));
+
+    // CRITICAL FIX: Ensure each childminder only appears ONCE in the recommendations
+    // Sort by score to prioritize best matches first
+    const uniqueRecommendations: ml.ChildminderProfile[] = [];
+    const recommendationMap = new Map<string, ml.ChildminderProfile>();
+
+    // First, sort by highest score
+    contentBasedRecommendations.sort((a, b) => {
+      const scoreA = ml.calculateSimilarityScore(parentProfile, a, formattedBookings);
+      const scoreB = ml.calculateSimilarityScore(parentProfile, b, formattedBookings);
+      return scoreB - scoreA; // Descending order
+    });
+
+    // Then create a Map where each childminder can only appear once
+    // This guarantees no duplicates since Maps only store one value per key
+    contentBasedRecommendations.forEach(rec => {
+      if (!recommendationMap.has(rec.id)) {
+        recommendationMap.set(rec.id, rec);
+      }
+    });
+
+    // Convert Map back to array and take top 5
+    const finalRecommendations = Array.from(recommendationMap.values()).slice(0, 5);
+
+    console.log('Final unique recommendations (guaranteed no duplicates):', 
+      finalRecommendations.map(rec => `${rec.id} (${rec.name})`));
 
     // Create new recommendation records
     const now = new Date();
     const recommendationRecords = await Promise.all(
-      contentBasedRecommendations.map(async (rec, index) => {
+      finalRecommendations.map(async (rec, index) => {
+        // Ensure each recommendation gets a unique ID
+        const newRecommendationId = uuidv4();
+        console.log(`Creating recommendation with ID ${newRecommendationId} for childminder ${rec.id} (${rec.name})`);
+        
         // Generate explanation for this recommendation
         const reasons = ml.generateRecommendationExplanation(
           parentProfile,
@@ -268,9 +306,9 @@ export async function GET(request: Request) {
         const normalizedScore = Math.min(100, Math.max(0, score));
 
         // Create recommendation record
-        return prisma.recommendation.create({
+        return (prisma as any).recommendation.create({
           data: {
-            id: uuidv4(),
+            id: newRecommendationId,
             parentId: parentId,
             childminderId: rec.id,
             score: normalizedScore,
@@ -318,11 +356,11 @@ export async function GET(request: Request) {
     );
 
     // Format recommendations for response
-    const formattedRecommendations = recommendationRecords.map(rec => {
+    const formattedRecommendations = recommendationRecords.map((rec: any) => {
       // Calculate average rating
-      const ratings = rec.childminder.Review_Review_revieweeIdToUser.map(review => review.rating);
+      const ratings = rec.childminder.Review_Review_revieweeIdToUser.map((review: any) => review.rating);
       const averageRating = ratings.length > 0 
-        ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+        ? ratings.reduce((sum: number, rating: number) => sum + rating, 0) / ratings.length 
         : 0;
 
       return {

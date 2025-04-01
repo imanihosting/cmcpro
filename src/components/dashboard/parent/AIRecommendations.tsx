@@ -33,9 +33,31 @@ interface Recommendation {
     reviewCount: number;
   };
   score: number;
-  reasons: string[];
+  reasons: string[] | string;
   isCollaborative: boolean;
 }
+
+// Helper function to safely parse reasons
+const parseReasons = (reasons: string | string[] | any): string[] => {
+  // If it's already an array, return it
+  if (Array.isArray(reasons)) {
+    return reasons;
+  }
+  
+  // If it's a string, try to parse it as JSON
+  if (typeof reasons === 'string') {
+    try {
+      const parsed = JSON.parse(reasons);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error('Error parsing reasons:', error);
+      return [];
+    }
+  }
+  
+  // Fallback to empty array
+  return [];
+};
 
 export default function AIRecommendations() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -54,7 +76,23 @@ export default function AIRecommendations() {
       }
       
       const data = await response.json();
-      setRecommendations(data.data);
+      
+      // Extra verification to ensure no duplicates in the frontend
+      const seenChildminderIds = new Set();
+      const uniqueRecommendations = data.data.filter((rec: Recommendation) => {
+        if (seenChildminderIds.has(rec.childminder.id)) {
+          console.warn(`Duplicate childminder detected: ${rec.childminder.id} (${rec.childminder.name})`);
+          return false;
+        }
+        seenChildminderIds.add(rec.childminder.id);
+        return true;
+      });
+      
+      if (uniqueRecommendations.length !== data.data.length) {
+        console.warn(`Removed ${data.data.length - uniqueRecommendations.length} duplicate childminders`);
+      }
+      
+      setRecommendations(uniqueRecommendations);
       setIsFresh(data.fresh);
       setLoading(false);
     } catch (err) {
@@ -208,17 +246,23 @@ export default function AIRecommendations() {
               
               <div className="mt-4 space-y-2 border-t pt-3">
                 <p className="text-sm font-semibold text-gray-700 mb-2">Why recommended:</p>
-                {recommendation.reasons.slice(0, 2).map((reason, idx) => (
-                  <div key={idx} className="flex items-start text-sm">
-                    <CheckCircle size={16} className="text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{reason}</span>
-                  </div>
-                ))}
-                {recommendation.reasons.length > 2 && (
-                  <div className="text-sm text-blue-600 font-medium mt-1">
-                    +{recommendation.reasons.length - 2} more reasons
-                  </div>
-                )}
+                {(() => {
+                  const reasonsList = parseReasons(recommendation.reasons);
+                  return reasonsList.slice(0, 2).map((reason, idx) => (
+                    <div key={idx} className="flex items-start text-sm">
+                      <CheckCircle size={16} className="text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{reason}</span>
+                    </div>
+                  ));
+                })()}
+                {(() => {
+                  const reasonsList = parseReasons(recommendation.reasons);
+                  return reasonsList.length > 2 && (
+                    <div className="text-sm text-blue-600 font-medium mt-1">
+                      +{reasonsList.length - 2} more reasons
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

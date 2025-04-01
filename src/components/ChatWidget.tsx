@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Send, X, Loader, ChevronDown, RefreshCw } from "lucide-react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import { useSession } from "next-auth/react";
+import { IoMdSend } from "react-icons/io";
+import { FiX } from "react-icons/fi";
+import { RiChat3Line } from "react-icons/ri";
+import { motion, AnimatePresence } from "framer-motion";
+import Cookies from 'js-cookie';
 
 interface ChatMessage {
   id: string;
@@ -19,187 +25,275 @@ interface ChatSession {
 }
 
 export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { data: session, status: authStatus } = useSession();
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [reopeningChat, setReopeningChat] = useState(false);
   const [visitorId, setVisitorId] = useState<string | null>(null);
-  const [sessionStatus, setSessionStatus] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const chatPollInterval = useRef<NodeJS.Timeout | null>(null);
+  const [showWidget, setShowWidget] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize visitor ID
   useEffect(() => {
-    // Check local storage for existing visitor ID
-    const storedVisitorId = localStorage.getItem("chat_visitor_id");
-    if (storedVisitorId) {
-      setVisitorId(storedVisitorId);
-    } else {
-      // Generate a new visitor ID if none exists
-      const newVisitorId = uuidv4();
-      localStorage.setItem("chat_visitor_id", newVisitorId);
-      setVisitorId(newVisitorId);
+    // Initialize visitor ID from cookie or create new one
+    let vid = Cookies.get('visitor_id');
+    if (!vid && authStatus === 'unauthenticated') {
+      vid = uuidv4();
+      Cookies.set('visitor_id', vid, { expires: 365 }); // Store for 1 year
     }
+    setVisitorId(vid || null);
 
     // Check for existing session
-    const storedSessionId = localStorage.getItem("chat_session_id");
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-      fetchSessionDetails(storedSessionId);
-      fetchMessages(storedSessionId);
+    const existingSessionId = localStorage.getItem("chat_session_id");
+    if (existingSessionId) {
+      setSessionId(existingSessionId);
     }
-  }, []);
+
+    // Check if user is admin - don't show widget to admins
+    if (authStatus === "authenticated") {
+      if (session?.user?.role !== "admin") {
+        setShowWidget(true);
+      } else {
+        setShowWidget(false);
+      }
+    } else if (authStatus === "unauthenticated") {
+      // Show to unauthenticated users too
+      setShowWidget(true);
+    }
+  }, [authStatus, session]);
+
+  // Determine if we should show the widget
+  useEffect(() => {
+    // Show widget if user is authenticated or we have a visitor ID
+    if (authStatus === 'authenticated' || (authStatus === 'unauthenticated' && visitorId)) {
+      setShowWidget(true);
+    } else {
+      setShowWidget(false);
+    }
+  }, [authStatus, visitorId]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // Poll for new messages when chat is open
   useEffect(() => {
     if (isOpen && sessionId) {
-      fetchSessionDetails(sessionId);
-      fetchMessages(sessionId);
+      fetchSessionDetails();
+      fetchMessages();
       
       // Set up polling every 5 seconds
-      chatPollInterval.current = setInterval(() => {
-        fetchSessionDetails(sessionId);
-        fetchMessages(sessionId);
+      const interval = setInterval(() => {
+        fetchSessionDetails();
+        fetchMessages();
       }, 5000);
+      
+      return () => clearInterval(interval);
     }
-
-    return () => {
-      if (chatPollInterval.current) {
-        clearInterval(chatPollInterval.current);
-      }
-    };
   }, [isOpen, sessionId]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const fetchSessionDetails = async (sid: string) => {
+  // Fetch session details
+  const fetchSessionDetails = async () => {
+    if (!sessionId) return;
+    
+    setError(null);
     try {
-      const response = await axios.get(`/api/chat/sessions/${sid}`);
-      setSessionStatus(response.data.status);
+      const response = await fetch(`/api/chat/sessions/${sessionId}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSessionStatus(data.status);
+      } else if (response.status === 401) {
+        console.error("Unauthorized access to chat session");
+        setError("You are not authorized to access this chat session");
+      } else {
+        console.error("Failed to fetch session details");
+        setError("Failed to load chat session details");
+      }
     } catch (error) {
       console.error("Error fetching session details:", error);
+      setError("Error loading chat session");
     }
   };
 
-  const fetchMessages = async (sid: string) => {
+  // Fetch messages for the current session
+  const fetchMessages = async () => {
+    if (!sessionId) return;
+    
+    setError(null);
     try {
-      const response = await axios.get(`/api/chat/messages?sessionId=${sid}`);
-      setMessages(response.data);
+      const response = await fetch(`/api/chat/messages?sessionId=${sessionId}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data);
+      } else if (response.status === 401) {
+        console.error("Unauthorized access to chat messages");
+        setError("You are not authorized to view these messages");
+      } else {
+        console.error("Failed to fetch messages");
+        setError("Failed to load chat messages");
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
+      setError("Error loading chat messages");
     }
   };
 
+  // Start a new chat
   const startChat = async () => {
-    if (sessionId) {
-      // Already have a session, just open the chat
-      setIsOpen(true);
-      return;
-    }
-
-    setLoading(true);
     try {
-      // Get current page URL to store in metadata
-      const pageUrl = window.location.href;
-      const pageTitle = document.title;
-
-      const response = await axios.post("/api/chat/sessions", {
-        visitorId,
-        metadata: {
-          pageUrl,
-          pageTitle,
-          userAgent: navigator.userAgent
-        }
+      setLoading(true);
+      setError(null);
+      
+      const payload: Record<string, any> = {
+        status: "ACTIVE",
+        topic: "Support Request",
+      };
+      
+      // Add user ID for authenticated users
+      if (authStatus === 'authenticated' && session?.user?.id) {
+        payload.userId = session.user.id;
+      } 
+      // Add visitor ID for unauthenticated users
+      else if (authStatus === 'unauthenticated' && visitorId) {
+        payload.visitorId = visitorId;
+      }
+      
+      const response = await fetch("/api/chat/sessions", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
       });
 
-      const newSessionId = response.data.id;
-      setSessionId(newSessionId);
-      setSessionStatus("ACTIVE");
-      localStorage.setItem("chat_session_id", newSessionId);
-      
-      // Fetch initial messages
-      fetchMessages(newSessionId);
-      setIsOpen(true);
+      if (response.ok) {
+        const data = await response.json();
+        setSessionId(data.id);
+        setSessionStatus(data.status);
+        localStorage.setItem("chat_session_id", data.id);
+        setIsOpen(true);
+        
+        // Fetch initial messages
+        fetchMessages();
+      } else {
+        console.error("Failed to start chat");
+        setError("Failed to start chat session");
+      }
     } catch (error) {
       console.error("Error starting chat:", error);
+      setError("Error starting chat");
     } finally {
       setLoading(false);
     }
   };
 
-  const reopenChat = async () => {
-    if (!sessionId) return;
-    
-    setReopeningChat(true);
-    try {
-      await axios.patch(`/api/chat/sessions/${sessionId}`, {
-        status: "ACTIVE"
-      });
-      
-      // Refresh session details and messages
-      fetchSessionDetails(sessionId);
-      fetchMessages(sessionId);
-    } catch (error) {
-      console.error("Error reopening chat:", error);
-    } finally {
-      setReopeningChat(false);
-    }
-  };
-
-  const sendMessage = async () => {
+  // Send a message
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!sessionId || !newMessage.trim() || sessionStatus === "CLOSED") return;
 
-    setSendingMessage(true);
-    
-    // Optimistically add message to UI
-    const tempId = "temp-" + Date.now();
-    const tempMessage = {
-      id: tempId,
-      content: newMessage,
-      senderType: "USER" as const,
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, tempMessage]);
-    setNewMessage("");
-
     try {
-      await axios.post("/api/chat/messages", {
-        sessionId,
-        content: tempMessage.content
-      });
+      setSendingMessage(true);
+      setError(null);
       
-      // Fetch updated messages to get actual message ID and any responses
-      fetchMessages(sessionId);
+      const response = await fetch("/api/chat/messages", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          sessionId,
+          content: newMessage,
+        }),
+      });
+
+      if (response.ok) {
+        setNewMessage("");
+        // Fetch updated messages
+        fetchMessages();
+      } else if (response.status === 401) {
+        console.error("Unauthorized to send message");
+        setError("You are not authorized to send messages");
+      } else {
+        console.error("Failed to send message");
+        setError("Failed to send message");
+      }
     } catch (error) {
       console.error("Error sending message:", error);
-      // Remove the temp message if sending failed
-      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      setError("Error sending message");
     } finally {
       setSendingMessage(false);
     }
   };
 
-  const minimizeChat = () => {
-    setIsOpen(false);
+  // Reopen a closed chat
+  const reopenChat = async () => {
+    if (!sessionId) return;
+
+    try {
+      setReopeningChat(true);
+      setError(null);
+      
+      const response = await fetch(`/api/chat/sessions/${sessionId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          status: "ACTIVE",
+        }),
+      });
+
+      if (response.ok) {
+        setSessionStatus("ACTIVE");
+        // Refresh messages
+        fetchMessages();
+      } else if (response.status === 401) {
+        console.error("Unauthorized to reopen chat");
+        setError("You are not authorized to reopen this chat");
+      } else {
+        console.error("Failed to reopen chat");
+        setError("Failed to reopen chat");
+      }
+    } catch (error) {
+      console.error("Error reopening chat:", error);
+      setError("Error reopening chat");
+    } finally {
+      setReopeningChat(false);
+    }
   };
 
-  const startNewChat = () => {
-    // Clear the current session
+  // Helper function to get authentication headers
+  const getAuthHeaders = () => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add visitor ID header for unauthenticated users
+    if (authStatus === 'unauthenticated' && visitorId) {
+      headers['x-visitor-id'] = visitorId;
+    }
+    
+    return headers;
+  };
+
+  // Handle authentication errors
+  const handleAuthError = () => {
+    setError("Your session has expired. Please refresh the page to continue.");
+    // Clear session ID as it's no longer valid
     localStorage.removeItem("chat_session_id");
     setSessionId(null);
-    setSessionStatus(null);
-    setMessages([]);
-    
-    // Start a new chat
-    startChat();
   };
+
+  // Don't render widget for admins or if explicitly hidden
+  if (!showWidget) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col">
@@ -210,12 +304,6 @@ export default function ChatWidget() {
             <h3 className="font-medium">Chat Support</h3>
             <div className="flex space-x-1">
               <button 
-                onClick={minimizeChat} 
-                className="p-1 hover:bg-indigo-700 rounded"
-              >
-                <ChevronDown size={18} />
-              </button>
-              <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-indigo-700 rounded"
               >
@@ -226,6 +314,19 @@ export default function ChatWidget() {
           
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-3 bg-gray-50">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-2 rounded mb-2 text-sm">
+                {error}
+                {error.includes("expired") && (
+                  <button 
+                    onClick={startChat}
+                    className="ml-2 underline hover:text-red-800"
+                  >
+                    Start new chat
+                  </button>
+                )}
+              </div>
+            )}
             {messages.map(message => (
               <div
                 key={message.id}
@@ -249,7 +350,7 @@ export default function ChatWidget() {
                 </div>
               </div>
             ))}
-            <div ref={chatEndRef} />
+            <div ref={messagesEndRef} />
           </div>
           
           {/* Message input or closed chat notice */}
@@ -277,7 +378,7 @@ export default function ChatWidget() {
                     <span>Reopen Chat</span>
                   </button>
                   <button
-                    onClick={startNewChat}
+                    onClick={startChat}
                     className="flex-1 py-2 px-3 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                   >
                     Start New Chat
@@ -293,14 +394,17 @@ export default function ChatWidget() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      sendMessage();
+                      sendMessage(e);
                     }
                   }}
                   placeholder="Type your message..."
                   className="flex-1 border rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    sendMessage(e);
+                  }}
                   disabled={sendingMessage || !newMessage.trim()}
                   className={`px-3 py-2 rounded-r-lg flex items-center justify-center ${
                     sendingMessage || !newMessage.trim()
@@ -320,15 +424,19 @@ export default function ChatWidget() {
         </div>
       ) : (
         <button
-          onClick={startChat}
+          onClick={() => {
+            setIsOpen(true);
+            if (!sessionId) {
+              startChat();
+            }
+          }}
           disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center w-14 h-14"
+          className={`rounded-full w-14 h-14 flex items-center justify-center shadow-lg ${
+            loading ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-700"
+          } text-white`}
+          aria-label="Open chat"
         >
-          {loading ? (
-            <Loader className="w-6 h-6 animate-spin" />
-          ) : (
-            <MessageSquare className="w-6 h-6" />
-          )}
+          {loading ? <Loader className="w-6 h-6 animate-spin" /> : <MessageSquare className="w-6 h-6" />}
         </button>
       )}
     </div>

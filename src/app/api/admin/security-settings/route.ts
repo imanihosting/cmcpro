@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 
 interface SecuritySettingMetadata {
   min?: number;
@@ -209,7 +210,16 @@ async function saveSecuritySettings(updatedSettings: SecuritySettingData[]): Pro
             value: setting.value,
             updatedAt: new Date()
           },
-          create: setting
+          create: {
+            id: setting.id || uuidv4(),
+            key: setting.key,
+            value: setting.value,
+            description: setting.description,
+            type: setting.type,
+            metadata: setting.metadata ? JSON.stringify(setting.metadata) : undefined,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
         });
       }
     } else {

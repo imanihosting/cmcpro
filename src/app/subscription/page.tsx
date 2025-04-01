@@ -15,9 +15,9 @@ export default function SubscriptionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const required = searchParams.get('required');
-  const canceled = searchParams.get('canceled');
-  const success = searchParams.get('success');
+  const required = searchParams?.get('required');
+  const canceled = searchParams?.get('canceled');
+  const success = searchParams?.get('success');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly');
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);

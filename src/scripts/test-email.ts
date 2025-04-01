@@ -24,13 +24,12 @@ async function testEmailSending() {
     
     // Send a test email
     await sendEmail({
-      toEmail: testEmail,
+      to: testEmail,
       subject: 'Test Email from Childminders Connect',
       body: `
         <h1>Test Email</h1>
-        <p>This is a test email from Childminders Connect to verify Microsoft Graph configuration.</p>
-        <p>If you're receiving this email, it means the email sending functionality is working correctly!</p>
-        <p>Timestamp: ${new Date().toISOString()}</p>
+        <p>This is a test email from the Childminders Connect application.</p>
+        <p>If you're seeing this, email sending is working correctly!</p>
       `,
       isHtml: true
     });
