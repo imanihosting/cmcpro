@@ -340,14 +340,14 @@ export default function CalendarPage() {
       </div>
 
       {/* Status color legend */}
-      <div className="rounded-lg bg-white shadow p-4">
-        <h3 className="font-medium text-gray-900 mb-3">Booking Status Legend</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div className="rounded-lg bg-white shadow p-5">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Booking Status Legend</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6">
           {Object.entries(STATUS_COLORS).map(([status, color]) => (
             status !== 'DEFAULT' && (
-              <div key={status} className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }}></div>
-                <span className="text-sm font-medium">{status.replace('_', ' ')}</span>
+              <div key={status} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full shadow-sm" style={{ backgroundColor: color }}></div>
+                <span className="text-base font-semibold text-gray-900">{status.replace('_', ' ')}</span>
               </div>
             )
           ))}

@@ -7,7 +7,7 @@ import { EventSourceInput } from '@fullcalendar/core';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import EventDetailModal from './EventDetailModal';
 import AvailabilityModal from './AvailabilityModal';
-import { CalendarEvent } from '../types';
+import { CalendarEvent, AvailabilityData } from '../types';
 import './Calendar.css';
 import { FaPlus, FaMinus } from 'react-icons/fa';
 import { BsGoogle } from 'react-icons/bs';
@@ -212,13 +212,22 @@ const Calendar: React.FC = () => {
     setSelectedEvent(null);
   };
   
+  // Fix for Date | undefined type issue
+  const safeRefreshEvents = () => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const view = calendarApi.view;
+
+      fetchEvents({
+        start: view.activeStart,
+        end: view.activeEnd,
+        mode: viewMode
+      });
+    }
+  };
+
   // Handle saving availability
-  const handleSaveAvailability = async (data: {
-    title: string;
-    description?: string;
-    isRecurring: boolean;
-    recurrenceRule?: string;
-  }) => {
+  const handleSaveAvailability = async (data: AvailabilityData) => {
     if (selectedTimeRange) {
       await addAvailability({
         start: selectedTimeRange.start,
@@ -226,65 +235,46 @@ const Calendar: React.FC = () => {
         type: availabilityType,
         title: data.title,
         description: data.description,
-        recurrenceRule: data.isRecurring ? data.recurrenceRule : undefined,
+        recurrenceRule: data.recurrenceRule,
         eventId: selectedEvent?.id
       });
       
       // Refresh calendar events
-      fetchEvents({
-        start: calendarRef.current?.getApi().view.activeStart,
-        end: calendarRef.current?.getApi().view.activeEnd,
-        mode: viewMode
-      });
+      safeRefreshEvents();
       
       closeAvailabilityModal();
     }
   };
   
-  // Handle deleting availability
+  // Update the handleDeleteAvailability function
   const handleDeleteAvailability = async () => {
     if (selectedEvent?.id) {
       await removeAvailability(selectedEvent.id);
       
       // Refresh calendar events
-      fetchEvents({
-        start: calendarRef.current?.getApi().view.activeStart,
-        end: calendarRef.current?.getApi().view.activeEnd,
-        mode: viewMode
-      });
+      safeRefreshEvents();
       
       closeAvailabilityModal();
     }
   };
   
-  // Toggle between bookings and availability view modes
+  // Update the toggleViewMode function
   const toggleViewMode = () => {
     const newMode = viewMode === 'bookings' ? 'availability' : 'bookings';
     setViewMode(newMode);
     
     // Refresh calendar with the new mode
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      fetchEvents({
-        start: calendarApi.view.activeStart,
-        end: calendarApi.view.activeEnd,
-        mode: newMode
-      });
-    }
+    safeRefreshEvents();
   };
   
-  // Handle Google Calendar sync
+  // Update the handleGoogleSync function
   const handleGoogleSync = async () => {
     if (isGoogleCalendarConnected) {
       // Sync calendar
       await syncWithGoogleCalendar();
       
       // Refresh calendar events
-      fetchEvents({
-        start: calendarRef.current?.getApi().view.activeStart,
-        end: calendarRef.current?.getApi().view.activeEnd,
-        mode: viewMode
-      });
+      safeRefreshEvents();
     } else {
       // Redirect to Google Calendar OAuth flow
       window.location.href = '/api/calendar-sync/auth';
@@ -307,11 +297,12 @@ const Calendar: React.FC = () => {
   return (
     <div className="w-full h-full" ref={containerRef}>
       {/* View Toggle and Action Buttons */}
+      <h2 className="sr-only">Calendar Controls</h2>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={toggleViewMode} 
-            className={`px-4 py-2 rounded-md font-medium ${
+            className={`px-4 py-2 rounded-md font-bold text-base ${
               viewMode === 'bookings' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-200 text-gray-800'
@@ -321,7 +312,7 @@ const Calendar: React.FC = () => {
           </button>
           <button 
             onClick={toggleViewMode} 
-            className={`px-4 py-2 rounded-md font-medium ${
+            className={`px-4 py-2 rounded-md font-bold text-base ${
               viewMode === 'availability' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-200 text-gray-800'
@@ -338,7 +329,7 @@ const Calendar: React.FC = () => {
                 setAvailabilityType('AVAILABLE');
                 setShowAvailabilityModal(true);
               }}
-              className="flex items-center gap-1 px-3 py-2 bg-green-500 text-white rounded-md font-medium"
+              className="flex items-center gap-1 px-3 py-2 bg-green-500 text-white rounded-md font-bold text-base"
             >
               <FaPlus size={14} />
               <span>Add Available</span>
@@ -348,14 +339,14 @@ const Calendar: React.FC = () => {
                 setAvailabilityType('UNAVAILABLE');
                 setShowAvailabilityModal(true);
               }}
-              className="flex items-center gap-1 px-3 py-2 bg-red-500 text-white rounded-md font-medium"
+              className="flex items-center gap-1 px-3 py-2 bg-red-500 text-white rounded-md font-bold text-base"
             >
               <FaMinus size={14} />
               <span>Block Time</span>
             </button>
             <button
               onClick={handleGoogleSync}
-              className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50"
+              className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-bold text-base hover:bg-gray-50"
             >
               <BsGoogle size={16} className="text-blue-500" />
               <span>{isGoogleCalendarConnected ? 'Sync Calendar' : 'Connect Google'}</span>
@@ -383,35 +374,37 @@ const Calendar: React.FC = () => {
       )}
       
       {/* Calendar color legend */}
-      <div className="flex flex-wrap gap-4 mb-5 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-        <h3 className="w-full text-lg font-bold text-gray-800 mb-2">Legend:</h3>
-        {viewMode === 'bookings' ? (
-          <>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.confirmed.backgroundColor }}></div>
-              <span className="text-base font-semibold">Confirmed</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.pending.backgroundColor }}></div>
-              <span className="text-base font-semibold">Pending</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.cancelled.backgroundColor }}></div>
-              <span className="text-base font-semibold">Cancelled</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.available.backgroundColor }}></div>
-              <span className="text-base font-semibold">Available</span>
-            </div>
-            <div className="flex items-center">
-              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.unavailable.backgroundColor }}></div>
-              <span className="text-base font-semibold">Unavailable</span>
-            </div>
-          </>
-        )}
+      <div className="flex flex-wrap gap-6 mb-5 p-5 bg-white rounded-lg shadow-sm border border-gray-200">
+        <h3 className="w-full text-xl font-bold text-gray-900 mb-4">Calendar Legend:</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 w-full">
+          {viewMode === 'bookings' ? (
+            <>
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md mr-3 shadow-sm" style={{ backgroundColor: eventColors.confirmed.backgroundColor }}></div>
+                <span className="text-base font-bold text-gray-900">Confirmed</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md mr-3 shadow-sm" style={{ backgroundColor: eventColors.pending.backgroundColor }}></div>
+                <span className="text-base font-bold text-gray-900">Pending</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md mr-3 shadow-sm" style={{ backgroundColor: eventColors.cancelled.backgroundColor }}></div>
+                <span className="text-base font-bold text-gray-900">Cancelled</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md mr-3 shadow-sm" style={{ backgroundColor: eventColors.available.backgroundColor }}></div>
+                <span className="text-base font-bold text-gray-900">Available</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-8 w-8 rounded-md mr-3 shadow-sm" style={{ backgroundColor: eventColors.unavailable.backgroundColor }}></div>
+                <span className="text-base font-bold text-gray-900">Unavailable</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
       
       {/* Calendar component */}
@@ -444,7 +437,7 @@ const Calendar: React.FC = () => {
               // Month view settings
               dayMaxEventRows: isMobile ? 2 : 4,
               titleFormat: { month: 'long', year: 'numeric' },
-              eventMinHeight: isMobile ? 28 : 24
+              eventMinHeight: isMobile ? 32 : 28 // Increased height for better readability
             },
             timeGridWeek: {
               // Week view settings
@@ -463,9 +456,17 @@ const Calendar: React.FC = () => {
             return (
               <div className="p-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
                 {info.timeText && (
-                  <div className="text-xs sm:text-sm font-extrabold mb-0.5">{info.timeText}</div>
+                  <div className="text-xs sm:text-sm font-extrabold mb-0.5 text-gray-900">{info.timeText}</div>
                 )}
-                <div className="text-sm sm:text-base leading-snug font-bold">{info.event.title}</div>
+                <div className="text-sm sm:text-base font-bold leading-tight text-gray-900">{info.event.title}</div>
+              </div>
+            )
+          }}
+          // Enhance heading text
+          dayHeaderContent={(arg) => {
+            return (
+              <div className="text-sm sm:text-base font-bold text-gray-900">
+                {arg.text}
               </div>
             )
           }}
@@ -480,12 +481,17 @@ const Calendar: React.FC = () => {
       {/* Availability modal */}
       {showAvailabilityModal && (
         <AvailabilityModal
+          isOpen={showAvailabilityModal}
           onClose={closeAvailabilityModal}
           onSave={handleSaveAvailability}
           onDelete={selectedEvent ? handleDeleteAvailability : undefined}
+          startDate={selectedTimeRange?.start}
+          endDate={selectedTimeRange?.end}
           type={availabilityType}
-          timeRange={selectedTimeRange}
-          existingEvent={selectedEvent}
+          title={selectedEvent?.title}
+          description={selectedEvent?.description}
+          recurrenceRule={selectedEvent?.extendedProps?.recurrenceRule}
+          isEditing={!!selectedEvent}
         />
       )}
     </div>
