@@ -27,15 +27,22 @@ model Account {
 }
 
 model Availability {
-  id        String   @id
-  userId    String
-  date      DateTime
-  timeSlot  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id
+  userId          String
+  date            DateTime
+  timeSlot        String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  type            String   @default("AVAILABLE") // AVAILABLE or UNAVAILABLE
+  googleEventId   String?  // To store the Google Calendar event ID for syncing
+  title           String?  // Optional title for the availability block
+  description     String?  @db.Text // Optional description
+  recurrenceRule  String?  // Optional iCalendar RRULE for recurring slots
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "Availability_userId_fkey")
+  @@index([date])
+  @@index([type])
 }
 
 model Booking {

@@ -19,10 +19,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Forbidden - Childminder role required' }, { status: 403 });
     }
     
-    // Parse query parameters for date range
+    // Parse query parameters for date range and mode
     const { searchParams } = new URL(request.url);
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
+    const mode = searchParams.get('mode') || 'bookings';
     
     // Validate date range parameters
     if (!startParam || !endParam) {
@@ -36,111 +37,164 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
     }
     
-    // Build the query to fetch bookings in the specified date range
-    const whereClause = {
-      childminderId: session.user.id,
-      OR: [
-        // Booking starts within range
-        {
-          startTime: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        // Booking ends within range
-        {
-          endTime: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        // Booking spans the entire range
-        {
-          AND: [
-            { startTime: { lte: startDate } },
-            { endTime: { gte: endDate } }
-          ]
-        }
-      ]
-    };
+    let events = [];
     
-    // Fetch bookings
-    const bookings = await prisma.booking.findMany({
-      where: whereClause,
-      include: {
-        User_Booking_parentIdToUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
+    // BOOKINGS MODE: Fetch booking events
+    if (mode === 'bookings') {
+      // Build the query to fetch bookings in the specified date range
+      const whereClause = {
+        childminderId: session.user.id,
+        OR: [
+          // Booking starts within range
+          {
+            startTime: {
+              gte: startDate,
+              lte: endDate
+            }
+          },
+          // Booking ends within range
+          {
+            endTime: {
+              gte: startDate,
+              lte: endDate
+            }
+          },
+          // Booking spans the entire range
+          {
+            AND: [
+              { startTime: { lte: startDate } },
+              { endTime: { gte: endDate } }
+            ]
           }
-        },
-        BookingChildren: {
-          include: {
-            Child: {
-              select: {
-                id: true,
-                name: true,
-                age: true,
+        ]
+      };
+      
+      // Fetch bookings
+      const bookings = await prisma.booking.findMany({
+        where: whereClause,
+        include: {
+          User_Booking_parentIdToUser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            }
+          },
+          BookingChildren: {
+            include: {
+              Child: {
+                select: {
+                  id: true,
+                  name: true,
+                  age: true,
+                }
               }
             }
           }
         }
-      }
-    });
-    
-    // Transform bookings into calendar events
-    const events = bookings.map(booking => {
-      // Get children names for the event description
-      const childrenNames = booking.BookingChildren.map(bookingChild => 
-        bookingChild.Child.name
-      );
+      });
       
-      // Default parent name if not available
-      const parentName = booking.User_Booking_parentIdToUser.name || 'Parent';
-      
-      // Determine event category based on booking status
-      let category: 'confirmed' | 'pending' | 'cancelled';
-      
-      switch (booking.status) {
-        case Booking_status.CONFIRMED:
-          category = 'confirmed';
-          break;
-        case Booking_status.PENDING:
-          category = 'pending';
-          break;
-        case Booking_status.CANCELLED:
-        case Booking_status.LATE_CANCELLED:
-          category = 'cancelled';
-          break;
-        default:
-          category = 'confirmed'; // Default fallback
-      }
-      
-      // Create calendar event object
-      return {
-        id: booking.id, // Using booking ID as event ID
-        title: `${parentName} - ${childrenNames.join(', ')}`,
-        start: booking.startTime.toISOString(),
-        end: booking.endTime.toISOString(),
-        allDay: false,
-        category,
-        bookingId: booking.id,
-        parentName: parentName,
-        children: childrenNames,
-        extendedProps: {
+      // Transform bookings into calendar events
+      events = bookings.map(booking => {
+        // Get children names for the event description
+        const childrenNames = booking.BookingChildren.map(bookingChild => 
+          bookingChild.Child.name
+        );
+        
+        // Default parent name if not available
+        const parentName = booking.User_Booking_parentIdToUser.name || 'Parent';
+        
+        // Determine event category based on booking status
+        let category: 'confirmed' | 'pending' | 'cancelled';
+        
+        switch (booking.status) {
+          case Booking_status.CONFIRMED:
+            category = 'confirmed';
+            break;
+          case Booking_status.PENDING:
+            category = 'pending';
+            break;
+          case Booking_status.CANCELLED:
+          case Booking_status.LATE_CANCELLED:
+            category = 'cancelled';
+            break;
+          default:
+            category = 'confirmed'; // Default fallback
+        }
+        
+        // Create calendar event object
+        return {
+          id: booking.id, // Using booking ID as event ID
+          title: `${parentName} - ${childrenNames.join(', ')}`,
+          start: booking.startTime.toISOString(),
+          end: booking.endTime.toISOString(),
+          allDay: false,
+          category,
           bookingId: booking.id,
-          status: booking.status,
-          bookingType: booking.bookingType,
-          isRecurring: booking.isRecurring,
-          recurrencePattern: booking.recurrencePattern,
-          children: childrenNames,
           parentName: parentName,
-          parentId: booking.parentId
+          children: childrenNames,
+          extendedProps: {
+            bookingId: booking.id,
+            status: booking.status,
+            bookingType: booking.bookingType,
+            isRecurring: booking.isRecurring,
+            recurrencePattern: booking.recurrencePattern,
+            children: childrenNames,
+            parentName: parentName,
+            parentId: booking.parentId
+          }
+        };
+      });
+    }
+    // AVAILABILITY MODE: Fetch availability blocks
+    else if (mode === 'availability') {
+      // Build the query to fetch availability blocks in the specified date range
+      const availabilityWhereClause = {
+        userId: session.user.id,
+        date: {
+          gte: startDate,
+          lte: endDate
         }
       };
-    });
+      
+      // Fetch availabilities
+      const availabilities = await prisma.availability.findMany({
+        where: availabilityWhereClause
+      });
+      
+      // Transform availabilities into calendar events
+      const availabilityEvents = availabilities.map(availability => {
+        // Parse the time slot
+        const [startHours, startMinutes, endHours, endMinutes] = availability.timeSlot.split(':').map(Number);
+        
+        // Create date objects for start and end times
+        const startDate = new Date(availability.date);
+        startDate.setHours(startHours);
+        startDate.setMinutes(startMinutes);
+        startDate.setSeconds(0);
+        
+        const endDate = new Date(availability.date);
+        endDate.setHours(endHours);
+        endDate.setMinutes(endMinutes);
+        endDate.setSeconds(0);
+        
+        return {
+          id: availability.id,
+          title: availability.title || (availability.type === 'AVAILABLE' ? 'Available' : 'Unavailable'),
+          start: startDate.toISOString(),
+          end: endDate.toISOString(),
+          allDay: false,
+          category: availability.type.toLowerCase() as 'available' | 'unavailable',
+          description: availability.description,
+          extendedProps: {
+            recurrenceRule: availability.recurrenceRule
+          }
+        };
+      });
+      
+      events = availabilityEvents;
+    }
     
     return NextResponse.json({ events });
     

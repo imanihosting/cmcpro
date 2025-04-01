@@ -6,8 +6,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { EventSourceInput } from '@fullcalendar/core';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import EventDetailModal from './EventDetailModal';
+import AvailabilityModal from './AvailabilityModal';
 import { CalendarEvent } from '../types';
 import './Calendar.css';
+import { FaPlus, FaMinus } from 'react-icons/fa';
+import { BsGoogle } from 'react-icons/bs';
 
 // Define the color mapping for event categories with more vivid colors
 const eventColors = {
@@ -30,15 +33,31 @@ const eventColors = {
     backgroundColor: '#94a3b8', // slate-400
     borderColor: '#64748b',     // slate-500
     textColor: '#000000'        // black for better readability
+  },
+  available: {
+    backgroundColor: '#93c5fd', // blue-300
+    borderColor: '#3b82f6',     // blue-500
+    textColor: '#000000'        // black for better readability
+  },
+  unavailable: {
+    backgroundColor: '#f87171', // red-400
+    borderColor: '#ef4444',     // red-500
+    textColor: '#000000'        // black for better readability
   }
 };
 
 const Calendar: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<{start: Date, end: Date} | null>(null);
+  const [availabilityType, setAvailabilityType] = useState<'AVAILABLE' | 'UNAVAILABLE'>('AVAILABLE');
   const [currentView, setCurrentView] = useState<string>('dayGridMonth');
+  const [viewMode, setViewMode] = useState<'bookings' | 'availability'>('bookings');
   const [isMobile, setIsMobile] = useState(false);
   const [calendarHeight, setCalendarHeight] = useState('calc(100vh - 260px)');
-  const { events, isLoading, error, fetchEvents } = useCalendarEvents();
+  const [isGoogleCalendarConnected, setIsGoogleCalendarConnected] = useState(false);
+  const { events, isLoading, error, fetchEvents, addAvailability, removeAvailability, syncWithGoogleCalendar, checkGoogleCalendarConnection } = useCalendarEvents();
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -64,6 +83,16 @@ const Calendar: React.FC = () => {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
+  // Check Google Calendar connection status
+  useEffect(() => {
+    const checkGoogleConnection = async () => {
+      const isConnected = await checkGoogleCalendarConnection();
+      setIsGoogleCalendarConnected(isConnected);
+    };
+    
+    checkGoogleConnection();
+  }, [checkGoogleCalendarConnection]);
+
   // Fetch initial events when the component mounts
   useEffect(() => {
     const fetchInitialEvents = () => {
@@ -73,7 +102,8 @@ const Calendar: React.FC = () => {
         
         fetchEvents({
           start: view.activeStart,
-          end: view.activeEnd
+          end: view.activeEnd,
+          mode: viewMode
         });
       }
     };
@@ -81,33 +111,48 @@ const Calendar: React.FC = () => {
     // Short delay to ensure the calendar is fully initialized
     const timer = setTimeout(fetchInitialEvents, 100);
     return () => clearTimeout(timer);
-  }, [fetchEvents]);
+  }, [fetchEvents, viewMode]);
 
   // Configure FullCalendar event sources with color coding
   const eventSources: EventSourceInput[] = [
-    {
-      events: events.filter(event => event.category === 'confirmed'),
-      ...eventColors.confirmed
-    },
-    {
-      events: events.filter(event => event.category === 'pending'),
-      ...eventColors.pending
-    },
-    {
-      events: events.filter(event => event.category === 'cancelled'),
-      ...eventColors.cancelled
-    },
-    {
-      events: events.filter(event => event.category === 'personal'),
-      ...eventColors.personal
-    }
+    // Only show these categories when in bookings mode
+    ...(viewMode === 'bookings' ? [
+      {
+        events: events.filter(event => event.category === 'confirmed'),
+        ...eventColors.confirmed
+      },
+      {
+        events: events.filter(event => event.category === 'pending'),
+        ...eventColors.pending
+      },
+      {
+        events: events.filter(event => event.category === 'cancelled'),
+        ...eventColors.cancelled
+      },
+      {
+        events: events.filter(event => event.category === 'personal'),
+        ...eventColors.personal
+      }
+    ] : []),
+    // Only show these categories when in availability mode
+    ...(viewMode === 'availability' ? [
+      {
+        events: events.filter(event => event.category === 'available'),
+        ...eventColors.available
+      },
+      {
+        events: events.filter(event => event.category === 'unavailable'),
+        ...eventColors.unavailable
+      }
+    ] : [])
   ];
 
   // Handle date range changes (navigation between months, weeks, etc.)
   const handleDatesSet = (arg: any) => {
     fetchEvents({
       start: arg.start,
-      end: arg.end
+      end: arg.end,
+      mode: viewMode
     });
   };
 
@@ -117,7 +162,35 @@ const Calendar: React.FC = () => {
     const eventObj = events.find(e => e.id === eventId);
     
     if (eventObj) {
-      setSelectedEvent(eventObj);
+      // If in availability mode and the event is an availability slot
+      if (viewMode === 'availability' && 
+          (eventObj.category === 'available' || eventObj.category === 'unavailable')) {
+        // Handle availability event click - allow editing or deleting
+        setAvailabilityType(eventObj.category === 'available' ? 'AVAILABLE' : 'UNAVAILABLE');
+        setSelectedEvent(eventObj);
+        setShowAvailabilityModal(true);
+      } else {
+        // For bookings, show the event detail modal
+        setSelectedEvent(eventObj);
+      }
+    }
+  };
+
+  // Handle date selection (for creating availability)
+  const handleDateSelect = (selectInfo: any) => {
+    if (viewMode === 'availability') {
+      setSelectedDate(selectInfo.start);
+      setSelectedTimeRange({
+        start: selectInfo.start,
+        end: selectInfo.end
+      });
+      setShowAvailabilityModal(true);
+    }
+    
+    // Clear selection after handling
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.unselect();
     }
   };
 
@@ -129,6 +202,93 @@ const Calendar: React.FC = () => {
   // Close the event detail modal
   const closeModal = () => {
     setSelectedEvent(null);
+  };
+  
+  // Close the availability modal
+  const closeAvailabilityModal = () => {
+    setShowAvailabilityModal(false);
+    setSelectedDate(null);
+    setSelectedTimeRange(null);
+    setSelectedEvent(null);
+  };
+  
+  // Handle saving availability
+  const handleSaveAvailability = async (data: {
+    title: string;
+    description?: string;
+    isRecurring: boolean;
+    recurrenceRule?: string;
+  }) => {
+    if (selectedTimeRange) {
+      await addAvailability({
+        start: selectedTimeRange.start,
+        end: selectedTimeRange.end,
+        type: availabilityType,
+        title: data.title,
+        description: data.description,
+        recurrenceRule: data.isRecurring ? data.recurrenceRule : undefined,
+        eventId: selectedEvent?.id
+      });
+      
+      // Refresh calendar events
+      fetchEvents({
+        start: calendarRef.current?.getApi().view.activeStart,
+        end: calendarRef.current?.getApi().view.activeEnd,
+        mode: viewMode
+      });
+      
+      closeAvailabilityModal();
+    }
+  };
+  
+  // Handle deleting availability
+  const handleDeleteAvailability = async () => {
+    if (selectedEvent?.id) {
+      await removeAvailability(selectedEvent.id);
+      
+      // Refresh calendar events
+      fetchEvents({
+        start: calendarRef.current?.getApi().view.activeStart,
+        end: calendarRef.current?.getApi().view.activeEnd,
+        mode: viewMode
+      });
+      
+      closeAvailabilityModal();
+    }
+  };
+  
+  // Toggle between bookings and availability view modes
+  const toggleViewMode = () => {
+    const newMode = viewMode === 'bookings' ? 'availability' : 'bookings';
+    setViewMode(newMode);
+    
+    // Refresh calendar with the new mode
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      fetchEvents({
+        start: calendarApi.view.activeStart,
+        end: calendarApi.view.activeEnd,
+        mode: newMode
+      });
+    }
+  };
+  
+  // Handle Google Calendar sync
+  const handleGoogleSync = async () => {
+    if (isGoogleCalendarConnected) {
+      // Sync calendar
+      await syncWithGoogleCalendar();
+      
+      // Refresh calendar events
+      fetchEvents({
+        start: calendarRef.current?.getApi().view.activeStart,
+        end: calendarRef.current?.getApi().view.activeEnd,
+        mode: viewMode
+      });
+    } else {
+      // Redirect to Google Calendar OAuth flow
+      window.location.href = '/api/calendar-sync/auth';
+    }
   };
 
   // Determine header toolbar based on screen size
@@ -146,6 +306,64 @@ const Calendar: React.FC = () => {
 
   return (
     <div className="w-full h-full" ref={containerRef}>
+      {/* View Toggle and Action Buttons */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div className="flex flex-wrap gap-2">
+          <button 
+            onClick={toggleViewMode} 
+            className={`px-4 py-2 rounded-md font-medium ${
+              viewMode === 'bookings' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-800'
+            }`}
+          >
+            Bookings
+          </button>
+          <button 
+            onClick={toggleViewMode} 
+            className={`px-4 py-2 rounded-md font-medium ${
+              viewMode === 'availability' 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-800'
+            }`}
+          >
+            Availability
+          </button>
+        </div>
+        
+        {viewMode === 'availability' && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setAvailabilityType('AVAILABLE');
+                setShowAvailabilityModal(true);
+              }}
+              className="flex items-center gap-1 px-3 py-2 bg-green-500 text-white rounded-md font-medium"
+            >
+              <FaPlus size={14} />
+              <span>Add Available</span>
+            </button>
+            <button
+              onClick={() => {
+                setAvailabilityType('UNAVAILABLE');
+                setShowAvailabilityModal(true);
+              }}
+              className="flex items-center gap-1 px-3 py-2 bg-red-500 text-white rounded-md font-medium"
+            >
+              <FaMinus size={14} />
+              <span>Block Time</span>
+            </button>
+            <button
+              onClick={handleGoogleSync}
+              className="flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50"
+            >
+              <BsGoogle size={16} className="text-blue-500" />
+              <span>{isGoogleCalendarConnected ? 'Sync Calendar' : 'Connect Google'}</span>
+            </button>
+          </div>
+        )}
+      </div>
+      
       {/* Loading state */}
       {isLoading && (
         <div className="text-center my-4 py-4 bg-blue-50 rounded-lg text-blue-700 text-base sm:text-lg font-bold flex items-center justify-center">
@@ -167,18 +385,33 @@ const Calendar: React.FC = () => {
       {/* Calendar color legend */}
       <div className="flex flex-wrap gap-4 mb-5 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
         <h3 className="w-full text-lg font-bold text-gray-800 mb-2">Legend:</h3>
-        <div className="flex items-center">
-          <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.confirmed.backgroundColor }}></div>
-          <span className="text-base font-semibold">Confirmed</span>
-        </div>
-        <div className="flex items-center">
-          <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.pending.backgroundColor }}></div>
-          <span className="text-base font-semibold">Pending</span>
-        </div>
-        <div className="flex items-center">
-          <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.cancelled.backgroundColor }}></div>
-          <span className="text-base font-semibold">Cancelled</span>
-        </div>
+        {viewMode === 'bookings' ? (
+          <>
+            <div className="flex items-center">
+              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.confirmed.backgroundColor }}></div>
+              <span className="text-base font-semibold">Confirmed</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.pending.backgroundColor }}></div>
+              <span className="text-base font-semibold">Pending</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.cancelled.backgroundColor }}></div>
+              <span className="text-base font-semibold">Cancelled</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center">
+              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.available.backgroundColor }}></div>
+              <span className="text-base font-semibold">Available</span>
+            </div>
+            <div className="flex items-center">
+              <div className="h-6 w-6 rounded-md mr-2" style={{ backgroundColor: eventColors.unavailable.backgroundColor }}></div>
+              <span className="text-base font-semibold">Unavailable</span>
+            </div>
+          </>
+        )}
       </div>
       
       {/* Calendar component */}
@@ -222,6 +455,9 @@ const Calendar: React.FC = () => {
               titleFormat: { weekday: 'long', month: 'short', day: 'numeric' }
             }
           }}
+          // Enable date selection for availability mode
+          selectable={viewMode === 'availability'}
+          select={handleDateSelect}
           // Custom styling for better text visibility
           eventContent={(info) => {
             return (
@@ -237,8 +473,20 @@ const Calendar: React.FC = () => {
       </div>
       
       {/* Event detail modal */}
-      {selectedEvent && (
+      {selectedEvent && !showAvailabilityModal && (
         <EventDetailModal event={selectedEvent} onClose={closeModal} />
+      )}
+      
+      {/* Availability modal */}
+      {showAvailabilityModal && (
+        <AvailabilityModal
+          onClose={closeAvailabilityModal}
+          onSave={handleSaveAvailability}
+          onDelete={selectedEvent ? handleDeleteAvailability : undefined}
+          type={availabilityType}
+          timeRange={selectedTimeRange}
+          existingEvent={selectedEvent}
+        />
       )}
     </div>
   );
