@@ -169,12 +169,12 @@ export default function DashboardLayout({
     // Add childminder links
     if (session.user.role === "childminder") {
       links.push(
+        { href: "/dashboard/childminder/profile", label: "Profile", icon: <FaUserCircle className="h-5 w-5" /> },
         { href: "/dashboard/childminder/bookings", label: "Bookings", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
         { href: "/dashboard/childminder/documents", label: "Documents", icon: <FaFileAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/calendar", label: "Calendar", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/childminder/activity", label: "Activity", icon: <FaHistory className="h-5 w-5" /> },
-        { href: "/dashboard/childminder/profile", label: "Profile", icon: <FaUserCircle className="h-5 w-5" /> },
         { href: "/dashboard/childminder/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> },
         { href: "/dashboard/childminder/subscription", label: "Subscription", icon: <FaCreditCard className="h-5 w-5" /> },
         { href: "/dashboard/childminder/help", label: "Help & Support", icon: <FaQuestionCircle className="h-5 w-5" /> }

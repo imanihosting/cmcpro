@@ -27,18 +27,18 @@ model Account {
 }
 
 model Availability {
-  id              String   @id
-  userId          String
-  date            DateTime
-  timeSlot        String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime
-  type            String   @default("AVAILABLE") // AVAILABLE or UNAVAILABLE
-  googleEventId   String?  // To store the Google Calendar event ID for syncing
-  title           String?  // Optional title for the availability block
-  description     String?  @db.Text // Optional description
-  recurrenceRule  String?  // Optional iCalendar RRULE for recurring slots
-  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id
+  userId         String
+  date           DateTime
+  timeSlot       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  description    String?  @db.Text
+  googleEventId  String?
+  recurrenceRule String?
+  title          String?
+  type           String   @default("AVAILABLE")
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "Availability_userId_fkey")
   @@index([date])
@@ -135,11 +135,11 @@ model Document {
   reviewDate                     DateTime?
   reviewerId                     String?
   status                         Document_status @default(PENDING)
+  documentIdentifier             String?
   expirationDate                 DateTime?
-  reminderSent                   Boolean         @default(false)
+  issuingAuthority               String?
   lastReminderDate               DateTime?
-  documentIdentifier             String?         // For storing certification numbers
-  issuingAuthority               String?         // Organization that issued the document
+  reminderSent                   Boolean         @default(false)
   User_Document_reviewerIdToUser User?           @relation("Document_reviewerIdToUser", fields: [reviewerId], references: [id])
   User_Document_userIdToUser     User            @relation("Document_userIdToUser", fields: [userId], references: [id])
 
@@ -366,15 +366,15 @@ model SystemLog {
 }
 
 model User {
-  id                                          String                  @id
-  email                                       String                  @unique
+  id                                          String                    @id
+  email                                       String                    @unique
   name                                        String?
-  role                                        User_role               @default(user)
-  createdAt                                   DateTime                @default(now())
+  role                                        User_role                 @default(user)
+  createdAt                                   DateTime                  @default(now())
   updatedAt                                   DateTime
   ageGroupsServed                             Json?
   availability                                String?
-  bio                                         String?                 @db.Text
+  bio                                         String?                   @db.Text
   careTypes                                   Json?
   childcareNeeds                              Json?
   childrenFirstCert                           Boolean?
@@ -397,64 +397,64 @@ model User {
   preferences                                 Json?
   profileImage                                String?
   qualifications                              String?
-  rate                                        Decimal?                @db.Decimal(10, 2)
+  rate                                        Decimal?                  @db.Decimal(10, 2)
   rateDetails                                 Json?
-  specialNeedsDetails                         String?                 @db.Text
+  specialNeedsDetails                         String?                   @db.Text
   specialNeedsExp                             Boolean?
   specialties                                 String?
-  subscriptionStatus                          User_subscriptionStatus @default(FREE)
+  subscriptionStatus                          User_subscriptionStatus   @default(FREE)
   tuslaRegistered                             Boolean?
   tuslaRegistrationNumber                     String?
   yearsOfExperience                           Int?
   resetToken                                  String?
   resetTokenExpiry                            DateTime?
   twoFactorBackupCodes                        Json?
-  twoFactorEnabled                            Boolean                 @default(false)
+  twoFactorEnabled                            Boolean                   @default(false)
   twoFactorSecret                             String?
-  twoFactorVerified                           Boolean                 @default(false)
-  trialActivated                              Boolean                 @default(false)
+  twoFactorVerified                           Boolean                   @default(false)
+  trialActivated                              Boolean                   @default(false)
   trialEndDate                                DateTime?
   trialStartDate                              DateTime?
-  is_google_user                              Boolean                 @default(false)
-  lastMinuteAvailable                         Boolean                 @default(false)
-  lastMinuteRadius                            Int?                    @default(5)
+  is_google_user                              Boolean                   @default(false)
+  lastMinuteAvailable                         Boolean                   @default(false)
+  lastMinuteRadius                            Int?                      @default(5)
   lastOnline                                  DateTime?
   Account                                     Account[]
   Availability                                Availability[]
-  Booking_Booking_childminderIdToUser         Booking[]               @relation("Booking_childminderIdToUser")
-  Booking_Booking_parentIdToUser              Booking[]               @relation("Booking_parentIdToUser")
+  Booking_Booking_childminderIdToUser         Booking[]                 @relation("Booking_childminderIdToUser")
+  Booking_Booking_parentIdToUser              Booking[]                 @relation("Booking_parentIdToUser")
   ChatMessage                                 ChatMessage[]
-  ChatSession_ChatSession_agentIdToUser       ChatSession[]           @relation("ChatSession_agentIdToUser")
-  ChatSession_ChatSession_userIdToUser        ChatSession[]           @relation("ChatSession_userIdToUser")
+  ChatSession_ChatSession_agentIdToUser       ChatSession[]             @relation("ChatSession_agentIdToUser")
+  ChatSession_ChatSession_userIdToUser        ChatSession[]             @relation("ChatSession_userIdToUser")
   Child                                       Child[]
-  Document_Document_reviewerIdToUser          Document[]              @relation("Document_reviewerIdToUser")
-  Document_Document_userIdToUser              Document[]              @relation("Document_userIdToUser")
-  Favorite_Favorite_childminderIdToUser       Favorite[]              @relation("Favorite_childminderIdToUser")
-  Favorite_Favorite_userIdToUser              Favorite[]              @relation("Favorite_userIdToUser")
-  Message_Message_receiverIdToUser            Message[]               @relation("Message_receiverIdToUser")
-  Message_Message_senderIdToUser              Message[]               @relation("Message_senderIdToUser")
+  Document_Document_reviewerIdToUser          Document[]                @relation("Document_reviewerIdToUser")
+  Document_Document_userIdToUser              Document[]                @relation("Document_userIdToUser")
+  Favorite_Favorite_childminderIdToUser       Favorite[]                @relation("Favorite_childminderIdToUser")
+  Favorite_Favorite_userIdToUser              Favorite[]                @relation("Favorite_userIdToUser")
+  lastMinuteOneTimeSlots                      LastMinuteOneTimeSlot[]
+  lastMinuteRecurringSlots                    LastMinuteRecurringSlot[]
+  Message_Message_receiverIdToUser            Message[]                 @relation("Message_receiverIdToUser")
+  Message_Message_senderIdToUser              Message[]                 @relation("Message_senderIdToUser")
   ModerationItem                              ModerationItem[]
   Notification                                Notification[]
   PasswordResetToken                          PasswordResetToken[]
   PushSubscription                            PushSubscription?
-  receivedRecommendations                     Recommendation[]        @relation("ChildminderRecommendations")
-  parentRecommendations                       Recommendation[]        @relation("ParentRecommendations")
+  receivedRecommendations                     Recommendation[]          @relation("ChildminderRecommendations")
+  parentRecommendations                       Recommendation[]          @relation("ParentRecommendations")
   RecurringAvailability                       RecurringAvailability[]
-  Report_Report_reporterIdToUser              Report[]                @relation("Report_reporterIdToUser")
-  Report_Report_targetIdToUser                Report[]                @relation("Report_targetIdToUser")
-  Review_Review_revieweeIdToUser              Review[]                @relation("Review_revieweeIdToUser")
-  Review_Review_reviewerIdToUser              Review[]                @relation("Review_reviewerIdToUser")
-  SecurityEvent_SecurityEvent_updatedByToUser SecurityEvent[]         @relation("SecurityEvent_updatedByToUser")
-  SecurityEvent_SecurityEvent_userIdToUser    SecurityEvent[]         @relation("SecurityEvent_userIdToUser")
+  Report_Report_reporterIdToUser              Report[]                  @relation("Report_reporterIdToUser")
+  Report_Report_targetIdToUser                Report[]                  @relation("Report_targetIdToUser")
+  Review_Review_revieweeIdToUser              Review[]                  @relation("Review_revieweeIdToUser")
+  Review_Review_reviewerIdToUser              Review[]                  @relation("Review_reviewerIdToUser")
+  SecurityEvent_SecurityEvent_updatedByToUser SecurityEvent[]           @relation("SecurityEvent_updatedByToUser")
+  SecurityEvent_SecurityEvent_userIdToUser    SecurityEvent[]           @relation("SecurityEvent_userIdToUser")
   Session                                     Session[]
   Subscription                                Subscription?
   SupportTicket                               SupportTicket[]
   UserActivityLog                             UserActivityLog[]
-  UserNote_UserNote_adminIdToUser             UserNote[]              @relation("UserNote_adminIdToUser")
-  UserNote_UserNote_userIdToUser              UserNote[]              @relation("UserNote_userIdToUser")
+  UserNote_UserNote_adminIdToUser             UserNote[]                @relation("UserNote_adminIdToUser")
+  UserNote_UserNote_userIdToUser              UserNote[]                @relation("UserNote_userIdToUser")
   WebhookEvent                                WebhookEvent[]
-  lastMinuteRecurringSlots                    LastMinuteRecurringSlot[]
-  lastMinuteOneTimeSlots                      LastMinuteOneTimeSlot[]
 
   @@index([email])
 }
@@ -582,15 +582,15 @@ model Recommendation {
   childminderId      String
   score              Int
   reasons            Json
+  isCollaborative    Boolean  @default(false)
   isViewed           Boolean  @default(false)
   isClicked          Boolean  @default(false)
-  isCollaborative    Boolean  @default(false)
-  isEmergency        Boolean  @default(false)
-  recommendationType String   @default("STANDARD")
   createdAt          DateTime @default(now())
   updatedAt          DateTime
-  parent             User     @relation("ParentRecommendations", fields: [parentId], references: [id], onDelete: Cascade)
+  isEmergency        Boolean  @default(false)
+  recommendationType String   @default("STANDARD")
   childminder        User     @relation("ChildminderRecommendations", fields: [childminderId], references: [id], onDelete: Cascade)
+  parent             User     @relation("ParentRecommendations", fields: [parentId], references: [id], onDelete: Cascade)
 
   @@index([childminderId])
   @@index([isViewed])
@@ -602,7 +602,7 @@ model Recommendation {
 model LastMinuteRecurringSlot {
   id        String   @id @default(uuid())
   userId    String
-  dayOfWeek Int      // 0-6 where 0 is Sunday
+  dayOfWeek Int
   startTime String
   endTime   String
   createdAt DateTime @default(now())
