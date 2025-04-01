@@ -782,3 +782,67 @@ Manage chat support agents.
   - Returns a list of users who can handle chat support
   - Includes availability status and active session count
   - Only accessible by admins 
+
+---
+
+## Calendar Sync
+
+### `/api/calendar-sync/auth`
+Initiate Google Calendar authorization.
+
+**Methods**:
+- `GET`: Start the OAuth flow for Google Calendar
+  - Redirects the user to Google's OAuth consent screen
+  - Sets a state cookie to prevent CSRF attacks
+  - Only accessible by authenticated users
+
+### `/api/calendar-sync/callback`
+Handle OAuth callback from Google.
+
+**Methods**:
+- `GET`: Process OAuth callback from Google
+  - Exchanges the authorization code for access and refresh tokens
+  - Stores tokens in the database for the authenticated user
+  - Verifies state parameter to prevent CSRF attacks
+  - Redirects back to the calendar page with success/error status
+
+### `/api/calendar-sync/status`
+Check Google Calendar connection status.
+
+**Methods**:
+- `GET`: Retrieve current connection status
+  - Returns whether Google Calendar is connected
+  - Includes provider information and last sync timestamp
+  - Only accessible by authenticated users
+
+### `/api/calendar-sync/sync`
+Synchronize availability with Google Calendar.
+
+**Methods**:
+- `POST`: Sync availability blocks to Google Calendar
+  - Finds all availability blocks without Google event IDs
+  - Creates corresponding events in the user's Google Calendar
+  - Updates local records with Google event IDs
+  - Returns sync statistics (success/failure counts)
+  - Only accessible by authenticated users
+
+### `/api/dashboard/childminder/availability`
+Manage childminder availability blocks.
+
+**Methods**:
+- `GET`: List availability blocks
+  - Returns all availability blocks for the authenticated childminder
+  - Supports filtering by date range
+- `POST`: Create a new availability block
+  - Accepts start/end times, type (available/unavailable), title, and description
+  - Optionally supports recurrence rules for repeating availability
+
+### `/api/dashboard/childminder/availability/[id]`
+Manage a specific availability block.
+
+**Methods**:
+- `GET`: Get availability block details
+- `PUT`: Update an existing availability block
+  - Modify times, type, title, description, or recurrence
+- `DELETE`: Remove an availability block
+  - Also removes the corresponding Google Calendar event if synced 

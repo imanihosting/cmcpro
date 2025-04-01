@@ -28,6 +28,7 @@ The [API Documentation](./API_Documentation.md) provides a comprehensive referen
 - Administrative functions
 - Subscription management
 - System configuration
+- Calendar management and Google Calendar integration
 
 Each endpoint is documented with its purpose, available methods, request parameters, and response format.
 
