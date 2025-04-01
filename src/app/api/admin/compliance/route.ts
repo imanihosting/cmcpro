@@ -3,6 +3,21 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
+// Define Document interface for proper typing
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  reviewDate?: Date | null;
+  expirationDate?: Date | null;
+  category?: string | null;
+  documentIdentifier?: string | null;
+  issuingAuthority?: string | null;
+}
+
 // GET /api/admin/compliance - Get overview of document compliance status
 export async function GET(req: NextRequest) {
   try {
@@ -67,61 +82,61 @@ export async function GET(req: NextRequest) {
     // Process and format the compliance data
     const complianceData = childminders.map(childminder => {
       // Get all documents and categorize them
-      const documents = childminder.Document_Document_userIdToUser || [];
+      const documents = childminder.Document_Document_userIdToUser || [] as Document[];
       
       // Find specific document types
-      const gardaVettingDocs = documents.filter(doc => 
+      const gardaVettingDocs = documents.filter((doc: Document) => 
         doc.type.toLowerCase().includes('garda') || 
         doc.category?.toLowerCase().includes('garda')
       );
       
-      const tuslaRegistrationDocs = documents.filter(doc => 
+      const tuslaRegistrationDocs = documents.filter((doc: Document) => 
         doc.type.toLowerCase().includes('tusla') || 
         doc.category?.toLowerCase().includes('tusla') ||
         doc.type.toLowerCase().includes('registration')
       );
       
-      const firstAidDocs = documents.filter(doc => 
+      const firstAidDocs = documents.filter((doc: Document) => 
         doc.type.toLowerCase().includes('first aid') || 
         doc.category?.toLowerCase().includes('first aid')
       );
       
-      const childrenFirstDocs = documents.filter(doc => 
+      const childrenFirstDocs = documents.filter((doc: Document) => 
         doc.type.toLowerCase().includes('children first') || 
         doc.category?.toLowerCase().includes('children first')
       );
       
       // Find expiring documents
-      const expiringDocuments = documents.filter(doc => {
+      const expiringDocuments = documents.filter((doc: Document) => {
         if (!doc.expirationDate) return false;
         return doc.expirationDate <= expiryThreshold && doc.expirationDate > currentDate;
       });
       
       // Find expired documents
-      const expiredDocuments = documents.filter(doc => {
+      const expiredDocuments = documents.filter((doc: Document) => {
         if (!doc.expirationDate) return false;
         return doc.expirationDate < currentDate;
       });
       
       // Check compliance status 
-      const hasValidGardaVetting = gardaVettingDocs.some(doc => 
+      const hasValidGardaVetting = gardaVettingDocs.some((doc: Document) => 
         doc.status === 'APPROVED' && 
         (!doc.expirationDate || doc.expirationDate > currentDate)
       );
       
-      const hasValidTuslaRegistration = tuslaRegistrationDocs.some(doc => 
+      const hasValidTuslaRegistration = tuslaRegistrationDocs.some((doc: Document) => 
         doc.status === 'APPROVED' && 
         (!doc.expirationDate || doc.expirationDate > currentDate)
       );
       
-      const hasValidFirstAid = firstAidDocs.some(doc => 
+      const hasValidFirstAid = firstAidDocs.some((doc: Document) => 
         doc.status === 'APPROVED' && 
         (!doc.expirationDate || doc.expirationDate > currentDate)
       ) || (childminder.firstAidCert && 
              childminder.firstAidCertExpiry && 
              childminder.firstAidCertExpiry > currentDate);
       
-      const hasValidChildrenFirst = childrenFirstDocs.some(doc => 
+      const hasValidChildrenFirst = childrenFirstDocs.some((doc: Document) => 
         doc.status === 'APPROVED' && 
         (!doc.expirationDate || doc.expirationDate > currentDate)
       ) || childminder.childrenFirstCert;

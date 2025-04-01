@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
     }
     
-    let events = [];
+    let events: any[] = [];
     
     // BOOKINGS MODE: Fetch booking events
     if (mode === 'bookings') {

@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
+    const now = new Date();
+    
     // Log the cron job execution
     await prisma.systemLog.create({
       data: {
@@ -22,12 +24,7 @@ export async function GET(request: NextRequest) {
         type: 'CRON_JOB',
         level: 'INFO',
         message: 'Automated document compliance check started',
-        metadata: {
-          timestamp: new Date(),
-          jobType: 'compliance-check'
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        timestamp: now
       }
     });
     
@@ -44,19 +41,8 @@ export async function GET(request: NextRequest) {
         id: uuidv4(),
         type: 'CRON_JOB',
         level: 'INFO',
-        message: 'Automated document compliance check completed',
-        metadata: {
-          timestamp: new Date(),
-          jobType: 'compliance-check',
-          result: {
-            totalDocuments: result.totalDocuments,
-            notificationsSent: result.notificationsSent,
-            expiredDocuments: result.expiredDocuments,
-            expiringDocuments: result.expiringDocuments
-          }
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        message: `Automated document compliance check completed: ${result.totalDocuments} docs, ${result.notificationsSent} notifications sent`,
+        timestamp: new Date()
       }
     });
     
@@ -75,14 +61,8 @@ export async function GET(request: NextRequest) {
         id: uuidv4(),
         type: 'CRON_JOB',
         level: 'ERROR',
-        message: 'Automated document compliance check failed',
-        metadata: {
-          timestamp: new Date(),
-          jobType: 'compliance-check',
-          error: error instanceof Error ? error.message : String(error)
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        message: `Automated document compliance check failed: ${error instanceof Error ? error.message : String(error)}`,
+        timestamp: new Date()
       }
     });
     

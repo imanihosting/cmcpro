@@ -12,64 +12,63 @@ export const metadata: Metadata = {
   description: 'Monitor and manage your certification compliance status',
 };
 
+// Define Document interface for proper typing
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  reviewDate?: Date | null;
+  expirationDate?: Date | null;
+  category?: string | null;
+  documentIdentifier?: string | null;
+  issuingAuthority?: string | null;
+}
+
 async function getChildminderDocuments(userId: string) {
   try {
-    // Get the childminder profile with required compliance fields
-    const childminder = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        gardaVetted: true,
-        firstAidCert: true,
-        firstAidCertExpiry: true,
-        tuslaRegistered: true,
-        tuslaRegistrationNumber: true,
-        childrenFirstCert: true,
-        Document_Document_userIdToUser: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-            category: true,
-            expirationDate: true,
-          }
-        }
-      }
-    }) as any; // Type assertion to bypass TypeScript error
-
+    // Fetch childminder data with their documents
+    const response = await fetch(`/api/dashboard/profile?userId=${userId}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch childminder data');
+    }
+    
+    const data = await response.json();
+    const childminder = data.user;
+    
     if (!childminder) {
       throw new Error('Childminder not found');
     }
 
     // Get all documents
-    const documents = childminder.Document_Document_userIdToUser || [];
+    const documents = childminder.Document_Document_userIdToUser || [] as Document[];
     
     // Categorize documents by type
-    const gardaVettingDocs = documents.filter(doc => 
+    const gardaVettingDocs = documents.filter((doc: Document) => 
       doc.type.toLowerCase().includes('garda') || 
       doc.category?.toLowerCase().includes('garda')
     );
     
-    const tuslaRegistrationDocs = documents.filter(doc => 
+    const tuslaRegistrationDocs = documents.filter((doc: Document) => 
       doc.type.toLowerCase().includes('tusla') || 
       doc.category?.toLowerCase().includes('tusla') ||
       doc.type.toLowerCase().includes('registration')
     );
     
-    const firstAidDocs = documents.filter(doc => 
+    const firstAidDocs = documents.filter((doc: Document) => 
       doc.type.toLowerCase().includes('first aid') || 
       doc.category?.toLowerCase().includes('first aid')
     );
     
-    const childrenFirstDocs = documents.filter(doc => 
+    const childrenFirstDocs = documents.filter((doc: Document) => 
       doc.type.toLowerCase().includes('children first') || 
       doc.category?.toLowerCase().includes('children first')
     );
 
-    const otherDocs = documents.filter(doc => 
+    const otherDocs = documents.filter((doc: Document) => 
       !gardaVettingDocs.includes(doc) && 
       !tuslaRegistrationDocs.includes(doc) && 
       !firstAidDocs.includes(doc) && 
@@ -79,24 +78,24 @@ async function getChildminderDocuments(userId: string) {
     // Calculate compliance status for each category
     const currentDate = new Date();
     
-    const hasValidGardaVetting = gardaVettingDocs.some(doc => 
+    const hasValidGardaVetting = gardaVettingDocs.some((doc: Document) => 
       doc.status === 'APPROVED' && 
       (!doc.expirationDate || new Date(doc.expirationDate) > currentDate)
     ) || childminder.gardaVetted === true;
     
-    const hasValidTuslaRegistration = tuslaRegistrationDocs.some(doc => 
+    const hasValidTuslaRegistration = tuslaRegistrationDocs.some((doc: Document) => 
       doc.status === 'APPROVED' && 
       (!doc.expirationDate || new Date(doc.expirationDate) > currentDate)
     ) || childminder.tuslaRegistered === true;
     
-    const hasValidFirstAid = firstAidDocs.some(doc => 
+    const hasValidFirstAid = firstAidDocs.some((doc: Document) => 
       doc.status === 'APPROVED' && 
       (!doc.expirationDate || new Date(doc.expirationDate) > currentDate)
     ) || (childminder.firstAidCert === true && 
            childminder.firstAidCertExpiry && 
            childminder.firstAidCertExpiry > currentDate);
     
-    const hasValidChildrenFirst = childrenFirstDocs.some(doc => 
+    const hasValidChildrenFirst = childrenFirstDocs.some((doc: Document) => 
       doc.status === 'APPROVED' && 
       (!doc.expirationDate || new Date(doc.expirationDate) > currentDate)
     ) || childminder.childrenFirstCert === true;

@@ -31,6 +31,12 @@ import {
 } from "react-icons/fa";
 import Header from "@/components/Header";
 
+// Dynamically import the chat widget to reduce initial bundle size
+const ChatWidget = dynamic(() => import('@/components/ChatWidget'), {
+  ssr: false,
+  loading: () => null,
+});
+
 // Define type for sidebar link
 interface SidebarLink {
   href: string;
@@ -254,6 +260,11 @@ export default function DashboardLayout({
           </Suspense>
         </main>
       </div>
+      
+      {/* Add Chat Widget for parent and childminder users */}
+      {session?.user?.role && 
+       session.user.role !== 'admin' && 
+       <ChatWidget />}
     </div>
   );
 } 
