@@ -21,6 +21,7 @@ import {
 import { ReactNode } from "react";
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { formatDistanceToNow } from 'date-fns';
+import AIRecommendations from '@/components/dashboard/parent/AIRecommendations';
 
 // Define types for the components
 interface DashboardCardProps {
@@ -608,6 +609,11 @@ function DashboardContent() {
         </section>
       </div>
       
+      {/* AI Recommendations section */}
+      <section className="mb-8">
+        <AIRecommendations />
+      </section>
+
       {/* Main services section */}
       <section>
         <h2 className="mb-4 text-xl font-semibold text-gray-900">Manage Your Services</h2>

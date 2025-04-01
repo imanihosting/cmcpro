@@ -2,6 +2,21 @@
 
 This document provides a comprehensive overview of all API endpoints available in the Childminder Connect application. The API is organized into logical sections based on functionality.
 
+## Tech Stack
+
+The Childminder Connect application is built using the following technologies:
+
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: MySQL
+- **Authentication**: NextAuth.js
+- **Payment Processing**: Stripe
+- **Email Services**: Microsoft Graph API
+- **Real-time Communication**: Server-Sent Events (SSE)
+- **Deployment**: Vercel (Frontend and API Routes)
+- **Storage**: Vercel Blob Storage (for documents and images)
+- **Monitoring**: Custom built monitoring dashboard
+
 ## Table of Contents
 - [Authentication](#authentication)
 - [User Management](#user-management)
@@ -15,6 +30,7 @@ This document provides a comprehensive overview of all API endpoints available i
 - [Documents](#documents)
 - [System](#system)
 - [Support](#support)
+- [Live Chat](#live-chat)
 
 ---
 
@@ -293,6 +309,15 @@ Manage a specific user.
 - `PATCH`: Update user information
 - `DELETE`: Delete a user account
 
+#### `/api/admin/users/[id]/reset-password`
+Initiate password reset for a user.
+
+**Methods**:
+- `POST`: Send password reset email to the specified user
+  - Does not require the user's current password
+  - Only accessible by admins
+  - Logs the action in the activity log
+
 #### `/api/admin/users/search`
 Search for users.
 
@@ -392,6 +417,34 @@ Manage system security settings.
 - `PATCH`: Update security settings
   - Controls password policies, session timeouts, etc.
 
+#### `/api/admin/settings`
+Manage personal admin settings.
+
+**Methods**:
+- `GET`: Retrieve admin personal settings
+  - Returns notification preferences, two-factor status, and other admin-specific settings
+- `PUT`: Update admin personal settings
+  - Update notification preferences and other admin-specific settings
+  - Toggle two-factor authentication settings
+
+#### `/api/admin/profile`
+Manage admin user profile.
+
+**Methods**:
+- `GET`: Retrieve admin profile information
+  - Returns admin personal information including name, email, bio, etc.
+- `PUT`: Update admin profile information
+  - Update profile fields like name, phone number, bio, etc.
+  - Cannot change email or role
+
+#### `/api/admin/profile-image`
+Manage admin profile image.
+
+**Methods**:
+- `POST`: Upload or update admin profile image
+  - Accepts image upload with validation
+  - Stores image and updates user profile
+
 ---
 
 ## Bookings
@@ -409,6 +462,23 @@ Get recommended childminders.
 **Methods**:
 - `GET`: List recommended childminders
   - Returns childminders based on location, ratings, and availability
+
+### `/api/recommendations`
+Get AI-powered childminder recommendations.
+
+**Methods**:
+- `GET`: Retrieve personalized childminder recommendations
+  - Uses machine learning to analyze parent preferences, booking history, and childminder attributes
+  - Returns recommendations with explanations for why each childminder is recommended
+  - Includes a match score (0-100) indicating compatibility
+
+### `/api/recommendations/click`
+Track when a parent clicks on a recommendation.
+
+**Methods**:
+- `POST`: Record when a recommendation is clicked
+  - Used for improving recommendation quality over time
+  - Requires recommendation ID in the request body
 
 ### `/api/childminders/search`
 Search for childminders.
@@ -489,6 +559,25 @@ Stripe webhook endpoint.
   - Processes webhook events like subscription created/updated/canceled
   - Updates local database based on Stripe events
 
+### `/api/webhook`
+General webhook endpoint for external integrations.
+
+**Methods**:
+- `POST`: Handle incoming webhook data from integrated services
+  - Processes events from external systems
+  - Updates relevant platform data based on webhook payload
+
+### `/api/fix-subscriptions`
+Utility endpoint to fix subscription status issues.
+
+**Methods**:
+- `GET`: Attempt to fix a user's subscription
+  - Checks Stripe for valid subscriptions
+  - Creates missing subscription records
+  - Updates user subscription status
+  - Only accessible to the authenticated user
+  - Used as a self-service recovery tool when subscription status is out of sync
+
 ---
 
 ## Documents
@@ -543,6 +632,14 @@ Manage system maintenance mode.
 - `PATCH`: Update maintenance settings
   - Enable/disable maintenance mode
   - Set maintenance message and expected end time
+
+### `/api/test-tickets`
+Get all support tickets for testing purposes.
+
+**Methods**:
+- `GET`: Retrieve all support tickets
+  - Returns all tickets with associated user data
+  - For testing and development use only
 
 ### `/api/notifications/email`
 Send system email notifications.
@@ -618,4 +715,70 @@ Get support ticket statistics.
 
 **Methods**:
 - `GET`: Retrieve ticket metrics
-  - Returns counts by status, response times, etc. 
+  - Returns counts by status, response times, etc.
+
+---
+
+## Live Chat
+
+### `/api/chat/sessions`
+Manage chat sessions.
+
+**Methods**:
+- `GET`: List all chat sessions (admin only)
+  - Returns a list of chat sessions with filtering by status
+  - Includes user information and the latest message for each session
+- `POST`: Create a new chat session
+  - Initializes a new chat session for the current user
+  - Creates a system message and sends email notification to support
+
+### `/api/chat/sessions/[id]`
+Manage a specific chat session.
+
+**Methods**:
+- `GET`: Get chat session details
+  - Returns full information about a specific chat session
+  - Only accessible by the session owner, assigned agent, or admin
+- `PATCH`: Update chat session status
+  - Update session status (active, closed, transferred)
+  - Assign or transfer to a different agent
+  - Regular users can only reopen their own closed chats
+
+### `/api/chat/messages`
+Manage chat messages.
+
+**Methods**:
+- `GET`: Get messages for a specific chat session
+  - Returns all messages for a given session ID
+  - Only accessible by session participants and admins
+- `POST`: Send a new message in a chat session
+  - Creates a new message in the specified session
+  - Updates the session's last activity timestamp
+  - Only allowed if the session is active (not closed)
+
+### `/api/chat/notifications`
+Get chat notifications for admins.
+
+**Methods**:
+- `GET`: Retrieve chat notification data
+  - Returns counts of unassigned/unread chat sessions
+  - Lists details of sessions requiring attention
+  - Only accessible by admins
+
+### `/api/chat/transfer`
+Transfer chat sessions between agents.
+
+**Methods**:
+- `POST`: Transfer a chat session to another agent
+  - Reassigns the chat to a different support agent
+  - Creates a system message about the transfer
+  - Only accessible by admins
+
+### `/api/chat/agents`
+Manage chat support agents.
+
+**Methods**:
+- `GET`: List available chat agents
+  - Returns a list of users who can handle chat support
+  - Includes availability status and active session count
+  - Only accessible by admins 

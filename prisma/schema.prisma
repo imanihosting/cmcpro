@@ -421,6 +421,8 @@ model User {
   Notification                                Notification[]
   PasswordResetToken                          PasswordResetToken[]
   PushSubscription                            PushSubscription?
+  receivedRecommendations                     Recommendation[]        @relation("ChildminderRecommendations")
+  parentRecommendations                       Recommendation[]        @relation("ParentRecommendations")
   RecurringAvailability                       RecurringAvailability[]
   Report_Report_reporterIdToUser              Report[]                @relation("Report_reporterIdToUser")
   Report_Report_targetIdToUser                Report[]                @relation("Report_targetIdToUser")
@@ -554,6 +556,26 @@ model ChatMessage {
   @@index([sessionId])
   @@index([senderId])
   @@index([timestamp])
+}
+
+model Recommendation {
+  id              String   @id
+  parentId        String
+  childminderId   String
+  score           Float    @db.Float
+  reasons         Json?
+  isCollaborative Boolean  @default(false)
+  isViewed        Boolean  @default(false)
+  isClicked       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  childminder     User     @relation("ChildminderRecommendations", fields: [childminderId], references: [id], onDelete: Cascade)
+  parent          User     @relation("ParentRecommendations", fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@index([parentId])
+  @@index([childminderId])
+  @@index([score])
+  @@index([createdAt])
 }
 
 enum Report_type {
