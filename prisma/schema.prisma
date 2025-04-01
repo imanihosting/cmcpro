@@ -128,12 +128,18 @@ model Document {
   reviewDate                     DateTime?
   reviewerId                     String?
   status                         Document_status @default(PENDING)
+  expirationDate                 DateTime?
+  reminderSent                   Boolean         @default(false)
+  lastReminderDate               DateTime?
+  documentIdentifier             String?         // For storing certification numbers
+  issuingAuthority               String?         // Organization that issued the document
   User_Document_reviewerIdToUser User?           @relation("Document_reviewerIdToUser", fields: [reviewerId], references: [id])
   User_Document_userIdToUser     User            @relation("Document_userIdToUser", fields: [userId], references: [id])
 
   @@index([name])
   @@index([reviewerId], map: "Document_reviewerId_fkey")
   @@index([userId], map: "Document_userId_fkey")
+  @@index([expirationDate])
 }
 
 model Favorite {
@@ -630,6 +636,7 @@ enum SystemLog_type {
   AUDIT
   SYSTEM
   USER
+  CRON_JOB
 }
 
 enum Report_status {

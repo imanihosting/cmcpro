@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
     const type = formData.get("type") as string;
     const category = formData.get("category") as string | null;
     const description = formData.get("description") as string | null;
+    const expirationDate = formData.get("expirationDate") as string | null;
+    const documentIdentifier = formData.get("documentIdentifier") as string | null;
+    const issuingAuthority = formData.get("issuingAuthority") as string | null;
 
     if (!file || !name || !type) {
       return NextResponse.json(
@@ -112,6 +115,10 @@ export async function POST(req: NextRequest) {
         description,
         fileSize: file.size,
         status: "PENDING",
+        expirationDate: expirationDate ? new Date(expirationDate) : null,
+        documentIdentifier,
+        issuingAuthority,
+        reminderSent: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
