@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -44,31 +44,31 @@ export default function AIRecommendations() {
   const [isFresh, setIsFresh] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/recommendations');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch recommendations');
-        }
-        
-        const data = await response.json();
-        setRecommendations(data.data);
-        setIsFresh(data.fresh);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching recommendations:', err);
-        setError('Unable to load recommendations at this time');
-        setLoading(false);
+  const fetchRecommendations = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/recommendations');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch recommendations');
       }
-    };
-    
-    fetchRecommendations();
+      
+      const data = await response.json();
+      setRecommendations(data.data);
+      setIsFresh(data.fresh);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+      setError('Unable to load recommendations at this time');
+      setLoading(false);
+    }
   }, []);
+  
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
-  const trackRecommendationClick = async (recommendationId: string) => {
+  const trackRecommendationClick = useCallback(async (recommendationId: string) => {
     try {
       await fetch('/api/recommendations/click', {
         method: 'POST',
@@ -80,12 +80,12 @@ export default function AIRecommendations() {
     } catch (err) {
       console.error('Error tracking recommendation click:', err);
     }
-  };
+  }, []);
 
-  const handleRecommendationClick = (recommendationId: string, childminderId: string) => {
+  const handleRecommendationClick = useCallback((recommendationId: string, childminderId: string) => {
     trackRecommendationClick(recommendationId);
-    router.push(`/dashboard/parent/childminders/${childminderId}`);
-  };
+    router.push(`/dashboard/parent/childminder/${childminderId}`);
+  }, [trackRecommendationClick, router]);
 
   if (loading) {
     return (
@@ -148,7 +148,7 @@ export default function AIRecommendations() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendations.map((recommendation) => (
+        {recommendations.map((recommendation, index) => (
           <div
             key={recommendation.id}
             className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer bg-white"
@@ -160,6 +160,8 @@ export default function AIRecommendations() {
                   src={recommendation.childminder.image}
                   alt={`${recommendation.childminder.name}'s profile`}
                   fill
+                  priority={index === 0}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   style={{ objectFit: 'cover' }}
                 />
               ) : (

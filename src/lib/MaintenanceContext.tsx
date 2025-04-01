@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -24,6 +24,16 @@ interface MaintenanceProviderProps {
   children: ReactNode;
 }
 
+// Environment check - only log in development
+const isDev = process.env.NODE_ENV === 'development';
+
+// Safer console log that only runs in development
+const safeConsoleLog = (message: string, ...args: any[]) => {
+  if (isDev && false) { // Set to false to disable all logs
+    console.log(message, ...args);
+  }
+};
+
 export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ children }) => {
   const [maintenanceState, setMaintenanceState] = useState<Omit<MaintenanceContextType, 'checkMaintenanceMode'>>({
     isInMaintenance: false,
@@ -36,11 +46,24 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
   const pathname = usePathname();
   const { data: session, status: sessionStatus } = useSession();
   const isAdmin = session?.user?.role === 'admin';
+  
+  // Add a ref to track if maintenance has been checked
+  const maintenanceChecked = useRef(false);
+  // Track last check time
+  const lastCheckTime = useRef(0);
 
   // Function to check maintenance mode status
   const checkMaintenanceMode = async (): Promise<boolean> => {
+    // Throttle checks to prevent excessive API calls
+    const now = Date.now();
+    if (now - lastCheckTime.current < 15000) { // 15 second throttle
+      safeConsoleLog('Maintenance check throttled');
+      return false;
+    }
+    lastCheckTime.current = now;
+    
     try {
-      console.log('Checking maintenance mode status...');
+      safeConsoleLog('Checking maintenance mode status...');
       const response = await fetch('/api/system/maintenance');
       if (!response.ok) {
         console.error('Maintenance API error:', response.status, response.statusText);
@@ -48,7 +71,7 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
       }
 
       const data = await response.json();
-      console.log('Maintenance mode data:', data);
+      safeConsoleLog('Maintenance mode data:', data);
       
       const isInMaintenance = data.maintenanceMode === true;
       
@@ -59,9 +82,9 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
         isLoading: false,
       });
 
-      console.log('Maintenance mode active:', isInMaintenance);
-      console.log('Current user is admin:', isAdmin);
-      console.log('Current path:', pathname);
+      safeConsoleLog('Maintenance mode active:', isInMaintenance);
+      safeConsoleLog('Current user is admin:', isAdmin);
+      safeConsoleLog('Current path:', pathname);
 
       // Handle redirects if in maintenance mode and not admin
       if (
@@ -75,12 +98,13 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
         if (currentPath !== '/maintenance' && 
             !currentPath.startsWith('/auth/') && 
             !currentPath.startsWith('/api/')) {
-          console.log('Redirecting non-admin user to maintenance page from:', currentPath);
+          safeConsoleLog('Redirecting non-admin user to maintenance page from:', currentPath);
           router.push('/maintenance');
           return true;
         }
       }
       
+      maintenanceChecked.current = true;
       return false;
     } catch (error) {
       console.error('Error checking maintenance mode:', error);
@@ -89,21 +113,22 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
     }
   };
 
-  // Check maintenance mode on initial load and when pathname changes
+  // Check maintenance mode only once on initial load
   useEffect(() => {
-    // Only check maintenance mode if session loading is complete
-    if (sessionStatus !== 'loading') {
-      console.log('Session status changed to:', sessionStatus);
+    // Only check maintenance mode if session loading is complete and we haven't checked yet
+    if (sessionStatus !== 'loading' && !maintenanceChecked.current) {
+      safeConsoleLog('Initial maintenance check');
       checkMaintenanceMode();
     }
-  }, [sessionStatus, pathname, isAdmin]); // Re-run if session status, pathname, or admin status changes
+  }, [sessionStatus]); // Only depend on sessionStatus
   
-  // Also check periodically (every 1 minute)
+  // Check periodically but very infrequently (10 minutes)
   useEffect(() => {
     const intervalId = setInterval(() => {
-      console.log('Periodic maintenance check');
+      safeConsoleLog('Periodic maintenance check');
       checkMaintenanceMode();
-    }, 60 * 1000);
+    }, 10 * 60 * 1000); // Check every 10 minutes
+    
     return () => clearInterval(intervalId);
   }, []);
 
