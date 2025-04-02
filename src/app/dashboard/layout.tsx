@@ -155,12 +155,15 @@ export default function DashboardLayout({
     // Add role-specific links
     if (session.user.role === "parent") {
       links.push(
+        { href: "/dashboard/parent/profile", label: "Profile", icon: <FaUserCircle className="h-5 w-5" /> },
         { href: "/dashboard/parent/find-childminders", label: "Find Childminders", icon: <FaSearch className="h-5 w-5" /> },
         { href: "/dashboard/parent/bookings", label: "Bookings", icon: <FaCalendarAlt className="h-5 w-5" /> },
         { href: "/dashboard/parent/messages", label: "Messages", icon: <FaComments className="h-5 w-5" /> },
         { href: "/dashboard/parent/calendar", label: "Calendar", icon: <FaCalendarAlt className="h-5 w-5" /> },
+        { href: "/dashboard/parent/activity", label: "Activity", icon: <FaHistory className="h-5 w-5" /> },
         { href: "/dashboard/parent/subscription", label: "Subscription", icon: <FaCreditCard className="h-5 w-5" /> },
-        { href: "/dashboard/parent/help", label: "Help & Support", icon: <FaQuestionCircle className="h-5 w-5" /> }
+        { href: "/dashboard/parent/help", label: "Help & Support", icon: <FaQuestionCircle className="h-5 w-5" /> },
+        { href: "/dashboard/parent/settings", label: "Settings", icon: <FaCog className="h-5 w-5" /> }
       );
     }
     // Add childminder and admin links as needed

@@ -44,18 +44,33 @@ export async function POST(req: Request) {
 
     // Cancel the subscription in Stripe
     // If cancelImmediately is true, cancel immediately, otherwise at period end
-    const subscription = await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: !cancelImmediately,
-      ...(cancelImmediately ? { status: 'canceled' } : {})
-    });
+    let subscription;
+    
+    if (cancelImmediately) {
+      // Use the cancel method for immediate cancellation
+      subscription = await stripe.subscriptions.cancel(subscriptionId);
+    } else {
+      // Use update with cancel_at_period_end for end-of-period cancellation
+      subscription = await stripe.subscriptions.update(subscriptionId, {
+        cancel_at_period_end: true
+      });
+    }
 
     // Update the subscription in database
     await db.subscription.update({
       where: { id: user.Subscription.id },
       data: {
-        cancelAtPeriodEnd: true,
-        status: cancelImmediately ? 'canceled' : 'active',
+        cancelAtPeriodEnd: !cancelImmediately ? true : false,
+        status: subscription.status,
         updatedAt: new Date(),
+      }
+    });
+
+    // Update the user's subscription status to ensure proper routing
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionStatus: 'FREE',
       }
     });
 
@@ -67,7 +82,8 @@ export async function POST(req: Request) {
         status: subscription.status,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      }
+      },
+      subscriptionStatus: 'FREE'
     });
   } catch (error: any) {
     console.error('Error canceling subscription:', error);

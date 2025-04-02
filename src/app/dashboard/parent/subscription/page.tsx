@@ -50,7 +50,7 @@ interface PlanInfo {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
 export default function SubscriptionPage() {
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session, status: sessionStatus, update } = useSession();
   const router = useRouter();
   
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -202,16 +202,28 @@ export default function SubscriptionPage() {
       const newSubData = await fetch('/api/subscription/current').then(res => res.json());
       setSubscription(newSubData);
       setShowCancelConfirm(false);
-      setActionSuccess(
-        cancelType === 'immediate' 
-          ? 'Your subscription has been cancelled immediately.' 
-          : 'Your subscription will be cancelled at the end of the billing period.'
-      );
       
-      // Reset success message after a few seconds
-      setTimeout(() => {
-        setActionSuccess(null);
-      }, 5000);
+      // Set success message
+      const successMessage = cancelType === 'immediate' 
+        ? 'Your subscription has been cancelled immediately. You will be redirected to the subscription page.' 
+        : 'Your subscription will be cancelled at the end of the billing period.';
+      setActionSuccess(successMessage);
+      
+      // If cancelled immediately, refresh session and redirect to subscription page after a few seconds
+      if (cancelType === 'immediate') {
+        // Force a session reload to update the subscription status
+        await update(); // Use next-auth update method
+        
+        setTimeout(() => {
+          // Use hard redirect to force a complete page refresh
+          window.location.href = '/subscription?required=true';
+        }, 3000);
+      } else {
+        // Reset success message after a few seconds
+        setTimeout(() => {
+          setActionSuccess(null);
+        }, 5000);
+      }
     } catch (error: any) {
       setError(error.message || 'An error occurred while cancelling your subscription');
       console.error('Subscription cancel error:', error);

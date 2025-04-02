@@ -29,7 +29,7 @@ import { AlertTriangle } from "lucide-react";
 interface DashboardCardProps {
   icon: ReactNode;
   title: string;
-  description: string;
+  description: string | ReactNode;
   linkText?: string;
   linkHref?: string;
   onClick?: () => void;
@@ -39,7 +39,7 @@ interface DashboardCardProps {
 interface StatsCardProps {
   icon: ReactNode;
   title: string;
-  value: string | number;
+  value: string | number | ReactNode;
   trend?: number;
   color?: "violet" | "indigo" | "purple";
 }
@@ -85,6 +85,18 @@ interface Message {
   createdAt: string;
   read: boolean;
   sender: MessageSender;
+}
+
+// Define types for dashboard stats
+interface DashboardStats {
+  upcomingBookings: number;
+  unreadMessages: { 
+    count: number; 
+    trend: number;
+  };
+  childrenRegistered: number;
+  subscriptionStatus: string;
+  subscriptionEndDate?: string | null;
 }
 
 // Card component for dashboard items
@@ -166,7 +178,11 @@ function StatsCard({
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <div className="flex items-center">
-            <p className="text-2xl font-semibold text-gray-900">{value}</p>
+            {typeof value === 'string' || typeof value === 'number' ? (
+              <p className="text-2xl font-semibold text-gray-900">{value}</p>
+            ) : (
+              <div className="text-2xl font-semibold text-gray-900">{value}</div>
+            )}
             {trend !== undefined && (
               <span className={`ml-2 flex items-center text-sm font-medium ${
                 trend > 0 ? "text-green-600" : trend < 0 ? "text-red-600" : "text-gray-500"
@@ -187,11 +203,12 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [greeting, setGreeting] = useState<string>('');
-  const [dashboardStats, setDashboardStats] = useState({
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     upcomingBookings: 0,
     unreadMessages: { count: 0, trend: 0 },
     childrenRegistered: 0,
-    subscriptionStatus: 'INACTIVE'
+    subscriptionStatus: 'INACTIVE',
+    subscriptionEndDate: null
   });
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -204,11 +221,20 @@ function DashboardContent() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push(`/auth/login?callbackUrl=${encodeURIComponent("/dashboard/parent")}`);
+      return;
     }
 
-    // Handle redirect from onboarding
-    if (status === "authenticated" && searchParams && searchParams.has("onboarding") && session.user.role === "parent") {
-      // Show onboarding success message if needed
+    if (status === "authenticated") {
+      // Check subscription status first
+      if (session.user.subscriptionStatus === "FREE") {
+        router.push("/subscription?required=true");
+        return;
+      }
+
+      // Handle redirect from onboarding
+      if (searchParams && searchParams.has("onboarding") && session.user.role === "parent") {
+        // Show onboarding success message if needed
+      }
     }
   }, [status, session, router, searchParams]);
 
@@ -292,6 +318,8 @@ function DashboardContent() {
     switch (status) {
       case 'ACTIVE':
         return 'Active';
+      case 'PREMIUM':
+        return 'Premium';
       case 'INACTIVE':
         return 'Inactive';
       case 'TRIAL':
@@ -368,7 +396,16 @@ function DashboardContent() {
           <StatsCard 
             icon={<FaChartLine className="h-5 w-5" />}
             title="Subscription Status" 
-            value={isLoading ? "..." : formatSubscriptionStatus(dashboardStats.subscriptionStatus)}
+            value={isLoading ? "..." : (
+              <div>
+                <span className="mr-1">{formatSubscriptionStatus(dashboardStats.subscriptionStatus)}</span>
+                {(dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE') && dashboardStats.subscriptionEndDate && (
+                  <span className="text-xs font-normal block">
+                    Renews: {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </span>
+                )}
+              </div>
+            )}
             color="violet"
           />
         </div>
@@ -635,7 +672,18 @@ function DashboardContent() {
           <DashboardCard
             icon={<FaCreditCard className="h-5 w-5" />}
             title="Subscription"
-            description="Manage your subscription plan, billing details, and payment methods."
+            description={
+              dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE'
+                ? <>
+                    <span className="font-medium text-green-600">Your premium plan is active.</span>
+                    {dashboardStats.subscriptionEndDate && 
+                      <span className="block mt-1">
+                        Renews on {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+                      </span>
+                    }
+                  </>
+                : 'Upgrade to a premium plan to access all features and benefits.'
+            }
             linkText="Manage Subscription"
             linkHref="/dashboard/parent/subscription"
             color="purple"

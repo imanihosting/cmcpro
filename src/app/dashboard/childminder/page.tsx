@@ -367,9 +367,18 @@ export default function ChildminderDashboard() {
           </div>
           <h2 className="mb-2 text-lg font-semibold text-gray-900">Subscription</h2>
           <p className="mb-4 text-sm text-gray-600">
-            {dashboardStats.subscriptionStatus === 'PREMIUM' 
-              ? `Your premium plan is active. ${dashboardStats.subscriptionEndDate ? `Renews on ${format(new Date(dashboardStats.subscriptionEndDate), 'PP')}.` : ''}` 
-              : 'Upgrade to a premium plan to access all features and benefits.'}
+            {dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE' ? (
+              <>
+                <span className="font-medium text-green-600">Your premium plan is active.</span>
+                {dashboardStats.subscriptionEndDate && (
+                  <span className="block mt-1">
+                    Renews on {format(new Date(dashboardStats.subscriptionEndDate), 'dd MMM yyyy')}.
+                  </span>
+                )}
+              </>
+            ) : (
+              'Upgrade to a premium plan to access all features and benefits.'
+            )}
           </p>
           <button 
             onClick={() => router.push('/dashboard/childminder/subscription')} 

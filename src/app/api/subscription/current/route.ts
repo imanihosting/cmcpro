@@ -63,6 +63,25 @@ export async function GET(req: Request) {
       user.Subscription.stripeSubscriptionId
     );
 
+    // If Stripe subscription is canceled, update user's status to FREE in database
+    if ((stripeSubscription.status === 'canceled' || 
+         stripeSubscription.status === 'incomplete_expired' || 
+         stripeSubscription.status === 'unpaid') && 
+        user.subscriptionStatus !== 'FREE') {
+      
+      console.log(`Updating user ${userId} subscription status to FREE due to Stripe status: ${stripeSubscription.status}`);
+      
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          subscriptionStatus: 'FREE',
+        }
+      });
+      
+      // Update local user object to reflect the change
+      user.subscriptionStatus = 'FREE';
+    }
+
     // Get the product details for additional information
     const priceId = stripeSubscription.items.data[0].price.id;
     const price = await stripe.prices.retrieve(priceId, {

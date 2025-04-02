@@ -95,7 +95,14 @@ export async function GET() {
         id: userId
       },
       select: {
-        subscriptionStatus: true
+        subscriptionStatus: true,
+        Subscription: {
+          select: {
+            stripeCurrentPeriodEnd: true,
+            status: true,
+            plan: true
+          }
+        }
       }
     });
     
@@ -109,7 +116,8 @@ export async function GET() {
         trend: messageTrend
       },
       childrenRegistered,
-      subscriptionStatus
+      subscriptionStatus,
+      subscriptionEndDate: subscription?.Subscription?.stripeCurrentPeriodEnd || null
     });
     
   } catch (error) {
