@@ -8,23 +8,23 @@ import type { User } from '@prisma/client';
  */
 export function getGraphClient() {
   // Get credentials from environment variables
-  const tenantId = process.env.MICROSOFT_GRAPH_TENANT_ID;
-  const clientId = process.env.MICROSOFT_GRAPH_CLIENT_ID;
-  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET;
+  const tenantId = process.env.MICROSOFT_GRAPH_TENANT_ID || process.env.AZURE_TENANT_ID;
+  const clientId = process.env.MICROSOFT_GRAPH_CLIENT_ID || process.env.AZURE_CLIENT_ID;
+  const clientSecret = process.env.MICROSOFT_GRAPH_CLIENT_SECRET || process.env.AZURE_CLIENT_SECRET;
   
   // Validate all required credentials are available
   if (!tenantId) {
-    console.error('Microsoft Graph tenant ID is not configured');
+    console.error('Microsoft Graph tenant ID is not configured (MICROSOFT_GRAPH_TENANT_ID or AZURE_TENANT_ID)');
     throw new Error('Microsoft Graph tenant ID is not configured');
   }
   
   if (!clientId) {
-    console.error('Microsoft Graph client ID is not configured');
+    console.error('Microsoft Graph client ID is not configured (MICROSOFT_GRAPH_CLIENT_ID or AZURE_CLIENT_ID)');
     throw new Error('Microsoft Graph client ID is not configured');
   }
   
   if (!clientSecret) {
-    console.error('Microsoft Graph client secret is not configured');
+    console.error('Microsoft Graph client secret is not configured (MICROSOFT_GRAPH_CLIENT_SECRET or AZURE_CLIENT_SECRET)');
     throw new Error('Microsoft Graph client secret is not configured');
   }
   
@@ -74,10 +74,10 @@ export async function sendEmail({ to, subject, body, isHtml = true }: EmailOptio
   try {
     // Check if we're in development mode and email is not fully configured
     if (process.env.NODE_ENV === 'development' && 
-        (!process.env.MICROSOFT_GRAPH_TENANT_ID || 
-         !process.env.MICROSOFT_GRAPH_CLIENT_ID || 
-         !process.env.MICROSOFT_GRAPH_CLIENT_SECRET ||
-         !process.env.MICROSOFT_GRAPH_USER_ID)) {
+        (!process.env.MICROSOFT_GRAPH_TENANT_ID && !process.env.AZURE_TENANT_ID || 
+         !process.env.MICROSOFT_GRAPH_CLIENT_ID && !process.env.AZURE_CLIENT_ID || 
+         !process.env.MICROSOFT_GRAPH_CLIENT_SECRET && !process.env.AZURE_CLIENT_SECRET ||
+         !process.env.MICROSOFT_GRAPH_USER_ID && !process.env.OFFICE365_USER_ID)) {
       // Log the email instead of sending it
       console.log('----------------');
       console.log('Email not sent (development mode):');
@@ -89,16 +89,16 @@ export async function sendEmail({ to, subject, body, isHtml = true }: EmailOptio
     }
     
     // Validate required environment variables
-    const userId = process.env.MICROSOFT_GRAPH_USER_ID;
-    const fromEmail = process.env.MICROSOFT_GRAPH_FROM_EMAIL;
+    const userId = process.env.MICROSOFT_GRAPH_USER_ID || process.env.OFFICE365_USER_ID;
+    const fromEmail = process.env.MICROSOFT_GRAPH_FROM_EMAIL || process.env.SMTP_FROM_EMAIL;
     
     if (!fromEmail) {
-      console.error('Microsoft Graph sender email is not configured');
+      console.error('Microsoft Graph sender email is not configured (MICROSOFT_GRAPH_FROM_EMAIL or SMTP_FROM_EMAIL)');
       throw new Error('Microsoft Graph sender email is not configured');
     }
 
     if (!userId) {
-      console.error('Microsoft Graph user ID is not configured');
+      console.error('Microsoft Graph user ID is not configured (MICROSOFT_GRAPH_USER_ID or OFFICE365_USER_ID)');
       throw new Error('Microsoft Graph user ID is not configured');
     }
     

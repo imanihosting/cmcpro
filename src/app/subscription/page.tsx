@@ -31,6 +31,17 @@ export default function SubscriptionPage() {
       router.push('/auth/login');
     }
     
+    // Handle redirect from registration
+    // Check if there's a redirectToSubscription flag in localStorage
+    if (status === 'authenticated' && typeof window !== 'undefined') {
+      const redirectFlag = localStorage.getItem('redirectToSubscription');
+      if (redirectFlag === 'true') {
+        // Clear the flag so it doesn't trigger again
+        localStorage.removeItem('redirectToSubscription');
+        console.log("Detected redirect from registration, staying on subscription page");
+      }
+    }
+    
     // If the user has just been redirected after successful payment
     // Show a success message and redirect to dashboard after a delay
     if (success === 'true') {

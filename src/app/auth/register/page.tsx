@@ -27,6 +27,7 @@ import {
   checkboxClass
 } from '@/components/ui/InputStyles';
 import Logo from "@/components/Logo";
+import { useSession } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -41,11 +42,19 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSafetyNotice, setShowSafetyNotice] = useState(false);
+  const { status } = useSession();
 
   // Show safety notice when parent role is selected
   useEffect(() => {
     setShowSafetyNotice(role === User_role.parent);
   }, [role]);
+
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,8 +110,19 @@ export default function RegisterPage() {
       });
 
       if (result?.ok) {
-        // Redirect to subscription page after successful registration and login
-        router.push("/subscription");
+        // Wait for the session to be fully established before redirecting
+        // This helps prevent the flickering and redirect to login issue
+        console.log("Login successful, preparing to redirect to subscription page...");
+        
+        // Store that this user should be redirected to subscription in localStorage
+        // This helps retain context after page reloads
+        localStorage.setItem('redirectToSubscription', 'true');
+        
+        // Force a delay to ensure the session is properly established
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Use hard navigation to ensure a fresh page load with established session
+        window.location.href = "/subscription";
       } else {
         // If auto-login fails, redirect to login page
         router.push("/auth/login?registered=true");
