@@ -68,13 +68,21 @@ export async function POST(req: Request) {
       );
     }
     
-    // Check for APP_URL and use a fallback if not available
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Get the application URL from environment variables
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+    
+    if (!appUrl) {
+      console.error('Missing required environment variable: NEXT_PUBLIC_APP_URL or NEXTAUTH_URL');
+      return NextResponse.json(
+        { error: 'Server configuration error: Missing application URL' },
+        { status: 500 }
+      );
+    }
     
     if (!appUrl.startsWith('http')) {
-      console.error('NEXT_PUBLIC_APP_URL is not properly configured with http/https protocol');
+      console.error('Application URL is not properly configured with http/https protocol');
       return NextResponse.json(
-        { error: 'Server configuration error' },
+        { error: 'Server configuration error: Invalid application URL format' },
         { status: 500 }
       );
     }
