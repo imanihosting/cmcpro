@@ -99,11 +99,12 @@ export async function POST(req: Request) {
           quantity: 1
         }
       ],
-      success_url: `${appUrl}/subscription?success=true`,
+      success_url: `${appUrl}/dashboard?subscription=success&timestamp=${Date.now()}`,
       cancel_url: `${appUrl}/subscription?canceled=true`,
       metadata: {
         userId,
-        plan
+        plan,
+        subscriptionStatus: 'PREMIUM'
       }
     });
     

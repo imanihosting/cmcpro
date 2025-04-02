@@ -187,8 +187,8 @@ function StatsCard({
               <span className={`ml-2 flex items-center text-sm font-medium ${
                 trend > 0 ? "text-green-600" : trend < 0 ? "text-red-600" : "text-gray-500"
               }`}>
-                {trend > 0 ? "+" : trend < 0 ? "-" : ""}
-                {Math.abs(trend)}%
+                {trend > 0 ? "+" : ""}
+                {trend}%
               </span>
             )}
           </div>
@@ -252,9 +252,9 @@ function DashboardContent() {
           
           const data = await response.json();
           setDashboardStats(data);
-        } catch (err) {
-          setError('Error loading dashboard data. Please try again later.');
-          console.error(err);
+        } catch (err: any) {
+          setError(err.message || 'Error loading dashboard stats');
+          console.error('Dashboard stats error:', err);
         } finally {
           setIsLoading(false);
         }
@@ -384,7 +384,7 @@ function DashboardContent() {
             icon={<FaComments className="h-5 w-5" />}
             title="New Messages" 
             value={isLoading ? "..." : dashboardStats.unreadMessages.count}
-            trend={isLoading ? undefined : dashboardStats.unreadMessages.trend}
+            trend={isLoading || dashboardStats.unreadMessages.trend === null ? undefined : Number(dashboardStats.unreadMessages.trend)}
             color="indigo"
           />
           <StatsCard 

@@ -73,13 +73,15 @@ export async function GET() {
       }
     });
     
-    let messageTrend = null;
+    // Calculate message trend, handling the case when there are no previous messages
+    let messageTrend = 0; // Default to 0% change
+    
     if (messagesPreviousWeek > 0) {
-      const percentageChange = ((messagesLastWeek - messagesPreviousWeek) / messagesPreviousWeek) * 100;
-      messageTrend = {
-        positive: percentageChange >= 0,
-        value: Math.abs(Math.round(percentageChange))
-      };
+      // Calculate percentage change when there were messages in the previous week
+      messageTrend = Math.round(((messagesLastWeek - messagesPreviousWeek) / messagesPreviousWeek) * 100);
+    } else if (messagesLastWeek > 0) {
+      // If there were no messages before but there are now, show a positive trend
+      messageTrend = 100; // 100% increase
     }
     
     // Get count of children registered

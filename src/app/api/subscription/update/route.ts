@@ -67,6 +67,16 @@ export async function POST(req: Request) {
       where: { id: user.Subscription.id },
       data: {
         stripePriceId: priceId,
+        status: 'active',
+        updatedAt: new Date(),
+      }
+    });
+
+    // Also update the user's subscription status to PREMIUM
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionStatus: 'PREMIUM',
         updatedAt: new Date(),
       }
     });

@@ -291,10 +291,12 @@ async function handleSubscriptionUpdated(subscription: any) {
       return;
     }
     
-    // Continue with normal flow if subscription was found...
-    const planInterval = subscription.items.data[0].price.recurring?.interval;
-    const plan = planInterval === 'month' ? 'monthly' : 'annual';
-
+    console.log(`Subscription ${subscription.id} updated - User: ${dbSubscription.userId}, Status: ${subscription.status}`);
+    
+    // Determine plan from price - enhanced plan detection
+    const priceId = subscription.items.data[0].price.id;
+    const plan = subscription.items.data[0].price.recurring?.interval === 'month' ? 'monthly' : 'annual';
+    
     // Update subscription in database
     await db.subscription.update({
       where: {
@@ -309,21 +311,28 @@ async function handleSubscriptionUpdated(subscription: any) {
       },
     });
 
-    // If subscription is canceled or inactive, update user's subscription status
-    try {
-      if (subscription.status !== 'active') {
-        await db.user.update({
-          where: {
-            id: dbSubscription.userId,
-          },
-          data: {
-            // @ts-ignore: Using local enum to match schema changes
-            subscriptionStatus: SubscriptionStatus.FREE,
-          },
-        });
-        console.log(`Subscription canceled/inactive: Updated user ${dbSubscription.userId} to FREE status`);
+    // Critical: Log detailed information for reactivation cases
+    if (subscription.status === 'active') {
+      console.log(`Active subscription detected - checking if this is a reactivation`);
+      
+      // Get the current user subscription status
+      const user = await db.user.findUnique({
+        where: { id: dbSubscription.userId },
+        select: { subscriptionStatus: true }
+      });
+      
+      if (user && user.subscriptionStatus !== 'PREMIUM') {
+        console.log(`Reactivation detected! User ${dbSubscription.userId} status: ${user.subscriptionStatus}`);
       } else {
-        // If subscription is active, update to PREMIUM
+        console.log(`User ${dbSubscription.userId} already has PREMIUM status: ${user?.subscriptionStatus}`);
+      }
+    }
+
+    // If subscription is canceled or inactive, update user's subscription status to FREE
+    // If subscription is active, update user's subscription status to PREMIUM
+    try {
+      if (subscription.status === 'active') {
+        // ALWAYS update status to PREMIUM if subscription is active, regardless of cancel_at_period_end
         await db.user.update({
           where: {
             id: dbSubscription.userId,
@@ -334,6 +343,18 @@ async function handleSubscriptionUpdated(subscription: any) {
           },
         });
         console.log(`Subscription active: Updated user ${dbSubscription.userId} to PREMIUM status`);
+      } else {
+        // Non-active status means FREE
+        await db.user.update({
+          where: {
+            id: dbSubscription.userId,
+          },
+          data: {
+            // @ts-ignore: Using local enum to match schema changes
+            subscriptionStatus: SubscriptionStatus.FREE,
+          },
+        });
+        console.log(`Subscription canceled/inactive: Updated user ${dbSubscription.userId} to FREE status`);
       }
     } catch (error) {
       console.error(`Error updating user subscription status:`, error);

@@ -64,12 +64,47 @@ export default function SubscriptionPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelType, setCancelType] = useState<'immediate' | 'end'>('end');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Function to forcefully refresh subscription data
+  const refreshSubscriptionData = async () => {
+    if (sessionStatus !== 'authenticated') return;
+    
+    setIsRefreshing(true);
+    setError(null);
+    
+    try {
+      // Force update the session first
+      await update();
+      
+      // Then fetch the latest subscription data
+      const response = await fetch('/api/subscription/current?timestamp=' + Date.now());
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      setSubscription(data);
+      setActionSuccess('Subscription information refreshed successfully.');
+      
+      // Reset success message after a few seconds
+      setTimeout(() => {
+        setActionSuccess(null);
+      }, 5000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to refresh subscription data.');
+      console.error('Error refreshing subscription data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Fetch subscription data and plans
   useEffect(() => {
     if (sessionStatus === 'authenticated') {
       Promise.all([
-        fetch('/api/subscription/current').then(res => res.json()),
+        fetch('/api/subscription/current?timestamp=' + Date.now()).then(res => res.json()),
         fetch('/api/subscription/plans').then(res => res.json())
       ]).then(([subData, plansData]) => {
         if (subData.error) {
@@ -381,6 +416,27 @@ export default function SubscriptionPage() {
                     </dl>
                     
                     <div className="mt-6 flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
+                      {/* Refresh button at the start of the button row */}
+                      <button
+                        onClick={refreshSubscriptionData}
+                        disabled={isRefreshing}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        {isRefreshing ? (
+                          <>
+                            <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refresh
+                          </>
+                        )}
+                      </button>
+
                       {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                         <>
                           <button
