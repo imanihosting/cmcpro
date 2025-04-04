@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { FaCalendarAlt, FaClock, FaUserCircle, FaMapMarkerAlt, FaTrash, FaEdit, FaCalendarPlus } from "react-icons/fa";
 import Link from 'next/link';
 import { BookingFilters, PaginationInfo, Booking } from './types';
@@ -11,8 +11,9 @@ import Pagination from './components/Pagination';
 import EmptyState from './components/EmptyState';
 import LoadingState from './components/LoadingState';
 import BookingDetailModal from './components/BookingDetailModal';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
-export default function BookingsPage() {
+function BookingsPageContent() {
   // State for bookings data
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -45,6 +46,7 @@ export default function BookingsPage() {
   const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
   
   const router = useRouter();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   
   // Fetch bookings from API
   const fetchBookings = useCallback(async () => {
@@ -182,6 +184,7 @@ export default function BookingsPage() {
   
   return (
     <div>
+      <SearchParamsListener />
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Bookings</h1>
         <p className="mt-1 text-sm text-gray-600">View and manage your childcare bookings</p>
@@ -277,5 +280,13 @@ export default function BookingsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <BookingsPageContent />
+    </Suspense>
   );
 } 

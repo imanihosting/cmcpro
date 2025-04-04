@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { FaLock, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { useSafeSearchParams } from "@/hooks/useSafeSearchParams";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +18,7 @@ export default function ResetPasswordPage() {
   const [tokenError, setTokenError] = useState<string | null>(null);
   
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
 
   useEffect(() => {
     const tokenParam = searchParams?.get("token");
@@ -93,6 +94,7 @@ export default function ResetPasswordPage() {
   if (isTokenChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <SearchParamsListener />
         <div className="max-w-md w-full text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Verifying reset link...</h2>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-700 mx-auto"></div>
@@ -104,6 +106,7 @@ export default function ResetPasswordPage() {
   if (isValidToken === false) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <SearchParamsListener />
         <div className="max-w-md w-full text-center space-y-6">
           <FaTimesCircle className="h-16 w-16 text-red-500 mx-auto" />
           <h2 className="text-2xl font-bold text-gray-900">Invalid Reset Link</h2>
@@ -123,6 +126,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <SearchParamsListener />
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Reset Your Password</h2>
@@ -214,5 +218,17 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-700"></div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 } 

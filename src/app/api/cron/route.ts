@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '@/lib/prisma';
 
+// Prevent static export of this API route
+export const dynamic = 'force-dynamic';
+
 // This endpoint is designed to be called by a cron service like Vercel Cron Jobs
 // It will check for document expirations and send notifications
 

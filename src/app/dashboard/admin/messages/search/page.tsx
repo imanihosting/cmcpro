@@ -2,11 +2,12 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense,  useEffect, useState, useCallback  } from 'react';
+import {  } from 'next/navigation';
 import { format } from 'date-fns';
 import debounce from 'lodash/debounce';
 import { FaSearch, FaTimes, FaChevronLeft, FaChevronRight, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 // Define types
 interface SearchResult {
@@ -44,10 +45,10 @@ interface SearchResponse {
 }
 
 // Main component
-export default function AdminMessagesSearch() {
+function AdminMessagesSearchContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   
   // Get search query from URL
   const initialQuery = searchParams ? searchParams.get('q') || '' : '';
@@ -171,8 +172,11 @@ export default function AdminMessagesSearch() {
   // Render loading state
   if (status === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+      <div>
+        <SearchParamsListener />
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+        </div>
       </div>
     );
   }
@@ -354,3 +358,12 @@ export default function AdminMessagesSearch() {
     </div>
   );
 } 
+export default function AdminMessagesSearch() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <AdminMessagesSearchContent />
+    </Suspense>
+  );
+}

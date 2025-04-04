@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense,  useState, useEffect, useCallback  } from 'react';
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter,  } from 'next/navigation';
 import { FaSearch, FaStar, FaThumbsUp } from "react-icons/fa";
 import SearchFiltersComponent from "./components/SearchFilters";
 import ChildminderCard from "./components/ChildminderCard";
@@ -10,11 +10,12 @@ import Pagination from "./components/Pagination";
 import EmptyState from "./components/EmptyState";
 import LoadingState from "./components/LoadingState";
 import { SearchFilters, SearchResponse, Childminder, Pagination as PaginationType } from "./types";
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
-export default function FindChildminders() {
+function FindChildmindersContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   
   // State for recommended childminders
   const [recommendedChildminders, setRecommendedChildminders] = useState<Childminder[]>([]);
@@ -214,14 +215,17 @@ export default function FindChildminders() {
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
-      <div className="flex h-[calc(100vh-64px)] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+      <div>
+        <SearchParamsListener />
+        <div className="flex h-[calc(100vh-64px)] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+      <div>
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Find Childminders</h1>
         <p className="mt-1 text-sm text-gray-600">Search for qualified childminders in your area</p>
@@ -320,3 +324,12 @@ export default function FindChildminders() {
     </div>
   );
 } 
+export default function FindChildminders() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <FindChildmindersContent />
+    </Suspense>
+  );
+}

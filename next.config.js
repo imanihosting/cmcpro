@@ -16,15 +16,29 @@ const nextConfig = {
     // Disable image optimization as it may be causing issues with local files
     unoptimized: true,
   },
-  // Don't try to statically optimize everything
+  // Configure production build
+  distDir: 'build',
   output: 'standalone',
-  // Optimize for production
+  staticPageGenerationTimeout: 180,
   productionBrowserSourceMaps: false,
-  // Simplified webpack config
+  
+  // Skip static generation for API routes and handle them as server-side only
+  experimental: {
+    serverComponentsExternalPackages: ['prisma', '@prisma/client'],
+    // Enable dynamic runtime for all API routes
+    appDir: true,
+    serverActions: {
+      bodySizeLimit: '4mb',
+    },
+  },
+  
+  // Exclude specific routes from static generation
+  excludeDefaultMomentLocales: true,
+  poweredByHeader: false,
+  
   webpack: (config, { isServer, dev }) => {
     // Only apply in client-side production builds
     if (!isServer && !dev) {
-      // Increase timeout for chunk loading (helpful for slower mobile connections)
       config.output.chunkLoadTimeout = 120000; // Increased to 120 seconds
       
       // Simplified chunk splitting for better compatibility

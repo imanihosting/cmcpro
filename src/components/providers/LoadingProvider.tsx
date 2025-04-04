@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 // Create loading context
@@ -9,10 +9,26 @@ const LoadingContext = createContext({
 
 export const useLoading = () => useContext(LoadingContext);
 
+// SearchParams component that safely uses the hook inside Suspense
+function SearchParamsWatcher({ onParamsChange }: { onParamsChange: (params: ReturnType<typeof useSearchParams>) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    onParamsChange(searchParams);
+  }, [searchParams, onParamsChange]);
+  
+  return null;
+}
+
 export default function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [params, setParams] = useState<ReturnType<typeof useSearchParams> | null>(null);
+
+  // Handler for search params change
+  const handleSearchParamsChange = (newParams: ReturnType<typeof useSearchParams>) => {
+    setParams(newParams);
+  };
 
   // Effect for navigation changes
   useEffect(() => {
@@ -28,10 +44,13 @@ export default function LoadingProvider({ children }: { children: React.ReactNod
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [pathname, searchParams]);
+  }, [pathname, params]);
 
   return (
     <LoadingContext.Provider value={{ isLoading, setIsLoading }}>
+      <Suspense fallback={null}>
+        <SearchParamsWatcher onParamsChange={handleSearchParamsChange} />
+      </Suspense>
       {children}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-gradient-to-br from-violet-900/90 via-violet-800/90 to-purple-800/90 backdrop-blur-sm transition-all duration-300 animate-fadeIn">

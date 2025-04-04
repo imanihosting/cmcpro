@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Suspense,  useEffect, useState, useCallback  } from 'react';
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter,  } from 'next/navigation';
 import { format } from "date-fns";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -64,8 +64,9 @@ type Filters = {
 
 // Document Detail Modal component will be defined separately
 import DocumentDetailModal from "./DocumentDetailModal";
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
-export default function AdminDocumentsPage() {
+function AdminDocumentsPageContent() {
   // State
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +89,7 @@ export default function AdminDocumentsPage() {
   // Hooks
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
 
   // Function to fetch documents with filtering and pagination
   const fetchDocuments = useCallback(async () => {
@@ -214,8 +215,11 @@ export default function AdminDocumentsPage() {
   // Show loading state while checking authentication or loading data
   if (status === "loading" || (loading && !error && documents.length === 0)) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+      <div>
+        <SearchParamsListener />
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+        </div>
       </div>
     );
   }
@@ -587,3 +591,12 @@ export default function AdminDocumentsPage() {
     </div>
   );
 } 
+export default function AdminDocumentsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <AdminDocumentsPageContent />
+    </Suspense>
+  );
+}

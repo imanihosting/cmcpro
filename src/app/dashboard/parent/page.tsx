@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { 
@@ -24,6 +24,7 @@ import { formatDistanceToNow } from 'date-fns';
 import AIRecommendations from '@/components/dashboard/parent/AIRecommendations';
 import { FiSearch, FiCalendar } from "react-icons/fi";
 import { AlertTriangle } from "lucide-react";
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 // Define types for the components
 interface DashboardCardProps {
@@ -201,7 +202,7 @@ function StatsCard({
 function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   const [greeting, setGreeting] = useState<string>('');
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     upcomingBookings: 0,
@@ -355,348 +356,353 @@ function DashboardContent() {
 
   // Parent dashboard content
   return (
-    <div>
-      {/* Welcome section with stats */}
-      <section className="mb-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            {greeting}, {session.user.name}!
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Here's what's happening with your childcare services
-          </p>
-          {error && (
-            <div className="mt-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-        </div>
-        
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard 
-            icon={<FaCalendarAlt className="h-5 w-5" />}
-            title="Upcoming Bookings" 
-            value={isLoading ? "..." : dashboardStats.upcomingBookings}
-            color="violet"
-          />
-          <StatsCard 
-            icon={<FaComments className="h-5 w-5" />}
-            title="New Messages" 
-            value={isLoading ? "..." : dashboardStats.unreadMessages.count}
-            trend={isLoading || dashboardStats.unreadMessages.trend === null ? undefined : Number(dashboardStats.unreadMessages.trend)}
-            color="indigo"
-          />
-          <StatsCard 
-            icon={<FaChild className="h-5 w-5" />}
-            title="Children Registered" 
-            value={isLoading ? "..." : dashboardStats.childrenRegistered}
-            color="purple"
-          />
-          <StatsCard 
-            icon={<FaChartLine className="h-5 w-5" />}
-            title="Subscription Status" 
-            value={isLoading ? "..." : (
-              <div>
-                <span className="mr-1">{formatSubscriptionStatus(dashboardStats.subscriptionStatus)}</span>
-                {(dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE') && dashboardStats.subscriptionEndDate && (
-                  <span className="text-xs font-normal block">
-                    Renews: {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                  </span>
-                )}
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <SearchParamsListener />
+      <div>
+        {/* Welcome section with stats */}
+        <section className="mb-8">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {greeting}, {session.user.name}!
+            </h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Here's what's happening with your childcare services
+            </p>
+            {error && (
+              <div className="mt-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                {error}
               </div>
             )}
-            color="violet"
-          />
-        </div>
-      </section>
-      
-      {/* Quick actions */}
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DashboardCard
-            icon={<FiSearch className="h-5 w-5" />}
-            title="Find Childminders"
-            description="Search and browse our directory of trusted childminders"
-            linkText="Find Now"
-            linkHref="/dashboard/parent/find-childminders"
-            color="violet"
-          />
-          
-          <DashboardCard
-            icon={<FiCalendar className="h-5 w-5" />}
-            title="Book Childcare"
-            description="Schedule regular childcare with your preferred childminders"
-            linkText="Book Now"
-            linkHref="/dashboard/parent/bookings/create"
-            color="indigo"
-          />
-          
-          <DashboardCard
-            icon={<AlertTriangle className="h-5 w-5" />}
-            title="Emergency Childcare"
-            description="Need urgent childcare? Request immediate help from available childminders"
-            linkText="Request Now"
-            linkHref="/dashboard/parent/emergency-booking"
-            color="purple"
-          />
-        </div>
-      </div>
-      
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Upcoming bookings section */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Upcoming Bookings</h2>
-            <Link 
-              href="/dashboard/parent/bookings"
-              className="text-sm font-medium text-violet-600 hover:text-violet-800"
-            >
-              View all
-            </Link>
           </div>
           
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {bookingsLoading ? (
-              <div className="p-6 text-center">
-                <LoadingSpinner />
-                <p className="mt-2 text-sm text-gray-500">Loading your upcoming bookings...</p>
-              </div>
-            ) : upcomingBookings.length === 0 ? (
-              <div className="p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                  <FaCalendarAlt className="h-6 w-6" />
+          {/* Stats cards */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard 
+              icon={<FaCalendarAlt className="h-5 w-5" />}
+              title="Upcoming Bookings" 
+              value={isLoading ? "..." : dashboardStats.upcomingBookings}
+              color="violet"
+            />
+            <StatsCard 
+              icon={<FaComments className="h-5 w-5" />}
+              title="New Messages" 
+              value={isLoading ? "..." : dashboardStats.unreadMessages.count}
+              trend={isLoading || dashboardStats.unreadMessages.trend === null ? undefined : Number(dashboardStats.unreadMessages.trend)}
+              color="indigo"
+            />
+            <StatsCard 
+              icon={<FaChild className="h-5 w-5" />}
+              title="Children Registered" 
+              value={isLoading ? "..." : dashboardStats.childrenRegistered}
+              color="purple"
+            />
+            <StatsCard 
+              icon={<FaChartLine className="h-5 w-5" />}
+              title="Subscription Status" 
+              value={isLoading ? "..." : (
+                <div>
+                  <span className="mr-1">{formatSubscriptionStatus(dashboardStats.subscriptionStatus)}</span>
+                  {(dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE') && dashboardStats.subscriptionEndDate && (
+                    <span className="text-xs font-normal block">
+                      Renews: {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    </span>
+                  )}
                 </div>
-                <h3 className="mt-3 text-sm font-medium text-gray-900">No upcoming bookings</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by creating a new booking.</p>
-                <div className="mt-6">
-                  <Link
-                    href="/dashboard/parent/bookings/new"
-                    className="inline-flex items-center rounded-md bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-500"
-                  >
-                    <FaCalendarAlt className="-ml-0.5 mr-1.5 h-4 w-4" />
-                    New Booking
-                  </Link>
+              )}
+              color="violet"
+            />
+          </div>
+        </section>
+        
+        {/* Quick actions */}
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <DashboardCard
+              icon={<FiSearch className="h-5 w-5" />}
+              title="Find Childminders"
+              description="Search and browse our directory of trusted childminders"
+              linkText="Find Now"
+              linkHref="/dashboard/parent/find-childminders"
+              color="violet"
+            />
+            
+            <DashboardCard
+              icon={<FiCalendar className="h-5 w-5" />}
+              title="Book Childcare"
+              description="Schedule regular childcare with your preferred childminders"
+              linkText="Book Now"
+              linkHref="/dashboard/parent/bookings/create"
+              color="indigo"
+            />
+            
+            <DashboardCard
+              icon={<AlertTriangle className="h-5 w-5" />}
+              title="Emergency Childcare"
+              description="Need urgent childcare? Request immediate help from available childminders"
+              linkText="Request Now"
+              linkHref="/dashboard/parent/emergency-booking"
+              color="purple"
+            />
+          </div>
+        </div>
+        
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Upcoming bookings section */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Upcoming Bookings</h2>
+              <Link 
+                href="/dashboard/parent/bookings"
+                className="text-sm font-medium text-violet-600 hover:text-violet-800"
+              >
+                View all
+              </Link>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              {bookingsLoading ? (
+                <div className="p-6 text-center">
+                  <LoadingSpinner />
+                  <p className="mt-2 text-sm text-gray-500">Loading your upcoming bookings...</p>
                 </div>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {upcomingBookings.map(booking => (
-                  <div key={booking.id} className="p-4 sm:px-6">
-                    <div className="flex items-center justify-between">
+              ) : upcomingBookings.length === 0 ? (
+                <div className="p-6 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+                    <FaCalendarAlt className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-3 text-sm font-medium text-gray-900">No upcoming bookings</h3>
+                  <p className="mt-1 text-sm text-gray-500">Get started by creating a new booking.</p>
+                  <div className="mt-6">
+                    <Link
+                      href="/dashboard/parent/bookings/new"
+                      className="inline-flex items-center rounded-md bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-500"
+                    >
+                      <FaCalendarAlt className="-ml-0.5 mr-1.5 h-4 w-4" />
+                      New Booking
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {upcomingBookings.map(booking => (
+                    <div key={booking.id} className="p-4 sm:px-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            {booking.childminder.image ? (
+                              <img
+                                className="h-10 w-10 rounded-full"
+                                src={booking.childminder.image}
+                                alt={booking.childminder.name}
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+                                <FaChild className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">{booking.childminder.name}</h3>
+                            <div className="mt-1 flex items-center">
+                              <FaClock className="mr-1.5 h-3 w-3 text-gray-500" />
+                              <p className="text-xs text-gray-500">
+                                {formatDate(booking.startTime)} - {formatDate(booking.endTime)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            booking.status === 'CONFIRMED' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Pending'}
+                          </span>
+                          {booking.isEmergency && (
+                            <span className="mt-1 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                              Emergency
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="flex flex-wrap gap-1">
+                          {booking.children.map(child => (
+                            <span key={child.id} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                              {child.name}, {child.age}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Recent messages section */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Recent Messages</h2>
+              <Link 
+                href="/dashboard/parent/messages"
+                className="text-sm font-medium text-violet-600 hover:text-violet-800"
+              >
+                View all
+              </Link>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              {messagesLoading ? (
+                <div className="p-6 text-center">
+                  <LoadingSpinner />
+                  <p className="mt-2 text-sm text-gray-500">Loading your messages...</p>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="p-6 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                    <FaComments className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-3 text-sm font-medium text-gray-900">No new messages</h3>
+                  <p className="mt-1 text-sm text-gray-500">You're all caught up!</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {messages.map(message => (
+                    <div key={message.id} className="p-4 sm:px-6">
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
-                          {booking.childminder.image ? (
+                          {message.sender.image ? (
                             <img
                               className="h-10 w-10 rounded-full"
-                              src={booking.childminder.image}
-                              alt={booking.childminder.name}
+                              src={message.sender.image}
+                              alt={message.sender.name}
                             />
                           ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
                               <FaChild className="h-5 w-5" />
                             </div>
                           )}
                         </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">{booking.childminder.name}</h3>
-                          <div className="mt-1 flex items-center">
-                            <FaClock className="mr-1.5 h-3 w-3 text-gray-500" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">
+                              {message.sender.name}
+                            </p>
                             <p className="text-xs text-gray-500">
-                              {formatDate(booking.startTime)} - {formatDate(booking.endTime)}
+                              {formatMessageTime(message.createdAt)}
                             </p>
                           </div>
+                          <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                            {message.content}
+                          </p>
+                          <div className="mt-2">
+                            <Link
+                              href={`/dashboard/parent/messages?conversation=${message.sender.id}`}
+                              className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+                            >
+                              Read message
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          booking.status === 'CONFIRMED' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {booking.status === 'CONFIRMED' ? 'Confirmed' : 'Pending'}
-                        </span>
-                        {booking.isEmergency && (
-                          <span className="mt-1 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-                            Emergency
-                          </span>
-                        )}
-                      </div>
                     </div>
-                    <div className="mt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {booking.children.map(child => (
-                          <span key={child.id} className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                            {child.name}, {child.age}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+        
+        {/* AI Recommendations section */}
+        <section className="mb-8">
+          <AIRecommendations />
         </section>
 
-        {/* Recent messages section */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Messages</h2>
-            <Link 
-              href="/dashboard/parent/messages"
-              className="text-sm font-medium text-violet-600 hover:text-violet-800"
-            >
-              View all
-            </Link>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {messagesLoading ? (
-              <div className="p-6 text-center">
-                <LoadingSpinner />
-                <p className="mt-2 text-sm text-gray-500">Loading your messages...</p>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="p-6 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                  <FaComments className="h-6 w-6" />
-                </div>
-                <h3 className="mt-3 text-sm font-medium text-gray-900">No new messages</h3>
-                <p className="mt-1 text-sm text-gray-500">You're all caught up!</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {messages.map(message => (
-                  <div key={message.id} className="p-4 sm:px-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        {message.sender.image ? (
-                          <img
-                            className="h-10 w-10 rounded-full"
-                            src={message.sender.image}
-                            alt={message.sender.name}
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                            <FaChild className="h-5 w-5" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">
-                            {message.sender.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatMessageTime(message.createdAt)}
-                          </p>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                          {message.content}
-                        </p>
-                        <div className="mt-2">
-                          <Link
-                            href={`/dashboard/parent/messages?conversation=${message.sender.id}`}
-                            className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
-                          >
-                            Read message
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Main services section */}
+        <section>
+          <h2 className="mb-4 text-xl font-semibold text-gray-900">Manage Your Services</h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <DashboardCard
+              icon={<FaChild className="h-5 w-5" />}
+              title="My Children"
+              description="Add and manage your children's profiles, preferences, and special requirements."
+              linkText="Manage Children"
+              linkHref="/dashboard/parent/children"
+              color="violet"
+            />
+            
+            <DashboardCard
+              icon={<FaSearch className="h-5 w-5" />}
+              title="Find Childminders"
+              description="Search for qualified childminders in your area based on your specific needs."
+              linkText="Find Now"
+              linkHref="/dashboard/parent/find-childminders"
+              color="indigo"
+            />
+            
+            <DashboardCard
+              icon={<FaCalendarAlt className="h-5 w-5" />}
+              title="Bookings"
+              description="View upcoming appointments, manage schedules, and make new bookings."
+              linkText="View Bookings"
+              linkHref="/dashboard/parent/bookings"
+              color="purple"
+            />
+            
+            <DashboardCard
+              icon={<FaComments className="h-5 w-5" />}
+              title="Messages"
+              description="Communicate with childminders, receive updates, and manage conversations."
+              linkText="View Messages"
+              linkHref="/dashboard/parent/messages"
+              color="violet"
+            />
+            
+            <DashboardCard
+              icon={<FaBookOpen className="h-5 w-5" />}
+              title="Activity Log"
+              description="Track your booking history, payment records, and service usage."
+              linkText="View Activity"
+              linkHref="/dashboard/parent/activity"
+              color="indigo"
+            />
+            
+            <DashboardCard
+              icon={<FaCreditCard className="h-5 w-5" />}
+              title="Subscription"
+              description={
+                dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE'
+                  ? <>
+                      <span className="font-medium text-green-600">Your premium plan is active.</span>
+                      {dashboardStats.subscriptionEndDate && 
+                        <span className="block mt-1">
+                          Renews on {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+                        </span>
+                      }
+                    </>
+                  : 'Upgrade to a premium plan to access all features and benefits.'
+              }
+              linkText="Manage Subscription"
+              linkHref="/dashboard/parent/subscription"
+              color="purple"
+            />
           </div>
         </section>
       </div>
-      
-      {/* AI Recommendations section */}
-      <section className="mb-8">
-        <AIRecommendations />
-      </section>
-
-      {/* Main services section */}
-      <section>
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Manage Your Services</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <DashboardCard
-            icon={<FaChild className="h-5 w-5" />}
-            title="My Children"
-            description="Add and manage your children's profiles, preferences, and special requirements."
-            linkText="Manage Children"
-            linkHref="/dashboard/parent/children"
-            color="violet"
-          />
-          
-          <DashboardCard
-            icon={<FaSearch className="h-5 w-5" />}
-            title="Find Childminders"
-            description="Search for qualified childminders in your area based on your specific needs."
-            linkText="Find Now"
-            linkHref="/dashboard/parent/find-childminders"
-            color="indigo"
-          />
-          
-          <DashboardCard
-            icon={<FaCalendarAlt className="h-5 w-5" />}
-            title="Bookings"
-            description="View upcoming appointments, manage schedules, and make new bookings."
-            linkText="View Bookings"
-            linkHref="/dashboard/parent/bookings"
-            color="purple"
-          />
-          
-          <DashboardCard
-            icon={<FaComments className="h-5 w-5" />}
-            title="Messages"
-            description="Communicate with childminders, receive updates, and manage conversations."
-            linkText="View Messages"
-            linkHref="/dashboard/parent/messages"
-            color="violet"
-          />
-          
-          <DashboardCard
-            icon={<FaBookOpen className="h-5 w-5" />}
-            title="Activity Log"
-            description="Track your booking history, payment records, and service usage."
-            linkText="View Activity"
-            linkHref="/dashboard/parent/activity"
-            color="indigo"
-          />
-          
-          <DashboardCard
-            icon={<FaCreditCard className="h-5 w-5" />}
-            title="Subscription"
-            description={
-              dashboardStats.subscriptionStatus === 'PREMIUM' || dashboardStats.subscriptionStatus === 'ACTIVE'
-                ? <>
-                    <span className="font-medium text-green-600">Your premium plan is active.</span>
-                    {dashboardStats.subscriptionEndDate && 
-                      <span className="block mt-1">
-                        Renews on {new Date(dashboardStats.subscriptionEndDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
-                      </span>
-                    }
-                  </>
-                : 'Upgrade to a premium plan to access all features and benefits.'
-            }
-            linkText="Manage Subscription"
-            linkHref="/dashboard/parent/subscription"
-            color="purple"
-          />
-        </div>
-      </section>
     </div>
   );
 }
 
 export default function ParentDashboard() {
   return (
-    <Suspense fallback={<LoadingSpinner fullPage />}>
+    <Suspense fallback={<div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <LoadingSpinner size="large" />
+    </div>}>
       <DashboardContent />
     </Suspense>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense,  useState, useEffect, useCallback  } from 'react';
+import { useRouter,  } from 'next/navigation';
 import axios from "axios";
 import { format } from "date-fns";
 import {
@@ -23,6 +23,7 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 import TicketDetailModal from "./components/TicketDetailModal";
 import CreateTicketModal from "./components/CreateTicketModal";
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 // Define ticket status and priority colors
 const statusColors: Record<string, string> = {
@@ -68,7 +69,7 @@ interface AdminUser {
   role: string;
 }
 
-export default function AdminSupportPage() {
+function AdminSupportPageContent() {
   // State for tickets and pagination
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +105,7 @@ export default function AdminSupportPage() {
   const [apiResponseDebug, setApiResponseDebug] = useState<any>(null);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
 
   // Initialize state from URL params on page load
   useEffect(() => {
@@ -269,447 +270,459 @@ export default function AdminSupportPage() {
   };
 
   return (
-    <div className="container mx-auto px-2 py-2 md:px-4 md:py-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Support Tickets</h1>
-        <p className="text-gray-600">
-          Manage and respond to support tickets from users
-        </p>
-      </div>
-      
-      {/* Debug info */}
-      {apiResponseDebug && (
-        <div className="mb-4 p-4 bg-gray-100 rounded overflow-auto max-h-60">
-          <h3 className="font-medium text-gray-900 mb-2">API Response Debug:</h3>
-          <pre className="text-xs">{JSON.stringify(apiResponseDebug, null, 2)}</pre>
+    <div>
+      <SearchParamsListener />
+      <div className="container mx-auto px-2 py-2 md:px-4 md:py-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Support Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Manage user support tickets and inquiries
+          </p>
         </div>
-      )}
+        
+        {/* Debug info */}
+        {apiResponseDebug && (
+          <div className="mb-4 p-4 bg-gray-100 rounded overflow-auto max-h-60">
+            <h3 className="font-medium text-gray-900 mb-2">API Response Debug:</h3>
+            <pre className="text-xs">{JSON.stringify(apiResponseDebug, null, 2)}</pre>
+          </div>
+        )}
 
-      {/* Controls row */}
-      <div className="mb-6 space-y-4">
-        {/* Search and Create button */}
-        <div className="flex flex-col md:flex-row md:items-center gap-3">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search tickets..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
-              onChange={(e) => debouncedSearch(e.target.value)}
-              defaultValue={searchQuery}
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
+        {/* Controls row */}
+        <div className="mb-6 space-y-4">
+          {/* Search and Create button */}
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search tickets..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-violet-500 focus:border-violet-500"
+                onChange={(e) => debouncedSearch(e.target.value)}
+                defaultValue={searchQuery}
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
             </div>
-          </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center justify-center gap-2 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
-          >
-            <FaPlus className="h-4 w-4" />
-            <span>Create Ticket</span>
-          </button>
-          <button
-            onClick={refreshTickets}
-            className="flex items-center justify-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
-          >
-            <FaSync className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden md:inline">Refresh</span>
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3">
-            {/* Status filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500"
-            >
-              <option value="">All Statuses</option>
-              <option value="OPEN">Open</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="CLOSED">Closed</option>
-            </select>
-
-            {/* Priority filter */}
-            <select
-              value={priorityFilter}
-              onChange={(e) => {
-                setPriorityFilter(e.target.value);
-                setPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500"
-            >
-              <option value="">All Priorities</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="URGENT">Urgent</option>
-            </select>
-
-            {/* Assignee filter */}
-            <select
-              value={assigneeFilter}
-              onChange={(e) => {
-                setAssigneeFilter(e.target.value);
-                setPage(1);
-              }}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500 col-span-2 md:col-span-1"
-            >
-              <option value="">All Assignees</option>
-              <option value="unassigned">Unassigned</option>
-              {adminUsers.map((admin) => (
-                <option key={admin.id} value={admin.id}>
-                  {admin.name || admin.email}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Tickets table/list */}
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-        {loading && !tickets.length ? (
-          <div className="p-6 text-center">
-            <FaSpinner className="animate-spin h-8 w-8 mx-auto text-violet-600 mb-4" />
-            <p className="text-gray-500">Loading tickets...</p>
-          </div>
-        ) : error ? (
-          <div className="p-6 text-center">
-            <FaExclamationTriangle className="h-8 w-8 mx-auto text-red-500 mb-4" />
-            <p className="text-gray-600">{error}</p>
-            <button
-              onClick={fetchTickets}
-              className="mt-4 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : tickets.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-gray-500 mb-4">No tickets found.</p>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+              className="flex items-center justify-center gap-2 bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
             >
-              Create New Ticket
+              <FaPlus className="h-4 w-4" />
+              <span>Create Ticket</span>
+            </button>
+            <button
+              onClick={refreshTickets}
+              className="flex items-center justify-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+            >
+              <FaSync className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden md:inline">Refresh</span>
             </button>
           </div>
-        ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("id")}
-                    >
-                      <div className="flex items-center gap-1">
-                        ID
-                        {sortBy === "id" ? (
-                          sortOrder === "asc" ? (
-                            <FaArrowUp className="h-3 w-3" />
+
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Status filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="OPEN">Open</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="RESOLVED">Resolved</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+
+              {/* Priority filter */}
+              <select
+                value={priorityFilter}
+                onChange={(e) => {
+                  setPriorityFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500"
+              >
+                <option value="">All Priorities</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+
+              {/* Assignee filter */}
+              <select
+                value={assigneeFilter}
+                onChange={(e) => {
+                  setAssigneeFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-violet-500 focus:border-violet-500 col-span-2 md:col-span-1"
+              >
+                <option value="">All Assignees</option>
+                <option value="unassigned">Unassigned</option>
+                {adminUsers.map((admin) => (
+                  <option key={admin.id} value={admin.id}>
+                    {admin.name || admin.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Tickets table/list */}
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+          {loading && !tickets.length ? (
+            <div className="p-6 text-center">
+              <FaSpinner className="animate-spin h-8 w-8 mx-auto text-violet-600 mb-4" />
+              <p className="text-gray-500">Loading tickets...</p>
+            </div>
+          ) : error ? (
+            <div className="p-6 text-center">
+              <FaExclamationTriangle className="h-8 w-8 mx-auto text-red-500 mb-4" />
+              <p className="text-gray-600">{error}</p>
+              <button
+                onClick={fetchTickets}
+                className="mt-4 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : tickets.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500 mb-4">No tickets found.</p>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700"
+              >
+                Create New Ticket
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort("id")}
+                      >
+                        <div className="flex items-center gap-1">
+                          ID
+                          {sortBy === "id" ? (
+                            sortOrder === "asc" ? (
+                              <FaArrowUp className="h-3 w-3" />
+                            ) : (
+                              <FaArrowDown className="h-3 w-3" />
+                            )
                           ) : (
-                            <FaArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <FaSort className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("subject")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Subject
-                        {sortBy === "subject" ? (
-                          sortOrder === "asc" ? (
-                            <FaArrowUp className="h-3 w-3" />
-                          ) : (
-                            <FaArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <FaSort className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Submitter
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("status")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Status
-                        {sortBy === "status" ? (
-                          sortOrder === "asc" ? (
-                            <FaArrowUp className="h-3 w-3" />
-                          ) : (
-                            <FaArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <FaSort className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("priority")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Priority
-                        {sortBy === "priority" ? (
-                          sortOrder === "asc" ? (
-                            <FaArrowUp className="h-3 w-3" />
-                          ) : (
-                            <FaArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <FaSort className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Created
-                        {sortBy === "createdAt" ? (
-                          sortOrder === "asc" ? (
-                            <FaArrowUp className="h-3 w-3" />
-                          ) : (
-                            <FaArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <FaSort className="h-3 w-3 text-gray-400" />
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleSelectTicket(ticket.id)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {ticket.id.substring(0, 8)}...
+                            <FaSort className="h-3 w-3 text-gray-400" />
+                          )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 line-clamp-1">
-                          {ticket.subject}
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort("subject")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Subject
+                          {sortBy === "subject" ? (
+                            sortOrder === "asc" ? (
+                              <FaArrowUp className="h-3 w-3" />
+                            ) : (
+                              <FaArrowDown className="h-3 w-3" />
+                            )
+                          ) : (
+                            <FaSort className="h-3 w-3 text-gray-400" />
+                          )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {ticket.userName}
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Submitter
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort("status")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Status
+                          {sortBy === "status" ? (
+                            sortOrder === "asc" ? (
+                              <FaArrowUp className="h-3 w-3" />
+                            ) : (
+                              <FaArrowDown className="h-3 w-3" />
+                            )
+                          ) : (
+                            <FaSort className="h-3 w-3 text-gray-400" />
+                          )}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {ticket.userEmail}
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort("priority")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Priority
+                          {sortBy === "priority" ? (
+                            sortOrder === "asc" ? (
+                              <FaArrowUp className="h-3 w-3" />
+                            ) : (
+                              <FaArrowDown className="h-3 w-3" />
+                            )
+                          ) : (
+                            <FaSort className="h-3 w-3 text-gray-400" />
+                          )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                        onClick={() => handleSort("createdAt")}
+                      >
+                        <div className="flex items-center gap-1">
+                          Created
+                          {sortBy === "createdAt" ? (
+                            sortOrder === "asc" ? (
+                              <FaArrowUp className="h-3 w-3" />
+                            ) : (
+                              <FaArrowDown className="h-3 w-3" />
+                            )
+                          ) : (
+                            <FaSort className="h-3 w-3 text-gray-400" />
+                          )}
+                        </div>
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {tickets.map((ticket) => (
+                      <tr
+                        key={ticket.id}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleSelectTicket(ticket.id)}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {ticket.id.substring(0, 8)}...
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 line-clamp-1">
+                            {ticket.subject}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {ticket.userName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {ticket.userEmail}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              statusColors[ticket.status] || "bg-gray-100"
+                            }`}
+                          >
+                            {ticket.status.replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              priorityColors[ticket.priority] || "bg-gray-100"
+                            }`}
+                          >
+                            {ticket.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">
+                            {formatDate(ticket.createdAt)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectTicket(ticket.id);
+                            }}
+                            className="text-violet-600 hover:text-violet-900 px-2 py-1 rounded hover:bg-violet-50"
+                          >
+                            <FaEye className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {tickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="px-4 py-3 hover:bg-gray-50"
+                    onClick={() => handleSelectTicket(ticket.id)}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
+                        {ticket.subject}
+                      </h3>
+                      <div className="flex">
                         <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            statusColors[ticket.status] || "bg-gray-100"
-                          }`}
-                        >
-                          {ticket.status.replace(/_/g, " ")}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
                             priorityColors[ticket.priority] || "bg-gray-100"
                           }`}
                         >
                           {ticket.priority}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
-                          {formatDate(ticket.createdAt)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectTicket(ticket.id);
-                          }}
-                          className="text-violet-600 hover:text-violet-900 px-2 py-1 rounded hover:bg-violet-50"
-                        >
-                          <FaEye className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="md:hidden divide-y divide-gray-200">
-              {tickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="px-4 py-3 hover:bg-gray-50"
-                  onClick={() => handleSelectTicket(ticket.id)}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-sm font-medium text-gray-900 line-clamp-1">
-                      {ticket.subject}
-                    </h3>
-                    <div className="flex">
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2 flex justify-between">
+                      <span>ID: {ticket.id.substring(0, 8)}...</span>
                       <span
-                        className={`ml-2 px-2 py-1 text-xs font-semibold rounded-full ${
-                          priorityColors[ticket.priority] || "bg-gray-100"
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          statusColors[ticket.status] || "bg-gray-100"
                         }`}
                       >
-                        {ticket.priority}
+                        {ticket.status.replace(/_/g, " ")}
                       </span>
                     </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <div>From: {ticket.userName}</div>
+                      <div>{formatDate(ticket.createdAt).split(' ')[0]}</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mb-2 flex justify-between">
-                    <span>ID: {ticket.id.substring(0, 8)}...</span>
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        statusColors[ticket.status] || "bg-gray-100"
-                      }`}
-                    >
-                      {ticket.status.replace(/_/g, " ")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <div>From: {ticket.userName}</div>
-                    <div>{formatDate(ticket.createdAt).split(' ')[0]}</div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {tickets.length > 0 && (
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 mb-4">
+            <div className="text-sm text-gray-700 mb-4 md:mb-0">
+              Showing{" "}
+              <span className="font-medium">
+                {Math.min((page - 1) * limit + 1, totalTickets)}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(page * limit, totalTickets)}
+              </span>{" "}
+              of <span className="font-medium">{totalTickets}</span> tickets
             </div>
-          </>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setPage(Math.max(page - 1, 1))}
+                disabled={page === 1}
+                className={`px-3 py-1 rounded-md ${
+                  page === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                }`}
+              >
+                Previous
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Show pages around current page
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    className={`px-3 py-1 rounded-md ${
+                      page === pageNum
+                        ? "bg-violet-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setPage(Math.min(page + 1, totalPages))}
+                disabled={page === totalPages}
+                className={`px-3 py-1 rounded-md ${
+                  page === totalPages
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Ticket Detail Modal */}
+        {isDetailModalOpen && selectedTicket && (
+          <TicketDetailModal
+            ticket={selectedTicket}
+            isOpen={isDetailModalOpen}
+            onClose={() => {
+              setIsDetailModalOpen(false);
+              setSelectedTicket(null);
+            }}
+            onTicketUpdated={refreshTickets}
+            adminUsers={adminUsers}
+          />
+        )}
+
+        {/* Create Ticket Modal */}
+        {isCreateModalOpen && (
+          <CreateTicketModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onTicketCreated={handleCreateTicket}
+          />
         )}
       </div>
-
-      {/* Pagination */}
-      {tickets.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 mb-4">
-          <div className="text-sm text-gray-700 mb-4 md:mb-0">
-            Showing{" "}
-            <span className="font-medium">
-              {Math.min((page - 1) * limit + 1, totalTickets)}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(page * limit, totalTickets)}
-            </span>{" "}
-            of <span className="font-medium">{totalTickets}</span> tickets
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setPage(Math.max(page - 1, 1))}
-              disabled={page === 1}
-              className={`px-3 py-1 rounded-md ${
-                page === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-              }`}
-            >
-              Previous
-            </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              // Show pages around current page
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
-
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setPage(pageNum)}
-                  className={`px-3 py-1 rounded-md ${
-                    page === pageNum
-                      ? "bg-violet-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => setPage(Math.min(page + 1, totalPages))}
-              disabled={page === totalPages}
-              className={`px-3 py-1 rounded-md ${
-                page === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Ticket Detail Modal */}
-      {isDetailModalOpen && selectedTicket && (
-        <TicketDetailModal
-          ticket={selectedTicket}
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedTicket(null);
-          }}
-          onTicketUpdated={refreshTickets}
-          adminUsers={adminUsers}
-        />
-      )}
-
-      {/* Create Ticket Modal */}
-      {isCreateModalOpen && (
-        <CreateTicketModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onTicketCreated={handleCreateTicket}
-        />
-      )}
     </div>
   );
 } 
+export default function AdminSupportPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <AdminSupportPageContent />
+    </Suspense>
+  );
+}

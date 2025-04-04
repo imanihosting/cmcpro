@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:windows": "set NODE_ENV=production&& node server.js",
+    "fix-search-params": "node scripts/fix-search-params.js",
     "lint": "next lint"
   },
   "dependencies": {

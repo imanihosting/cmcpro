@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FaCalendarAlt, FaClock, FaChild, FaUser, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 interface Childminder {
   id: string;
@@ -19,10 +20,10 @@ interface Child {
   age: number;
 }
 
-export default function NewBookingPage() {
+function NewBookingPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   const childminderId = searchParams ? searchParams.get('childminderId') : null;
   
   const [isLoading, setIsLoading] = useState(true);
@@ -190,17 +191,9 @@ export default function NewBookingPage() {
     }
   };
 
-  // Show loading spinner if checking auth status or loading data
-  if (status === "loading" || (isLoading && !error)) {
-    return (
-      <div className="flex h-[calc(100vh-64px)] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
-      </div>
-    );
-  }
-
   return (
     <div>
+      <SearchParamsListener />
       <header className="mb-6">
         <div className="flex items-center">
           <Link 
@@ -483,5 +476,17 @@ export default function NewBookingPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function NewBookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-[calc(100vh-64px)] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+      </div>
+    }>
+      <NewBookingPageContent />
+    </Suspense>
   );
 } 

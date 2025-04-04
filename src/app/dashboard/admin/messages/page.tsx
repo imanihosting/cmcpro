@@ -1,11 +1,12 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter,  } from 'next/navigation';
+import { Suspense,  useEffect, useState, useCallback, useMemo  } from 'react';
 import { format } from 'date-fns';
 import debounce from 'lodash/debounce';
 import { FaSearch, FaFilter, FaSort, FaTimes, FaChevronLeft, FaChevronRight, FaDownload, FaSpinner } from 'react-icons/fa';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 // Define types
 interface Participant {
@@ -66,10 +67,10 @@ interface ConversationsResponse {
 }
 
 // Main component
-export default function AdminMessages() {
+function AdminMessagesContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   
   // State for conversations list
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -257,8 +258,11 @@ export default function AdminMessages() {
   // Render loading state
   if (status === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+      <div>
+        <SearchParamsListener />
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-indigo-600 border-t-transparent"></div>
+        </div>
       </div>
     );
   }
@@ -583,3 +587,12 @@ export default function AdminMessages() {
     </div>
   );
 } 
+export default function AdminMessages() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <AdminMessagesContent />
+    </Suspense>
+  );
+}

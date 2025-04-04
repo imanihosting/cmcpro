@@ -1,13 +1,14 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter,  } from 'next/navigation';
+import { Suspense,  useEffect, useState  } from 'react';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
-export default function Dashboard() {
+function DashboardContent() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   const subscriptionSuccess = searchParams?.get('subscription') === 'success';
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(5);
@@ -216,19 +217,23 @@ export default function Dashboard() {
 
   // Loading state while checking session
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="flex flex-col items-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent mb-4"></div>
-        {subscriptionSuccess && (
-          <div className="text-center">
-            <p className="text-green-600 font-medium">Thank you for your subscription!</p>
-            <p className="text-gray-600 mt-2">Updating your account status... {secondsLeft > 0 ? `(${secondsLeft}s)` : ""}</p>
-          </div>
-        )}
-        {!subscriptionSuccess && (
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
-        )}
+    <div>
+      <SearchParamsListener />
+      <div className="flex h-screen items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-solid border-violet-500 border-r-transparent"></div>
+          <span className="mt-4 text-sm text-gray-500">Loading your dashboard...</span>
+        </div>
       </div>
     </div>
   );
 } 
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}

@@ -1,20 +1,21 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { Suspense,  useState, useEffect  } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter,  } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { FaCheckCircle, FaRegCreditCard, FaArrowRight, FaStar, FaExclamationTriangle } from 'react-icons/fa';
 import { RiShieldCheckFill } from 'react-icons/ri';
 import { BsCalendarMonth, BsCalendar3 } from 'react-icons/bs';
+import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
 // Load Stripe outside of component rendering to avoid recreating Stripe object on every render
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
-export default function SubscriptionPage() {
+function SubscriptionPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { searchParams, SearchParamsListener } = useSafeSearchParams();
   const required = searchParams?.get('required');
   const canceled = searchParams?.get('canceled');
   const success = searchParams?.get('success');
@@ -186,8 +187,11 @@ export default function SubscriptionPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+      <div>
+        <SearchParamsListener />
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid border-violet-600 border-t-transparent"></div>
+        </div>
       </div>
     );
   }
@@ -465,3 +469,12 @@ export default function SubscriptionPage() {
     </div>
   );
 } 
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-violet-500"></div>
+    </div>}>
+      <SubscriptionPageContent />
+    </Suspense>
+  );
+}
