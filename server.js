@@ -1,26 +1,18 @@
 const { createServer } = require('http');
 const { parse } = require('url');
-const path = require('path');
 const next = require('next');
 
 // Make sure we're in production mode
-const dev = false;
+const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = process.env.PORT || 3000;
 
-// Initialize Next.js instance with dynamic rendering
+// Initialize Next.js instance without conflicting configurations
 const app = next({ 
   dev, 
   hostname, 
-  port,
-  conf: {
-    // Force dynamic rendering for all pages
-    staticPageGenerationTimeout: 10,
-    // Completely disable static optimization
-    experimental: {
-      disableOptimizedLoading: true,
-    }
-  }
+  port
+  // Removed the conf overrides that were causing conflicts
 });
 
 const handle = app.getRequestHandler();
@@ -33,9 +25,18 @@ app.prepare()
       try {
         // Parse the URL
         const parsedUrl = parse(req.url, true);
-        const { pathname, query } = parsedUrl;
         
-        console.log(`> Request: ${pathname}`);
+        // Add CORS headers to avoid issues with router state
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,x-nextjs-data');
+        
+        // Handle preflight requests
+        if (req.method === 'OPTIONS') {
+          res.writeHead(200);
+          res.end();
+          return;
+        }
         
         // Let Next.js handle all requests
         await handle(req, res, parsedUrl);

@@ -19,13 +19,15 @@ const nextConfig = {
   // Configure production build
   distDir: 'build',
   output: 'standalone',
-  staticPageGenerationTimeout: 180,
+  
+  // Increase timeout to avoid build issues
+  staticPageGenerationTimeout: 300,
+  
   productionBrowserSourceMaps: false,
   
-  // Skip static generation for API routes and handle them as server-side only
+  // Configuration for API routes
   experimental: {
     serverComponentsExternalPackages: ['prisma', '@prisma/client'],
-    // Enable dynamic runtime for all API routes
     appDir: true,
     serverActions: {
       bodySizeLimit: '4mb',
@@ -35,6 +37,33 @@ const nextConfig = {
   // Exclude specific routes from static generation
   excludeDefaultMomentLocales: true,
   poweredByHeader: false,
+  
+  // Add headers to fix router state issues
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'X-Requested-With, Content-Type, Authorization, x-nextjs-data',
+          }
+        ],
+      },
+    ];
+  },
   
   webpack: (config, { isServer, dev }) => {
     // Only apply in client-side production builds

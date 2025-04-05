@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import Link from "next/link";
 import { 
   FaChild, 
@@ -217,6 +217,7 @@ function DashboardContent() {
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const onboardingCheckedRef = useRef(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -232,14 +233,17 @@ function DashboardContent() {
         return;
       }
 
-      // Handle redirect from onboarding
-      if (searchParams && searchParams.has("onboarding") && session.user.role === "parent") {
+      // Handle redirect from onboarding - ONLY CHECK ONCE
+      if (searchParams && searchParams.has("onboarding") && 
+          session.user.role === "parent" && 
+          !onboardingCheckedRef.current) {
+        onboardingCheckedRef.current = true;
         // Show onboarding success message if needed
       }
     }
   }, [status, session, router, searchParams]);
 
-  // Fetch dashboard data
+  // Fetch dashboard data - only fetch when session changes
   useEffect(() => {
     if (session?.user) {
       const fetchDashboardStats = async () => {
@@ -312,7 +316,7 @@ function DashboardContent() {
         router.push('/dashboard');
       }
     }
-  }, [session, router]);
+  }, [session, router]); // Removed searchParams from dependency array
 
   // Format subscription status for display
   const formatSubscriptionStatus = (status: string) => {
@@ -357,7 +361,8 @@ function DashboardContent() {
   // Parent dashboard content
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <SearchParamsListener />
+      {/* Only render the SearchParamsListener once */}
+      {status === "authenticated" && <SearchParamsListener />}
       <div>
         {/* Welcome section with stats */}
         <section className="mb-8">

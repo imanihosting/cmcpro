@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 // Component that safely uses the hook inside Suspense
@@ -10,7 +10,9 @@ function SearchParamsWatcher({ onParamsChange }: {
   const searchParams = useSearchParams();
   
   useEffect(() => {
-    onParamsChange(searchParams);
+    if (searchParams) {
+      onParamsChange(searchParams);
+    }
   }, [searchParams, onParamsChange]);
   
   return null;
@@ -26,17 +28,27 @@ function SearchParamsWatcher({ onParamsChange }: {
 export function useSafeSearchParams() {
   const [params, setParams] = useState<ReturnType<typeof useSearchParams> | null>(null);
 
-  const handleSearchParamsChange = (newParams: ReturnType<typeof useSearchParams>) => {
-    setParams(newParams);
-  };
+  // Memoize the callback to prevent it from changing on each render
+  const handleSearchParamsChange = useCallback((newParams: ReturnType<typeof useSearchParams>) => {
+    setParams(prevParams => {
+      // Only update if the params have actually changed and are not null
+      if (!prevParams || (newParams && newParams.toString() !== prevParams.toString())) {
+        return newParams;
+      }
+      return prevParams;
+    });
+  }, []);
+
+  // Memoize the component to prevent unnecessary re-renders
+  const SearchParamsListener = useCallback(() => (
+    <Suspense fallback={null}>
+      <SearchParamsWatcher onParamsChange={handleSearchParamsChange} />
+    </Suspense>
+  ), [handleSearchParamsChange]);
 
   return {
     searchParams: params,
-    SearchParamsListener: () => (
-      <Suspense fallback={null}>
-        <SearchParamsWatcher onParamsChange={handleSearchParamsChange} />
-      </Suspense>
-    )
+    SearchParamsListener
   };
 }
 
