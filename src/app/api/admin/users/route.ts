@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { User_role } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 // Convert string to role type safely
 const parseRole = (role?: string): User_role | undefined => {
@@ -31,7 +33,7 @@ const parseStatus = (status?: string): UserStatus | undefined => {
   return undefined;
 };
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Authenticate and authorize the request
     const session = await getServerSession(authOptions);

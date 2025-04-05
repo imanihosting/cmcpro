@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import * as ml from '@/lib/ml';
 import { Prisma } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/recommendations

@@ -38,9 +38,17 @@ export default function ChatWidget() {
   const [showWidget, setShowWidget] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Only execute client-side code after mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Initialize visitor ID
   useEffect(() => {
+    if (!mounted) return;
+    
     // Initialize visitor ID from cookie or create new one
     let vid = Cookies.get('visitor_id');
     if (!vid && authStatus === 'unauthenticated') {
@@ -54,7 +62,12 @@ export default function ChatWidget() {
     if (existingSessionId) {
       setSessionId(existingSessionId);
     }
+  }, [mounted, authStatus]);
 
+  // Determine if we should show the widget - only runs on client side
+  useEffect(() => {
+    if (!mounted) return;
+    
     // Check if user is admin - don't show widget to admins
     if (authStatus === "authenticated") {
       if (session?.user?.role !== "admin") {
@@ -66,25 +79,17 @@ export default function ChatWidget() {
       // Show to unauthenticated users too
       setShowWidget(true);
     }
-  }, [authStatus, session]);
-
-  // Determine if we should show the widget
-  useEffect(() => {
-    // Show widget if user is authenticated or we have a visitor ID
-    if (authStatus === 'authenticated' || (authStatus === 'unauthenticated' && visitorId)) {
-      setShowWidget(true);
-    } else {
-      setShowWidget(false);
-    }
-  }, [authStatus, visitorId]);
+  }, [mounted, authStatus, session]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
+    if (!mounted) return;
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [mounted, messages]);
 
   // Poll for new messages when chat is open
   useEffect(() => {
+    if (!mounted) return;
     if (isOpen && sessionId) {
       fetchSessionDetails();
       fetchMessages();
@@ -97,7 +102,7 @@ export default function ChatWidget() {
       
       return () => clearInterval(interval);
     }
-  }, [isOpen, sessionId]);
+  }, [mounted, isOpen, sessionId]);
 
   // Fetch session details
   const fetchSessionDetails = async () => {
@@ -292,8 +297,8 @@ export default function ChatWidget() {
     setSessionId(null);
   };
 
-  // Don't render widget for admins or if explicitly hidden
-  if (!showWidget) return null;
+  // Don't render anything during SSR or if widget shouldn't be shown
+  if (!mounted || !showWidget) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col">

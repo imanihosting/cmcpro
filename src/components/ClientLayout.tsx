@@ -32,14 +32,14 @@ export default function ClientLayout({
     !isAdminDashboard && 
     !pathname?.includes('/auth/');
     
-  // Add debug logging
-  console.log('Chat Widget Debug:', {
-    hasSession: !!session,
-    userRole: session?.user?.role,
-    isAdminDashboard,
-    pathname,
-    shouldShow: showChatWidget
-  });
+  // Remove debug logging
+  // console.log('Chat Widget Debug:', {
+  //   hasSession: !!session,
+  //   userRole: session?.user?.role,
+  //   isAdminDashboard,
+  //   pathname,
+  //   shouldShow: showChatWidget
+  // });
 
   return (
     <SessionProvider>

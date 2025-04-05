@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Booking_status, User_role, SupportTicket_status, User_subscriptionStatus } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 // Helper function to get date range for different time periods
 const getDateRange = (period: 'today' | 'week' | 'month') => {
@@ -24,7 +26,7 @@ const getDateRange = (period: 'today' | 'week' | 'month') => {
   return { startDate, endDate: now };
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Authenticate and authorize the request
     const session = await getServerSession(authOptions);

@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { stripe } from '@/lib/stripe';
+
+export const dynamic = 'force-dynamic';
 
 // Detect database type to use appropriate SQL syntax
 const getDatabaseProvider = () => {

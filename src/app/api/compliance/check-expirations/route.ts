@@ -8,6 +8,8 @@ import { sendEmail } from '@/lib/email';
 // Number of days before expiration to send reminders
 const REMINDER_DAYS = [30, 14, 7, 3, 1];
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/compliance/check-expirations - Check for expiring documents and send reminders
 export async function GET(req: NextRequest) {
   try {

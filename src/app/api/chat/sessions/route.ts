@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sendEmail } from "@/lib/msGraph";
 
+export const dynamic = 'force-dynamic';
+
 // Get all active chat sessions (for admin view)
 export async function GET(req: NextRequest) {
   try {

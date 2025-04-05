@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 import Stripe from "stripe";
 import { PrismaClient, Prisma } from "@prisma/client";
+
+export const dynamic = 'force-dynamic';
 
 // This is your Stripe webhook secret for testing your endpoint locally
 const webhookSecret = process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET;
@@ -43,9 +45,9 @@ const generateUpdateStatusSQL = (userId: string, status: string) => {
   }
 };
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.text();
+    const body = await request.text();
     const signature = headers().get("Stripe-Signature") as string;
 
     let event: Stripe.Event;

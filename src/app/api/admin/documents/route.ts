@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { Document_status } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 // Schema for query parameters validation
 const QuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),

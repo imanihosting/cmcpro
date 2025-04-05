@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { sendMessageToUser } from '@/lib/sse';
 
+export const dynamic = 'force-dynamic';
+
 interface SendMessageRequest {
   receiverId: string;
   content: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // Get the authenticated user session
     const session = await getServerSession(authOptions);

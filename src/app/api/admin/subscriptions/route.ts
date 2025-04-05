@@ -6,6 +6,8 @@ import { stripe } from '@/lib/stripe';
 import { z } from 'zod';
 import { User_role } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 // Schema for query parameters validation
 const QuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),

@@ -7,6 +7,8 @@ import * as crypto from 'crypto';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Get the session to authenticate the request

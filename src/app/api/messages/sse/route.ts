@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { addConnection, removeConnection } from '@/lib/sse';
+
+export const dynamic = 'force-dynamic';
 
 // Storage for active SSE connections
 const activeConnections = new Map<string, {
@@ -37,7 +39,7 @@ function sendMessageToUser(
 // Create a separate file for exporting this functionality if needed externally
 // e.g., create src/lib/message-helpers.ts for this purpose
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -45,7 +47,7 @@ export async function GET(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const partnerId = searchParams.get('partnerId');
     
     // Set up SSE headers

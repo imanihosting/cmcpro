@@ -1,10 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // API to get or mark a specific message as read
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Get the authenticated user session
     const session = await getServerSession(authOptions);
@@ -98,7 +100,7 @@ export async function GET(request: Request) {
 }
 
 // API to mark a message as read
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
     // Get the authenticated user session
     const session = await getServerSession(authOptions);

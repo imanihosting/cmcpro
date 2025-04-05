@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Booking_status } from '@prisma/client';
 import { startOfDay, endOfDay } from 'date-fns';
+
+export const dynamic = 'force-dynamic';
 
 // Define types for our database results
 type BookingChild = {

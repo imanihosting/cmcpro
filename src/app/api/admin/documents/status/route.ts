@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { Document_status } from '@prisma/client';
 import * as crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 // Schema for request body validation
 const UpdateStatusSchema = z.object({
   documentId: z.string().min(1, "Document ID is required"),

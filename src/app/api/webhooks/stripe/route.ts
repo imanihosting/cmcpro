@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import { randomUUID } from 'crypto';
+import { Readable } from 'stream';
+import Stripe from 'stripe';
+
+export const dynamic = 'force-dynamic';
 
 // Define local enum to match schema changes
 // This is a workaround until the Prisma client can be regenerated
@@ -49,8 +53,8 @@ const relevantEvents = new Set([
   'invoice.payment_failed',
 ]);
 
-export async function POST(req: Request) {
-  const body = await req.text();
+export async function POST(request: NextRequest) {
+  const body = await request.text();
   const signature = headers().get('stripe-signature') as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { google } from 'googleapis';
 import { nanoid } from 'nanoid';
 import prisma from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 // Setup OAuth2 client
 const oauth2Client = new google.auth.OAuth2(

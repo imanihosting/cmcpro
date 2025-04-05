@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { format } from "date-fns";
 
+export const dynamic = 'force-dynamic';
+
 // Define types for activity items
 interface BaseActivityItem {
   id: string;

@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { Booking_status } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 // Default pagination values
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;

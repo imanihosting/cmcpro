@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/childminders/recommended
@@ -10,7 +12,7 @@ import { Prisma } from '@prisma/client';
  * Returns recommended childminders based on parent's preferences and matching criteria
  * Such as location, children age groups, and availability
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Get current user session for authentication
     const session = await getServerSession(authOptions);

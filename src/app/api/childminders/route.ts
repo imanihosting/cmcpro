@@ -1,14 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/childminders
  * 
  * Returns all available childminders
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Get current user session for authentication
     const session = await getServerSession(authOptions);

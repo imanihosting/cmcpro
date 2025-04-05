@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { z } from 'zod';
+
+export const dynamic = 'force-dynamic';
 
 // Default number of items per page
 const DEFAULT_PAGE_SIZE = 10;
@@ -14,7 +17,30 @@ const ALLOWED_SORT_FIELDS = [
   'yearsOfExperience',
   'createdAt',
   'location'
-];
+] as const;
+
+const searchParamsSchema = z.object({
+  query: z.string().optional(),
+  page: z.coerce.number().min(1).optional().default(1),
+  pageSize: z.coerce.number().min(1).max(50).optional().default(DEFAULT_PAGE_SIZE),
+  sortBy: z.enum(ALLOWED_SORT_FIELDS).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  location: z.string().optional(),
+  minRating: z.coerce.number().min(0).max(10).optional(),
+  ageGroup: z.string().optional(),
+  dayOfWeek: z.coerce.number().min(0).max(6).optional(),
+  firstAidCert: z.coerce.boolean().optional(),
+  childrenFirstCert: z.coerce.boolean().optional(),
+  gardaVetted: z.coerce.boolean().optional(),
+  tuslaRegistered: z.coerce.boolean().optional(),
+  specialNeedsExp: z.coerce.boolean().optional(),
+  minRate: z.coerce.number().min(0).max(100).optional(),
+  maxRate: z.coerce.number().min(0).max(100).optional(),
+  minExperience: z.coerce.number().min(0).optional(),
+  language: z.string().optional(),
+  mealsProvided: z.coerce.boolean().optional(),
+  pickupDropoff: z.coerce.boolean().optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -63,7 +89,7 @@ export async function GET(request: Request) {
     const sortOrder = searchParams.get('sortOrder') || 'desc';
     
     // Validate sorting parameters
-    if (!ALLOWED_SORT_FIELDS.includes(sortBy)) {
+    if (!ALLOWED_SORT_FIELDS.includes(sortBy as typeof ALLOWED_SORT_FIELDS[number])) {
       return NextResponse.json(
         { error: `Invalid sortBy parameter. Allowed values: ${ALLOWED_SORT_FIELDS.join(', ')}` },
         { status: 400 }

@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { SystemLog_level, SystemLog_type } from '@prisma/client';
+
+export const dynamic = 'force-dynamic';
 
 // Helper function to get date range
 const getDateRange = (days = 7) => {
@@ -14,7 +16,7 @@ const getDateRange = (days = 7) => {
   return { startDate, endDate };
 };
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // Authenticate and authorize the request
     const session = await getServerSession(authOptions);

@@ -6,6 +6,8 @@ import { stripe } from '@/lib/stripe';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
+export const dynamic = 'force-dynamic';
+
 // Schema for request body validation
 const CancelSubscriptionSchema = z.object({
   subscriptionId: z.string().min(1, "Subscription ID is required"),
