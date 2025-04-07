@@ -8,7 +8,9 @@
     "start": "next start",
     "start:windows": "set NODE_ENV=production&& node server.js",
     "fix-search-params": "node scripts/fix-search-params.js",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-trials": "node scripts/check-trial-expirations.js",
+    "update-trial-setting": "node scripts/update-subscription-enum.js"
   },
   "dependencies": {
     "@azure/identity": "^4.8.0",

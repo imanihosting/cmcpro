@@ -111,18 +111,13 @@ export default function RegisterPage() {
 
       if (result?.ok) {
         // Wait for the session to be fully established before redirecting
-        // This helps prevent the flickering and redirect to login issue
-        console.log("Login successful, preparing to redirect to subscription page...");
-        
-        // Store that this user should be redirected to subscription in localStorage
-        // This helps retain context after page reloads
-        localStorage.setItem('redirectToSubscription', 'true');
+        console.log("Login successful, preparing to redirect...");
         
         // Force a delay to ensure the session is properly established
         await new Promise((resolve) => setTimeout(resolve, 1000));
         
-        // Use hard navigation to ensure a fresh page load with established session
-        window.location.href = "/subscription";
+        // Use the redirect URL from the API response
+        window.location.href = data.redirectUrl || "/dashboard";
       } else {
         // If auto-login fails, redirect to login page
         router.push("/auth/login?registered=true");

@@ -18,6 +18,8 @@ declare module "next-auth" {
       role: User_role;
       image?: string | null;
       subscriptionStatus: User_subscriptionStatus;
+      trialEndDate?: Date | null;
+      trialActivated?: boolean;
     };
   }
 
@@ -28,6 +30,8 @@ declare module "next-auth" {
     role: User_role;
     image?: string | null;
     subscriptionStatus: User_subscriptionStatus;
+    trialEndDate?: Date | null;
+    trialActivated?: boolean;
   }
 }
 
@@ -39,6 +43,8 @@ declare module "next-auth/jwt" {
     role: User_role;
     image?: string | null;
     subscriptionStatus: User_subscriptionStatus;
+    trialEndDate?: Date | null;
+    trialActivated?: boolean;
   }
 }
 
@@ -100,6 +106,8 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           image: user.image || null,
           subscriptionStatus: user.subscriptionStatus,
+          trialEndDate: user.trialEndDate,
+          trialActivated: user.trialActivated,
         };
       },
     }),
@@ -113,6 +121,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
         session.user.image = token.image;
         session.user.subscriptionStatus = token.subscriptionStatus;
+        session.user.trialEndDate = token.trialEndDate;
+        session.user.trialActivated = token.trialActivated;
       }
       return session;
     },
@@ -128,6 +138,8 @@ export const authOptions: NextAuthOptions = {
           token.id = user.id;
           token.role = user.role;
           token.subscriptionStatus = user.subscriptionStatus;
+          token.trialEndDate = user.trialEndDate;
+          token.trialActivated = user.trialActivated;
         }
         return token;
       }
@@ -139,6 +151,8 @@ export const authOptions: NextAuthOptions = {
         role: dbUser.role,
         image: dbUser.profileImage || dbUser.image,
         subscriptionStatus: dbUser.subscriptionStatus,
+        trialEndDate: dbUser.trialEndDate,
+        trialActivated: dbUser.trialActivated,
       };
     },
   },

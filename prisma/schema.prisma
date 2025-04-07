@@ -713,4 +713,7 @@ enum Booking_recurrencePattern {
 enum User_subscriptionStatus {
   FREE
   PREMIUM
+  TRIALING
+  TRIAL_EXPIRED
+  PENDING_SUBSCRIPTION
 }

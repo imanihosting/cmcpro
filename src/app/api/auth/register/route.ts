@@ -40,8 +40,27 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const now = new Date();
+    
+    // Check if free trial feature is enabled
+    const trialSetting = await db.securitySetting.findUnique({
+      where: { key: 'enable_free_trial' }
+    });
+    
+    const isTrialEnabled = trialSetting?.value === 'true';
+    
+    // Determine trial duration based on role
+    let trialDuration = 0;
+    if (isTrialEnabled) {
+      trialDuration = role === User_role.parent ? 30 : 60; // 30 days for parents, 60 for childminders
+    }
+
     const trialEndDate = new Date();
-    trialEndDate.setDate(now.getDate() + 30); // 30 days trial
+    trialEndDate.setDate(now.getDate() + trialDuration);
+
+    // Set initial subscription status based on trial settings
+    const subscriptionStatus = isTrialEnabled 
+      ? "TRIALING" as User_subscriptionStatus 
+      : "PENDING_SUBSCRIPTION" as User_subscriptionStatus;
 
     // Create the user
     const userId = uuidv4();
@@ -52,11 +71,10 @@ export async function POST(req: NextRequest) {
         email,
         role: role as User_role,
         hashed_password: hashedPassword,
-        trialActivated: true,
-        trialStartDate: now,
-        trialEndDate: trialEndDate,
-        // @ts-ignore: Using updated subscription status enums
-        subscriptionStatus: User_subscriptionStatus.FREE,
+        trialActivated: isTrialEnabled,
+        trialStartDate: isTrialEnabled ? now : null,
+        trialEndDate: isTrialEnabled ? trialEndDate : null,
+        subscriptionStatus,
         createdAt: now,
         updatedAt: now,
       },
@@ -71,17 +89,18 @@ export async function POST(req: NextRequest) {
         id: uuidv4(),
         userId: user.id,
         action: "USER_REGISTERED",
-        details: "User registration completed",
+        details: `User registration completed with ${isTrialEnabled ? `${trialDuration}-day trial` : 'no trial'}`,
         timestamp: new Date()
       }
     });
 
-    // We'll handle creation of specific role-based profiles through the dashboard
-    // after login, as this requires understanding the exact schema requirements
+    // Determine redirect URL based on trial status
+    const redirectUrl = isTrialEnabled ? "/dashboard" : "/subscription";
 
     return NextResponse.json({
       success: true,
-      message: "Registration successful! You can now log in."
+      message: "Registration successful! You can now log in.",
+      redirectUrl
     });
   } catch (error) {
     console.error("Error in user registration:", error);

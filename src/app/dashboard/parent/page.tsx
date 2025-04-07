@@ -320,20 +320,13 @@ function DashboardContent() {
 
   // Format subscription status for display
   const formatSubscriptionStatus = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'Active';
-      case 'PREMIUM':
-        return 'Premium';
-      case 'INACTIVE':
-        return 'Inactive';
-      case 'TRIAL':
-        return 'Trial';
-      case 'EXPIRED':
-        return 'Expired';
-      default:
-        return status;
-    }
+    if (!status) return '';
+    
+    // Convert from UPPER_CASE to Proper Case
+    return status.toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   // Format date for display

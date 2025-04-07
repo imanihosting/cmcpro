@@ -8,6 +8,7 @@ import { FaCheckCircle, FaRegCreditCard, FaArrowRight, FaStar, FaExclamationTria
 import { RiShieldCheckFill } from 'react-icons/ri';
 import { BsCalendarMonth, BsCalendar3 } from 'react-icons/bs';
 import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
+import { getSubscriptionDetails, getTrialDaysRemaining } from '@/lib/subscription';
 
 // Load Stripe outside of component rendering to avoid recreating Stripe object on every render
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
@@ -25,6 +26,11 @@ function SubscriptionPageContent() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isFixingSubscription, setIsFixingSubscription] = useState(false);
   const [fixResult, setFixResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [trialInfo, setTrialInfo] = useState<{ 
+    active: boolean;
+    daysRemaining: number;
+    expired: boolean;
+  }>({ active: false, daysRemaining: 0, expired: false });
 
   useEffect(() => {
     // Redirect unauthenticated users to login
@@ -109,6 +115,16 @@ function SubscriptionPageContent() {
     };
     
     checkSubscription();
+
+    // Check trial information
+    if (session?.user) {
+      const { status, daysRemaining } = getSubscriptionDetails(session.user);
+      setTrialInfo({
+        active: status === 'trial',
+        daysRemaining,
+        expired: status === 'expired'
+      });
+    }
   }, [status, router, success, session, required]);
 
   const handleSubscription = async () => {
@@ -220,7 +236,48 @@ function SubscriptionPageContent() {
           </div>
         )}
         
-        {required && (
+        {trialInfo.active && (
+          <div className="mb-8 rounded-lg bg-blue-50 p-4 shadow-md">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaStar className="h-5 w-5 text-blue-500" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-blue-800">
+                  You're on a Free Trial
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    You have <span className="font-medium">{trialInfo.daysRemaining} days</span> remaining in your free trial.
+                    Subscribe now to ensure uninterrupted access to all features when your trial ends.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {trialInfo.expired && (
+          <div className="mb-8 rounded-lg bg-red-50 p-4 shadow-md">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FaExclamationTriangle className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-red-800">
+                  Your Trial Has Expired
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>
+                    Your free trial period has ended. Subscribe now to regain access to all features.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {required && !trialInfo.active && !trialInfo.expired && (
           <div className="mb-8 rounded-lg bg-yellow-50 p-4 shadow-md">
             <div className="flex items-start">
               <div className="flex-shrink-0">

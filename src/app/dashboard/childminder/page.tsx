@@ -19,6 +19,7 @@ import {
   FaFilePdf
 } from "react-icons/fa";
 import { format } from "date-fns";
+import { getSubscriptionDetails } from "@/lib/subscription";
 
 // Types for dashboard stats
 interface DashboardStats {
@@ -377,7 +378,17 @@ export default function ChildminderDashboard() {
                 )}
               </>
             ) : (
-              'Upgrade to a premium plan to access all features and benefits.'
+              <>
+                {dashboardStats.subscriptionStatus === 'TRIALING' ? (
+                  <>
+                    <span className="font-medium text-blue-600">
+                      {getSubscriptionDetails({ subscriptionStatus: dashboardStats.subscriptionStatus, trialEndDate: dashboardStats.subscriptionEndDate }).statusText}
+                    </span>
+                  </>
+                ) : (
+                  'Upgrade to a premium plan to access all features and benefits.'
+                )}
+              </>
             )}
           </p>
           <button 

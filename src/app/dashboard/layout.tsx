@@ -7,6 +7,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import dynamic from 'next/dynamic';
 import { useMaintenanceMode } from "@/lib/MaintenanceContext";
+import SubscriptionBanner from "@/components/SubscriptionBanner";
 import { 
   FaBaby, 
   FaTachometerAlt, 
@@ -219,6 +220,9 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-gray-50">
       {/* Use the unified Header component, passing sidebar state and toggle function */}
       <Header sidebarOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+
+      {/* Subscription Banner */}
+      <SubscriptionBanner />
 
       <div className="pt-16 md:flex">
         {/* Mobile sidebar backdrop overlay */}
