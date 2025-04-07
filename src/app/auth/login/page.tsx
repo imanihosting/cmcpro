@@ -116,10 +116,18 @@ export default function LoginPage() {
   };
 
   // Helper function to handle redirects
-  const redirectToDashboard = (role?: string) => {
+  const redirectToDashboard = async (role?: string) => {
     console.log(`Redirecting to dashboard for role: ${role || 'unknown'}`);
     
+    // Ensure auth state has time to fully propagate on mobile
+    setIsLoading(true);
+    
+    // Add a small delay to ensure session is fully established
+    // This is especially important for mobile devices which may be slower
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     // Force a hard navigation to ensure the page fully refreshes
+    // This is more reliable than router.push on mobile
     if (role) {
       // Redirect to role-specific dashboard
       window.location.href = `/dashboard/${role}`;
@@ -387,4 +395,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}

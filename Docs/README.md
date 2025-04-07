@@ -7,6 +7,13 @@ This directory contains comprehensive documentation for the Childminder Connect 
 - [API Documentation](./API_Documentation.md) - Complete reference for all API endpoints
 - [Database Schema](./Database_Schema.md) - Documentation of the database structure and relationships
 - [White Paper](./Childminder_Connect_Whitepaper.md) - Overview of the platform's purpose, features, and benefits
+- [Stripe Webhook Setup](./STRIPE_WEBHOOK_SETUP.md) - Guide for setting up and managing Stripe webhooks
+- [Microsoft Graph Setup](./MICROSOFT_GRAPH_SETUP.md) - Instructions for setting up Microsoft Graph integration
+- [Subscription Update Guide](./SUBSCRIPTION-UPDATE-GUIDE.md) - Guide for updating subscription status enum
+- [Suspense Boundary README](./SUSPENSE-BOUNDARY-README.md) - Information about Suspense boundaries
+- [Recommendation Engine](./RECOMMENDATION_ENGINE.md) - Documentation about the recommendation system
+- [Webhook Event Schema](./WEBHOOK_EVENT_SCHEMA.md) - Documentation of the WebhookEvent database table
+- [Implementing New Webhook Events](./IMPLEMENTING_NEW_WEBHOOK_EVENTS.md) - Guide for adding and testing new webhook events
 
 ## Purpose
 
@@ -56,6 +63,36 @@ The [White Paper](./Childminder_Connect_Whitepaper.md) provides a high-level ove
 - Future roadmap
 
 This document is valuable for understanding the business context and overall goals of the platform.
+
+## Stripe Integration
+
+The [Stripe Webhook Setup](./STRIPE_WEBHOOK_SETUP.md) guide explains how to:
+
+- Configure Stripe webhooks in the Stripe Dashboard
+- Set up the required environment variables
+- Handle webhook events in the application
+- Test webhooks locally using Stripe CLI
+- Troubleshoot common webhook issues
+
+This document is essential for managing subscription billing in the platform.
+
+## Webhook Events
+
+The [Webhook Event Schema](./WEBHOOK_EVENT_SCHEMA.md) documentation provides details about:
+
+- The structure of the WebhookEvent database table
+- How webhook events are tracked and processed
+- Best practices for monitoring and maintaining webhook data
+- SQL queries for troubleshooting webhook-related issues
+
+The [Implementing New Webhook Events](./IMPLEMENTING_NEW_WEBHOOK_EVENTS.md) guide explains how to:
+
+- Add support for new webhook events
+- Implement event handlers
+- Test webhook functionality
+- Follow best practices for webhook implementation
+
+These resources are critical components for ensuring reliable subscription processing.
 
 ## How to Use This Documentation
 
