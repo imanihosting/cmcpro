@@ -17,6 +17,7 @@ import CreateTicketForm from "@/components/support/CreateTicketForm";
 import TicketList from "@/components/support/TicketList";
 import TicketDetail from "@/components/support/TicketDetail";
 import { SupportTicket, SupportTicket_status } from "@/types/supportTicket";
+import Link from "next/link";
 
 // FAQ Item component
 interface FAQItemProps {
@@ -132,24 +133,64 @@ export default function HelpSupportPage() {
   // Placeholder FAQs
   const faqs: FAQItemProps[] = [
     {
-      question: "How do I book a childminder?",
-      answer: "You can book a childminder by going to the 'Find Childminders' section, searching for available childminders in your area, and selecting the 'Book Now' option on their profile. Follow the steps to complete your booking based on your specific needs and schedule."
+      question: "What is ChildminderConnect?",
+      answer: "ChildminderConnect is a smart childcare platform connecting parents with trusted local childminders across Ireland."
     },
     {
-      question: "Can I cancel a booking?",
-      answer: "Yes, you can cancel a booking by going to the 'Bookings' section, finding the booking you want to cancel, and clicking the 'Cancel' button. Please note that cancellation policies may vary depending on the childminder and how close to the scheduled time you are cancelling."
+      question: "How does the platform work?",
+      answer: "Parents sign up, search using our smart search engine, and connect with verified childminders. All payments are made directly between parent and childminder — we simply facilitate the match."
     },
     {
-      question: "How do I update my children's information?",
-      answer: "You can update your children's information by navigating to the 'My Children' section in your dashboard. From there, select the child whose information you want to update, and click the 'Edit' button to modify their details such as age, medical requirements, or special needs."
+      question: "Is ChildminderConnect available across Ireland?",
+      answer: "Yes — our platform supports all counties and uses your location to show nearby childminders."
     },
     {
-      question: "How do payments work?",
-      answer: "ChildMinderConnect only charges a monthly subscription fee for using our platform. When you book a childminder, you pay them directly for their services. Our platform does not process or handle payments between you and childminders. You can manage your subscription details in the 'Subscription' section of your dashboard."
+      question: "Is my data secure?",
+      answer: "Yes. We are fully GDPR-compliant, and your personal data is stored securely."
     },
     {
-      question: "What should I do if I have a problem with a childminder?",
-      answer: "If you experience any issues with a childminder, we recommend first trying to resolve it directly through our messaging system. If the issue persists, you can contact our support team through the 'Help & Support' section, and we will assist you in resolving the matter appropriately."
+      question: "Do I need to pay to use the platform?",
+      answer: "Access to advanced features such as smart search, messaging, and full childminder profiles requires a subscription (€9.99/month or €99.99/year)."
+    },
+    {
+      question: "How do I find a childminder near me?",
+      answer: "Use the smart search feature — filter by location, availability, services, and more."
+    },
+    {
+      question: "Can I communicate with childminders before booking?",
+      answer: "Yes, use the secure in-app messaging system to ask questions and confirm availability."
+    },
+    {
+      question: "How do I pay the childminder?",
+      answer: "You agree on the rate and pay the childminder directly — ChildminderConnect does not handle payments."
+    },
+    {
+      question: "What if I'm not happy with a childminder?",
+      answer: "You can leave a review and report any serious issues through our support form. We take all complaints seriously."
+    },
+    {
+      question: "How do I subscribe?",
+      answer: "Visit your account dashboard and select either a monthly or yearly plan. Payments are processed securely via Stripe."
+    },
+    {
+      question: "Can I cancel my subscription?",
+      answer: "Yes, you can cancel anytime from your dashboard. Your access will continue until the end of your billing cycle."
+    },
+    {
+      question: "Are subscriptions refundable?",
+      answer: "Subscriptions are non-refundable unless otherwise stated in special promotions or offers."
+    },
+    {
+      question: "I forgot my password. What do I do?",
+      answer: "Use the \"Forgot Password\" link on the login page to reset it via email."
+    },
+    {
+      question: "I'm not receiving messages.",
+      answer: "Ensure your profile is active, subscribed, and notifications are enabled in your settings."
+    },
+    {
+      question: "Who do I contact for help?",
+      answer: "Reach out via our Contact Support form or email us at support@childminderconnect.com."
     }
   ];
 
@@ -211,6 +252,14 @@ export default function HelpSupportPage() {
                 <h3 className="mb-1 text-sm font-semibold text-gray-900">Live Chat</h3>
                 <p className="text-xs text-gray-600">Chat with our support team in real-time</p>
               </div>
+              
+              <Link href="/dashboard/parent/help/onboarding" className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <FaBook className="h-6 w-6" />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold text-gray-900">Onboarding Guide</h3>
+                <p className="text-xs text-gray-600">Step-by-step guide to get started</p>
+              </Link>
               
               <div 
                 className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer"

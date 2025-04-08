@@ -17,6 +17,7 @@ import CreateTicketForm from "@/components/support/CreateTicketForm";
 import TicketList from "@/components/support/TicketList";
 import TicketDetail from "@/components/support/TicketDetail";
 import { SupportTicket, SupportTicket_status } from "@/types/supportTicket";
+import Link from "next/link";
 
 // FAQ Item component
 interface FAQItemProps {
@@ -132,24 +133,64 @@ export default function HelpSupportPage() {
   // Childminder-specific FAQs
   const faqs: FAQItemProps[] = [
     {
-      question: "How do I update my availability?",
-      answer: "You can update your availability by going to the 'Calendar' section in your dashboard. From there, you can block off times when you're unavailable, or mark specific days or hours as available for bookings."
+      question: "What is ChildminderConnect?",
+      answer: "ChildminderConnect is a smart childcare platform connecting parents with trusted local childminders across Ireland."
     },
     {
-      question: "How do I manage my bookings?",
-      answer: "You can manage all your bookings in the 'Bookings' section of your dashboard. Here you can view pending requests, approve or decline bookings, and see your schedule. You can also contact parents directly through our messaging system."
+      question: "How does the platform work?",
+      answer: "Parents sign up, search using our smart search engine, and connect with verified childminders. All payments are made directly between parent and childminder — we simply facilitate the match."
     },
     {
-      question: "How do I update my profile information?",
-      answer: "To update your profile, go to the 'Profile' section in your dashboard. Here you can edit your personal information, qualifications, experience, and upload photos. Remember that keeping your profile accurate and detailed helps parents find the right childminder for their needs."
+      question: "Is ChildminderConnect available across Ireland?",
+      answer: "Yes — our platform supports all counties and uses your location to show nearby childminders."
     },
     {
-      question: "How do payments work?",
-      answer: "ChildMinderConnect only charges a monthly subscription fee for using our platform. For bookings, parents pay you directly for your childminding services. We do not process or take a cut from these payments between you and parents. You can manage your subscription details in the 'Subscription' section of your dashboard."
+      question: "Is my data secure?",
+      answer: "Yes. We are fully GDPR-compliant, and your personal data is stored securely."
     },
     {
-      question: "What should I do if I need to cancel a booking?",
-      answer: "If you need to cancel a booking, go to the 'Bookings' section, select the booking you need to cancel, and click the 'Cancel' button. Please try to provide as much notice as possible, as last-minute cancellations may affect your rating. Contact the parent directly to explain the situation."
+      question: "How do I get listed on the platform?",
+      answer: "Create a profile, upload your documents (Garda vetting, Tusla registration, etc.), and subscribe to go live."
+    },
+    {
+      question: "What does the subscription include?",
+      answer: "Your subscription (€9.99/month or €99.99/year) includes visibility in parent searches, messaging access, and profile enhancements."
+    },
+    {
+      question: "How do parents contact me?",
+      answer: "Once subscribed, your profile will appear in search results, and parents can message you directly."
+    },
+    {
+      question: "How do I set my rates?",
+      answer: "You set your own pricing and cancellation terms. ChildminderConnect does not interfere with your rates."
+    },
+    {
+      question: "What if I get a bad review?",
+      answer: "You can flag reviews for moderation if they are misleading or violate our guidelines."
+    },
+    {
+      question: "How do I subscribe?",
+      answer: "Visit your account dashboard and select either a monthly or yearly plan. Payments are processed securely via Stripe."
+    },
+    {
+      question: "Can I cancel my subscription?",
+      answer: "Yes, you can cancel anytime from your dashboard. Your access will continue until the end of your billing cycle."
+    },
+    {
+      question: "Are subscriptions refundable?",
+      answer: "Subscriptions are non-refundable unless otherwise stated in special promotions or offers."
+    },
+    {
+      question: "I forgot my password. What do I do?",
+      answer: "Use the \"Forgot Password\" link on the login page to reset it via email."
+    },
+    {
+      question: "I'm not receiving messages.",
+      answer: "Ensure your profile is active, subscribed, and notifications are enabled in your settings."
+    },
+    {
+      question: "Who do I contact for help?",
+      answer: "Reach out via our Contact Support form or email us at support@childminderconnect.com."
     }
   ];
 
@@ -212,6 +253,14 @@ export default function HelpSupportPage() {
                 <h3 className="mb-1 text-sm font-semibold text-gray-900">Live Chat</h3>
                 <p className="text-xs text-gray-600">Chat with our support team in real-time</p>
               </div>
+              
+              <Link href="/dashboard/childminder/help/onboarding" className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+                  <FaBook className="h-6 w-6" />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold text-gray-900">Onboarding Guide</h3>
+                <p className="text-xs text-gray-600">Step-by-step guide to get started</p>
+              </Link>
               
               <div 
                 className="rounded-lg bg-white p-4 text-center shadow-sm hover:shadow-md transition-shadow cursor-pointer"
