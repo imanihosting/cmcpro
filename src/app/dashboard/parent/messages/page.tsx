@@ -3,7 +3,8 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FaUserCircle, FaSearch, FaEllipsisH, FaPaperPlane, FaArrowLeft, FaTrash, FaTimes } from "react-icons/fa";
+import { FaUserCircle, FaSearch, FaEllipsisH, FaPaperPlane, FaArrowLeft, FaTrash, FaTimes, FaEdit, FaMicrophone, FaPaperclip, FaCamera, FaSmile, FaVideo, FaHeart, FaUserFriends, FaFilePdf, FaFileVideo, FaFileAudio, FaFileImage } from "react-icons/fa";
+import { IoMdNotificationsOutline } from "react-icons/io"; // Added notification icon
 import { format } from 'date-fns';
 import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
 
@@ -342,31 +343,49 @@ function MessagesContent() {
   return (
     <div>
       <SearchParamsListener />
-      <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
-        {/* Conversations sidebar */}
+      {/* Main 3-column layout */}
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-64px)] bg-gray-100">
+
+        {/* Left Column: Conversations List */}
         <div className={`w-full md:w-80 border-r border-gray-200 flex flex-col bg-white ${
-          showListMobile ? 'flex' : 'hidden md:flex'
+          showListMobile ? 'flex' : 'hidden md:flex' // Keep mobile logic for now
         }`}>
-          <div className="p-4 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+          {/* User Profile Section */}
+          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {session?.user?.image ? (
+                <img src={session.user.image} alt="User" className="h-10 w-10 rounded-full" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                  <FaUserCircle className="h-6 w-6 text-gray-500" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{session?.user?.name || 'Current User'}</p>
+                <p className="text-xs text-gray-500">{'Senior Developer' /* Placeholder */}</p>
+              </div>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600">
+              <FaEdit className="h-4 w-4" />
+            </button>
           </div>
-          
+
           {/* Search box */}
-          <div className="p-2 border-b border-gray-200">
+          <div className="p-3 border-b border-gray-200">
             <div className="relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FaSearch className="h-4 w-4 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-violet-500 focus:border-violet-500 sm:text-sm"
-                placeholder="Search conversations"
+                placeholder="Search Here..." // Updated placeholder
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-gray-100 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" // Updated styling: rounded-full, bg-gray-100
               />
             </div>
           </div>
-          
+
           {/* Conversations list */}
           <div className="flex-1 overflow-y-auto">
             {conversationsLoading ? (
@@ -381,15 +400,15 @@ function MessagesContent() {
               filteredConversations.map((conversation) => (
                 <button
                   key={conversation.partnerId}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-200 focus:outline-none transition-colors ${
+                  className={`w-full text-left px-4 py-3 border-b border-gray-100 focus:outline-none transition-colors ${ // Adjusted border color
                     activeConversation === conversation.partnerId
-                      ? 'bg-violet-50'
+                      ? 'bg-blue-50' // Updated active color
                       : 'hover:bg-gray-50'
                   }`}
                   onClick={() => handleSelectConversation(conversation.partnerId)}
                 >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
+                  <div className="flex items-center"> {/* Changed items-start to items-center */}
+                    <div className="flex-shrink-0 relative"> {/* Added relative for potential status indicator */}
                       {conversation.avatar ? (
                         <img
                           className="h-10 w-10 rounded-full"
@@ -401,21 +420,23 @@ function MessagesContent() {
                           <FaUserCircle className="h-6 w-6 text-gray-500" />
                         </div>
                       )}
+                      {/* Optional: Add online status indicator here */}
                     </div>
-                    <div className="ml-3 flex-1">
+                    <div className="ml-3 flex-1 min-w-0"> {/* Added min-w-0 for truncation */}
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-gray-800 truncate"> {/* Adjusted font weight */}
                           {conversation.participant}
                         </p>
-                        <p className="text-xs text-gray-500">{conversation.timestamp}</p>
+                        <p className="text-xs text-gray-400 flex-shrink-0 ml-2">{conversation.timestamp}</p> {/* Adjusted color and spacing */}
                       </div>
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-sm text-gray-500 truncate">{conversation.lastMessage}</p>
                         {conversation.unreadCount > 0 && (
-                          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-violet-600 text-xs font-medium text-white">
+                          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-xs font-medium text-white"> {/* Updated color */}
                             {conversation.unreadCount}
                           </span>
                         )}
+                        {/* Add checkmark for read status if needed */}
                       </div>
                     </div>
                   </div>
@@ -423,12 +444,12 @@ function MessagesContent() {
               ))
             )}
           </div>
-        </div>
-        
-        {/* Message view */}
+        </div> {/* Added back the closing div for the Left Column */}
+
+        {/* Middle Column: Active Chat */}
         <div className={`flex-1 flex flex-col bg-gray-50 ${showListMobile ? 'hidden md:flex' : 'flex'}`}>
-          {/* Mobile back button */}
-          <div className="flex md:hidden items-center p-4 border-b border-gray-200">
+          {/* Mobile back button - Keep for now */}
+          <div className="flex md:hidden items-center p-4 border-b border-gray-200 bg-white">
             <button
               type="button"
               className="mr-4 text-gray-400 hover:text-gray-500"
@@ -437,39 +458,53 @@ function MessagesContent() {
               <FaArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex-1 text-center">
-              <h2 className="text-lg font-medium text-gray-900">
+              <h2 className="text-lg font-medium text-gray-900 truncate">
                 {partner?.name || 'Messages'}
               </h2>
             </div>
+            {/* Add placeholder for right column toggle on mobile? */}
           </div>
-          
+
           {/* Message content */}
           {activeConversation && partner ? (
             <>
-              {/* Header */}
+              {/* Chat Header */}
               <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+                {/* Partner Info */}
                 <div className="flex items-center space-x-3">
-                  {partner.image ? (
-                    <img
-                      className="h-8 w-8 rounded-full"
-                      src={partner.image}
-                      alt={partner.name}
-                    />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <FaUserCircle className="h-5 w-5 text-gray-500" />
-                    </div>
-                  )}
-                  <h2 className="text-lg font-medium text-gray-900">{partner.name}</h2>
+                  <div className="relative">
+                    {partner.image ? (
+                      <img
+                        className="h-10 w-10 rounded-full" // Increased size
+                        src={partner.image}
+                        alt={partner.name}
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <FaUserCircle className="h-6 w-6 text-gray-500" />
+                      </div>
+                    )}
+                    {/* Online Status Indicator */}
+                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white"></span>
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-900">{partner.name}</h2> {/* Adjusted font size/weight */}
                 </div>
-                <button className="text-gray-400 hover:text-gray-500">
-                  <FaEllipsisH className="h-5 w-5" />
-                </button>
+                {/* Action Icons */}
+                <div className="flex items-center space-x-4 text-gray-500">
+                   <button className="hover:text-gray-700">
+                     <FaSearch className="h-5 w-5" />
+                   </button>
+                   <button className="hover:text-gray-700">
+                     <FaHeart className="h-5 w-5" />
+                   </button>
+                   <button className="hover:text-gray-700">
+                     <IoMdNotificationsOutline className="h-6 w-6" />
+                   </button>
+                </div>
               </div>
-              
-              <div className="flex flex-col flex-1">
-                {/* Messages container with fixed height */}
-                <div className="flex-1 overflow-y-auto p-4" style={{ height: '60vh', maxHeight: '400px' }}>
+
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-100"> {/* Adjusted padding and background */}
                   {messagesLoading ? (
                     <div className="flex items-center justify-center h-32">
                       <div className="h-5 w-5 border-t-2 border-b-2 border-violet-500 rounded-full animate-spin"></div>
@@ -481,95 +516,201 @@ function MessagesContent() {
                       <p className="text-sm text-gray-400 mt-1">Start a conversation below</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <>
                       {messages.map((message) => (
                         <div
                           key={message.id}
-                          className={`flex ${
-                            message.sender.isCurrentUser ? 'justify-end' : 'justify-start'
-                          }`}
+                        className={`flex items-end space-x-2 ${ // Added items-end and space-x
+                          message.sender.isCurrentUser ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {/* Avatar for received messages */}
+                        {!message.sender.isCurrentUser && (
+                          <div className="flex-shrink-0">
+                            {message.sender.image ? (
+                              <img src={message.sender.image} alt={message.sender.name} className="h-6 w-6 rounded-full" />
+                            ) : (
+                              <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">
+                                <FaUserCircle className="h-4 w-4 text-gray-500" />
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Message Bubble */}
+                        <div
+                          className={`inline-block rounded-xl px-4 py-2 max-w-[70%] ${ // Adjusted rounding and max-width
+                            message.sender.isCurrentUser
+                              ? 'bg-blue-500 text-white rounded-br-none' // Updated color and shape for sender
+                              : 'bg-white text-gray-800 rounded-bl-none' // Updated color and shape for receiver
+                          } relative group shadow-sm`} // Added shadow
                         >
-                          <div
-                            className={`inline-block rounded-lg px-4 py-2 max-w-[75%] ${
-                              message.sender.isCurrentUser
-                                ? 'bg-violet-600 text-white'
-                                : 'bg-white border border-gray-200 text-gray-900'
-                            } relative group`}
-                          >
+                          {/* Handle PDF preview - Requires specific logic */}
+                          {message.content.toLowerCase().includes('.pdf') ? (
+                            <div className="flex items-center space-x-2 p-2 border border-gray-200 rounded-md bg-gray-50">
+                              <FaFilePdf className="h-8 w-8 text-red-500" />
+                              <span className="text-sm text-gray-700 font-medium">{message.content}</span>
+                              {/* Add download/view button? */}
+                            </div>
+                          ) : (
                             <p className="text-sm">{message.content}</p>
-                            <p
-                              className={`text-xs mt-1 ${
-                                message.sender.isCurrentUser ? 'text-violet-100' : 'text-gray-500'
-                              }`}
-                            >
+                          )}
+                          {/* Timestamp - Consider moving outside bubble or showing on hover */}
+                          <p
+                            className={`text-xs mt-1 text-right ${ // Adjusted alignment
+                              message.sender.isCurrentUser ? 'text-blue-100' : 'text-gray-400' // Adjusted colors
+                            }`}
+                          >
                               {new Date(message.createdAt).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </p>
-                            
-                            {/* Delete button - only visible on hover and for user's own messages */}
-                            {message.sender.isCurrentUser && !message.id.toString().startsWith('temp-') && (
-                              <button
-                                onClick={() => {
-                                  setSelectedMessage(message.id);
-                                  setDeleteModalOpen(true);
-                                }}
-                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 rounded-full text-violet-100 hover:bg-violet-700 transition-opacity"
-                                aria-label="Delete message"
-                              >
-                                <FaTrash className="h-3 w-3" />
-                              </button>
-                            )}
                           </div>
+
+                          {/* Avatar for sent messages */}
+                          {message.sender.isCurrentUser && (
+                            <div className="flex-shrink-0">
+                              {message.sender.image ? (
+                                <img src={message.sender.image} alt={message.sender.name} className="h-6 w-6 rounded-full" />
+                              ) : (
+                                <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center">
+                                  <FaUserCircle className="h-4 w-4 text-gray-500" />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Delete button - only visible on hover and for user's own messages */}
+                          {message.sender.isCurrentUser && !message.id.toString().startsWith('temp-') && (
+                            <button
+                              onClick={() => {
+                                setSelectedMessage(message.id);
+                                setDeleteModalOpen(true);
+                              }}
+                              className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 p-1 rounded-full bg-red-500 text-white hover:bg-red-600 transition-opacity text-xs" // Adjusted position and style
+                              aria-label="Delete message"
+                            >
+                              <FaTrash className="h-2.5 w-2.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
-                      <div ref={messageEndRef} />
-                    </div>
+                      <div ref={messageEndRef} /> {/* Keep scroll ref */}
+                    </>
                   )}
-                </div>
-                
-                {/* Message input back at the bottom */}
-                <div className="border-t border-gray-200 p-3 bg-white">
-                  <div className="flex items-center relative">
-                    <textarea
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      className="block w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 max-h-24 resize-none"
-                      rows={1}
-                    />
-                    <button 
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-violet-600 hover:bg-violet-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                    >
-                      <FaPaperPlane className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
               </div>
+
+              {/* Message Input Area */}
+              <div className="border-t border-gray-200 p-4 bg-white">
+                <div className="flex items-center space-x-3 bg-gray-100 rounded-full px-4 py-2">
+                  <button className="text-gray-500 hover:text-gray-700">
+                    <FaMicrophone className="h-5 w-5" />
+                  </button>
+                  <input
+                    type="text" // Changed from textarea for simplicity in this layout
+                    placeholder="Write Something..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm placeholder-gray-500"
+                  />
+                  <button className="text-gray-500 hover:text-gray-700">
+                    <FaPaperclip className="h-5 w-5" />
+                  </button>
+                  <button className="text-gray-500 hover:text-gray-700">
+                    <FaCamera className="h-5 w-5" />
+                  </button>
+                   <button className="text-gray-500 hover:text-gray-700">
+                    <FaSmile className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                    className="p-2 rounded-full text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaPaperPlane className="h-5 w-5" />
+                  </button>
+                </div>
+              </div> {/* Corrected closing tag placement */}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <FaUserCircle className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a conversation</h3>
-              <p className="text-gray-500 max-w-md">
-                Choose a conversation from the list to start messaging.
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-gray-100"> {/* Adjusted background */}
+              <FaUserCircle className="h-20 w-20 text-gray-300 mb-4" /> {/* Increased size */}
+              <h3 className="text-xl font-medium text-gray-700 mb-2">Select a conversation</h3> {/* Adjusted text */}
+              <p className="text-gray-500 max-w-sm"> {/* Adjusted text */}
+                Choose someone from the left panel to start chatting or view details on the right.
               </p>
             </div>
           )}
-        </div>
-      </div>
-      
-      {/* Message deletion confirmation modal */}
+        </div> {/* End Middle Column */}
+
+        {/* Right Column: Details Panel */}
+        <div className="hidden md:flex md:w-80 border-l border-gray-200 flex-col bg-white p-6 space-y-6 overflow-y-auto"> {/* Added overflow-y-auto */}
+          {/* Search */}
+           <div className="relative">
+             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <FaSearch className="h-4 w-4 text-gray-400" aria-hidden="true" />
+             </div>
+             <input
+               type="text"
+               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full leading-5 bg-gray-100 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+               placeholder="Search Here..."
+             />
+           </div>
+
+           {/* Partner Profile */}
+           {partner ? (() => {
+             // Define partner image element conditionally
+             const partnerImageElement = partner.image ? (
+               <img src={partner.image} alt={partner.name} className="h-20 w-20 rounded-full" />
+             ) : (
+               <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                 <FaUserCircle className="h-12 w-12 text-gray-400" />
+               </div>
+             );
+
+             return (
+               <div className="flex flex-col items-center text-center space-y-3">
+                 <div className="relative">
+                   {partnerImageElement} {/* Use the variable here */}
+                   {/* Online Status */}
+                   <span className="absolute bottom-1 right-1 block h-4 w-4 rounded-full bg-green-400 ring-2 ring-white"></span>
+                 </div>
+                 <h3 className="text-lg font-semibold text-gray-900">{partner.name}</h3>
+                 {/* Action Buttons */}
+                 <div className="flex space-x-4 pt-2">
+                   <button className="flex flex-col items-center text-blue-500 hover:text-blue-700">
+                     <div className="p-3 rounded-full bg-blue-100">
+                       <FaPaperPlane className="h-5 w-5" />
+                     </div>
+                     <span className="text-xs mt-1">Chat</span>
+                   </button>
+                   <button className="flex flex-col items-center text-blue-500 hover:text-blue-700">
+                     <div className="p-3 rounded-full bg-blue-100">
+                       <FaVideo className="h-5 w-5" />
+                     </div>
+                     <span className="text-xs mt-1">Video Call</span>
+                   </button>
+                 </div>
+               </div>
+             );
+           })() : ( // End of IIFE for partner profile
+             <div className="text-center text-gray-500 py-10">Select a conversation to see details.</div>
+           )}
+
+           {/* Divider */}
+           {partner && <hr className="border-gray-200" />}
+        </div> {/* End Right Column */}
+      </div> {/* End Main 3-column layout */}
+
+      {/* Message deletion confirmation modal (Keep as is) */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">Delete Message</h3>
-              <button 
+              <button
                 onClick={() => setDeleteModalOpen(false)}
                 className="text-gray-400 hover:text-gray-500"
               >
