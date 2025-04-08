@@ -160,4 +160,63 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// API to delete a message
+export async function DELETE(request: NextRequest) {
+  try {
+    // Get the authenticated user session
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const userId = session.user.id;
+    
+    // Get message ID from query parameter
+    const { searchParams } = new URL(request.url);
+    const messageId = searchParams.get('id');
+    
+    if (!messageId) {
+      return NextResponse.json(
+        { error: 'Message ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Check if the message exists and belongs to the user
+    const message = await prisma.message.findUnique({
+      where: {
+        id: messageId,
+        senderId: userId // Only allow users to delete messages they sent
+      }
+    });
+    
+    if (!message) {
+      return NextResponse.json(
+        { error: 'Message not found or you do not have permission to delete it' },
+        { status: 404 }
+      );
+    }
+    
+    // Delete the message
+    await prisma.message.delete({
+      where: {
+        id: messageId
+      }
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Message deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('[MESSAGE_DELETE]', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 } 
