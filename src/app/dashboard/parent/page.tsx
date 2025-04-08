@@ -25,6 +25,7 @@ import AIRecommendations from '@/components/dashboard/parent/AIRecommendations';
 import { FiSearch, FiCalendar } from "react-icons/fi";
 import { AlertTriangle } from "lucide-react";
 import { useSafeSearchParams } from '@/hooks/useSafeSearchParams';
+import { hasValidSubscription } from '@/lib/subscription';
 
 // Define types for the components
 interface DashboardCardProps {
@@ -219,29 +220,26 @@ function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const onboardingCheckedRef = useRef(false);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
+    // Check if the user is authenticated and has the parent role
     if (status === "unauthenticated") {
-      router.push(`/auth/login?callbackUrl=${encodeURIComponent("/dashboard/parent")}`);
+      router.push("/auth/login");
       return;
     }
 
     if (status === "authenticated") {
-      // Check subscription status first
-      if (session.user.subscriptionStatus === "FREE") {
+      // Check if subscription is valid - redirect to subscription page if not
+      if (!hasValidSubscription(session.user)) {
         router.push("/subscription?required=true");
         return;
       }
-
-      // Handle redirect from onboarding - ONLY CHECK ONCE
-      if (searchParams && searchParams.has("onboarding") && 
-          session.user.role === "parent" && 
-          !onboardingCheckedRef.current) {
-        onboardingCheckedRef.current = true;
-        // Show onboarding success message if needed
+      
+      // Redirect if not a parent
+      if (session.user.role !== "parent") {
+        router.push('/dashboard');
       }
     }
-  }, [status, session, router, searchParams]);
+  }, [session, router, status]); // Removed searchParams from dependency array
 
   // Fetch dashboard data - only fetch when session changes
   useEffect(() => {

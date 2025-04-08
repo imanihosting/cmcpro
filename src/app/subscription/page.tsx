@@ -64,9 +64,16 @@ function SubscriptionPageContent() {
           console.log("Subscription fix response:", data);
           
           if (data.success) {
-            console.log("Subscription fixed successfully, redirecting to dashboard");
-            // If fix was successful, redirect to dashboard immediately
-            router.push('/dashboard?subscription=success');
+            console.log("Subscription fixed successfully, refreshing session");
+            // Force session refresh before redirecting
+            try {
+              await fetch('/api/auth/session?update=true');
+              console.log("Session refreshed, redirecting to dashboard");
+              router.push('/dashboard?subscription=success');
+            } catch (err) {
+              console.error("Error refreshing session:", err);
+              router.push('/dashboard?subscription=success');
+            }
           } else {
             console.error("Failed to fix subscription:", data.error);
             // Try again after a delay
@@ -74,9 +81,15 @@ function SubscriptionPageContent() {
               console.log("Retrying subscription fix...");
               fetch('/api/fix-subscriptions')
                 .then(res => res.json())
-                .then(retryData => {
+                .then(async (retryData) => {
                   console.log("Retry response:", retryData);
-                  // Redirect regardless of result after second attempt
+                  // Try to refresh session before redirecting
+                  try {
+                    await fetch('/api/auth/session?update=true');
+                    console.log("Session refreshed after retry");
+                  } catch (e) {
+                    console.error("Failed to refresh session:", e);
+                  }
                   router.push('/dashboard?subscription=success');
                 })
                 .catch(err => {
