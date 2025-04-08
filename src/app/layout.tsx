@@ -3,6 +3,10 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import ClientLayout from "@/components/ClientLayout";
+import dynamic from "next/dynamic";
+
+// Dynamically import the CookieConsent component with no SSR to avoid hydration issues
+const CookieConsent = dynamic(() => import("@/components/CookieConsent"), { ssr: false });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,6 +55,7 @@ export default function RootLayout({
           <ClientLayout>
             {children}
           </ClientLayout>
+          <CookieConsent />
         </Providers>
       </body>
     </html>
