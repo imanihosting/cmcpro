@@ -223,12 +223,20 @@ export default function ChildminderCard({ childminder, isRecommended = false }: 
             View Profile
           </Link>
           
-          <Link
-            href={`/dashboard/parent/bookings/new?childminderId=${childminder.id}`}
-            className="rounded bg-violet-600 px-3 py-1 text-sm font-medium text-white hover:bg-violet-700"
-          >
-            Book Now
-          </Link>
+          <div className="flex space-x-2">
+            <Link
+              href={`/dashboard/parent/messages/new?receiverId=${childminder.id}&receiverName=${encodeURIComponent(childminder.name || 'Childminder')}`}
+              className="rounded bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700 hover:bg-indigo-200"
+            >
+              Message
+            </Link>
+            <Link
+              href={`/dashboard/parent/bookings/new?childminderId=${childminder.id}`}
+              className="rounded bg-violet-600 px-3 py-1 text-sm font-medium text-white hover:bg-violet-700"
+            >
+              Book Now
+            </Link>
+          </div>
         </div>
       </div>
     </div>

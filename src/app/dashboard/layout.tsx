@@ -2,12 +2,13 @@
 
 import { useState, useEffect, ReactNode, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import dynamic from 'next/dynamic';
 import { useMaintenanceMode } from "@/lib/MaintenanceContext";
 import SubscriptionBanner from "@/components/SubscriptionBanner";
+import { hasValidSubscription } from "@/lib/subscription";
 import { 
   FaBaby, 
   FaTachometerAlt, 
@@ -77,6 +78,7 @@ export default function DashboardLayout({
   const { isInMaintenance, isLoading: maintenanceLoading, checkMaintenanceMode } = useMaintenanceMode();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
 
@@ -110,6 +112,20 @@ export default function DashboardLayout({
       return;
     }
 
+    // Check for valid subscription (unless admin)
+    if (status === "authenticated" && session?.user?.role !== "admin") {
+      // Don't redirect if we just came from successful subscription payment
+      const isFromSuccessfulPayment = 
+        pathname?.includes('subscription=success') || 
+        searchParams?.get('subscription') === 'success';
+        
+      // Redirect users with expired or no subscription to subscription page
+      if (!hasValidSubscription(session.user) && !isFromSuccessfulPayment) {
+        router.push("/subscription?required=true");
+        return;
+      }
+    }
+
     // Redirect based on user role if they're at the dashboard root
     if (status === "authenticated" && pathname === "/dashboard") {
       if (session?.user?.role === "admin") {
@@ -120,7 +136,7 @@ export default function DashboardLayout({
         router.push("/dashboard/childminder");
       }
     }
-  }, [status, session, router, pathname]);
+  }, [status, session, router, pathname, searchParams]);
 
   // Close sidebar when route changes (for mobile)
   useEffect(() => {

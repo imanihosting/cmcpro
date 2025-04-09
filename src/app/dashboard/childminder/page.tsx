@@ -19,7 +19,7 @@ import {
   FaFilePdf
 } from "react-icons/fa";
 import { format } from "date-fns";
-import { getSubscriptionDetails } from "@/lib/subscription";
+import { getSubscriptionDetails, hasValidSubscription } from "@/lib/subscription";
 
 // Types for dashboard stats
 interface DashboardStats {
@@ -50,7 +50,7 @@ export default function ChildminderDashboard() {
 
     if (status === "authenticated") {
       // Check subscription status first
-      if (session.user.subscriptionStatus === "FREE") {
+      if (!hasValidSubscription(session.user)) {
         router.push("/subscription?required=true");
         return;
       }

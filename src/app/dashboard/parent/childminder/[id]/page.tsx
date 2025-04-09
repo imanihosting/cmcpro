@@ -570,14 +570,21 @@ export default function ChildminderProfilePage({ params }: { params: { id: strin
             </div>
           )}
           
-          {/* Quick booking button */}
-          <div className="mt-6">
+          {/* Action buttons */}
+          <div className="mt-6 flex space-x-4">
             <Link
               href={`/dashboard/parent/bookings/new?childminderId=${childminder.id}`}
               className="inline-flex items-center rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
             >
               <FaCalendarAlt className="mr-2 h-4 w-4" />
               Book Now
+            </Link>
+            <Link
+              href={`/dashboard/parent/messages/new?receiverId=${childminder.id}&receiverName=${encodeURIComponent(childminder.name)}`}
+              className="inline-flex items-center rounded-md bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-700 shadow-sm hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              <FaEnvelope className="mr-2 h-4 w-4" />
+              Message
             </Link>
           </div>
         </div>
