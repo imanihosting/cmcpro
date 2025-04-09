@@ -603,36 +603,24 @@ function MessagesContent() {
 
               {/* Message Input Area */}
               <div className="border-t border-gray-200 p-4 bg-white">
-                <div className="flex items-center space-x-3 bg-gray-100 rounded-full px-4 py-2">
-                  <button className="text-gray-500 hover:text-gray-700">
-                    <FaMicrophone className="h-5 w-5" />
-                  </button>
+                <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-4 py-3 shadow-sm hover:shadow transition-shadow duration-200 border border-gray-200">
                   <input
-                    type="text" // Changed from textarea for simplicity in this layout
-                    placeholder="Write Something..."
+                    type="text"
+                    placeholder="Type your message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm placeholder-gray-500"
+                    className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-sm text-gray-700 placeholder-gray-400"
                   />
-                  <button className="text-gray-500 hover:text-gray-700">
-                    <FaPaperclip className="h-5 w-5" />
-                  </button>
-                  <button className="text-gray-500 hover:text-gray-700">
-                    <FaCamera className="h-5 w-5" />
-                  </button>
-                   <button className="text-gray-500 hover:text-gray-700">
-                    <FaSmile className="h-5 w-5" />
-                  </button>
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="p-2 rounded-full text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2.5 rounded-full text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:bg-blue-400 shadow-sm transition-all duration-200 flex items-center justify-center"
                   >
-                    <FaPaperPlane className="h-5 w-5" />
+                    <FaPaperPlane className="h-4 w-4" />
                   </button>
                 </div>
-              </div> {/* Corrected closing tag placement */}
+              </div>
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-gray-100"> {/* Adjusted background */}
@@ -685,12 +673,6 @@ function MessagesContent() {
                        <FaPaperPlane className="h-5 w-5" />
                      </div>
                      <span className="text-xs mt-1">Chat</span>
-                   </button>
-                   <button className="flex flex-col items-center text-blue-500 hover:text-blue-700">
-                     <div className="p-3 rounded-full bg-blue-100">
-                       <FaVideo className="h-5 w-5" />
-                     </div>
-                     <span className="text-xs mt-1">Video Call</span>
                    </button>
                  </div>
                </div>
