@@ -12,7 +12,7 @@ The Childminder Connect application is built using the following technologies:
 - **Authentication**: NextAuth.js
 - **Payment Processing**: Stripe
 - **Email Services**: Microsoft Graph API
-- **Real-time Communication**: Server-Sent Events (SSE)
+- **Real-time Communication**: Server-Sent Events (SSE), potentially WebSockets
 - **Deployment**: Vercel (Frontend and API Routes)
 - **Storage**: Vercel Blob Storage (for documents and images)
 - **Monitoring**: Custom built monitoring dashboard
@@ -24,13 +24,16 @@ The Childminder Connect application is built using the following technologies:
   - [Parent](#parent-dashboard)
   - [Childminder](#childminder-dashboard)
   - [Admin](#admin-dashboard)
-- [Bookings](#bookings)
+- [Bookings & Childminders](#bookings--childminders)
 - [Messages](#messages)
 - [Subscription & Payments](#subscription--payments)
-- [Documents](#documents)
+- [Documents & Compliance](#documents--compliance)
 - [System](#system)
 - [Support](#support)
 - [Live Chat](#live-chat)
+- [Calendar Sync](#calendar-sync)
+- [Cron Jobs](#cron-jobs)
+- [Real-time Communication](#real-time-communication)
 
 ---
 
@@ -39,7 +42,7 @@ The Childminder Connect application is built using the following technologies:
 ### `/api/auth/[...nextauth]`
 NextAuth integration for handling authentication flows.
 
-**Methods**: 
+**Methods**:
 - Implements OAuth providers and credential-based authentication
 - Handles sessions and JWT tokens
 
@@ -73,6 +76,13 @@ Reset a user's password.
 - `POST`: Reset password using a valid token
   - Validates the reset token
   - Updates the user's password in the database
+
+### `/api/auth/chat-status`
+Manage user's chat availability status.
+
+**Methods**:
+- `GET`: Retrieve current chat status
+- `PATCH`: Update chat status (e.g., available, busy, offline)
 
 ---
 
@@ -150,6 +160,21 @@ Manage notification settings.
 - `GET`: Get current notification preferences
 - `PATCH`: Update notification preferences
   - Customize which notifications to receive and delivery methods
+
+### `/api/user/last-minute-schedule`
+Manage user's last-minute availability or booking schedule.
+
+**Methods**:
+- `GET`: Retrieve last-minute schedule/availability
+- `POST`: Add/update last-minute schedule entry
+- `DELETE`: Remove a last-minute schedule entry
+
+### `/api/user/last-minute-settings`
+Manage settings related to last-minute bookings.
+
+**Methods**:
+- `GET`: Retrieve last-minute booking settings
+- `PATCH`: Update last-minute booking settings (e.g., notification preferences, auto-accept rules)
 
 ---
 
@@ -349,7 +374,7 @@ View and manage all messages.
 View a specific conversation.
 
 **Methods**:
-- `GET`: Get all messages in a conversation
+- `GET`: Get all messages in a conversation (requires conversation ID)
 
 #### `/api/admin/messages/search`
 Search through messages.
@@ -445,9 +470,35 @@ Manage admin profile image.
   - Accepts image upload with validation
   - Stores image and updates user profile
 
+#### `/api/admin/backup-recovery/history`
+View backup history.
+
+**Methods**:
+- `GET`: Retrieve a list of past backup attempts and their status.
+
+#### `/api/admin/backup-recovery/schedule`
+Manage backup schedule.
+
+**Methods**:
+- `GET`: Retrieve the current backup schedule.
+- `POST`: Set or update the automated backup schedule.
+
+#### `/api/admin/backup-recovery/trigger`
+Trigger a manual backup or recovery.
+
+**Methods**:
+- `POST`: Initiate an immediate backup or start a recovery process.
+
 ---
 
-## Bookings
+## Bookings & Childminders
+
+### `/api/childminders`
+Manage childminders.
+
+**Methods**:
+- `GET`: List all childminders (potentially with filtering/pagination).
+- `POST`: Create a new childminder profile (likely admin only).
 
 ### `/api/childminders/[id]`
 Get childminder details for booking.
@@ -580,7 +631,7 @@ Utility endpoint to fix subscription status issues.
 
 ---
 
-## Documents
+## Documents & Compliance
 
 ### `/api/user/documents`
 Manage user documents.
@@ -609,15 +660,30 @@ Manage a specific document.
 Download document files.
 
 **Methods**:
-- `GET`: Download a document file
+- `GET`: Download a document file (requires document ID)
   - Returns the file with proper content-type
 
 ### `/api/admin/documents/status`
 Update document verification status.
 
 **Methods**:
-- `PATCH`: Change document status
+- `PATCH`: Change document status (requires document ID)
   - Update verification status (pending/approved/rejected)
+
+### `/api/admin/compliance`
+Admin management of compliance requirements and status.
+
+**Methods**:
+- `GET`: List compliance requirements or user compliance status.
+- `POST`: Define new compliance requirements.
+- `PATCH`: Update compliance status for users or requirements.
+
+### `/api/compliance/check-expirations`
+Check for expired or soon-to-expire compliance documents.
+
+**Methods**:
+- `GET`: Retrieve a list of users with expiring compliance items.
+- `POST`: Trigger notifications for expiring items (potentially via cron).
 
 ---
 
@@ -651,6 +717,12 @@ Send system email notifications.
 ---
 
 ## Support
+
+### `/api/[...tickets].ts`
+Catch-all endpoint for support ticket operations. (Note: Specific functionality might vary based on implementation).
+
+**Methods**:
+- Handles various GET, POST, PATCH, DELETE requests related to support tickets based on the dynamic path segments.
 
 ### `/api/contact`
 Submit contact form information.
@@ -781,7 +853,7 @@ Manage chat support agents.
 - `GET`: List available chat agents
   - Returns a list of users who can handle chat support
   - Includes availability status and active session count
-  - Only accessible by admins 
+  - Only accessible by admins
 
 ---
 
@@ -845,4 +917,26 @@ Manage a specific availability block.
 - `PUT`: Update an existing availability block
   - Modify times, type, title, description, or recurrence
 - `DELETE`: Remove an availability block
-  - Also removes the corresponding Google Calendar event if synced 
+  - Also removes the corresponding Google Calendar event if synced
+
+---
+
+## Cron Jobs
+
+### `/api/cron`
+Endpoint triggered by scheduled tasks (cron jobs).
+
+**Methods**:
+- `GET` or `POST`: Execute scheduled tasks like checking trial expirations, sending reminders, cleaning up data, etc. (Specific actions depend on implementation and request parameters/headers).
+
+---
+
+## Real-time Communication
+
+(In addition to `/api/messages/sse` for Server-Sent Events)
+
+### `/api/socket` / `/api/socketio`
+Endpoints for WebSocket-based real-time communication (if implemented).
+
+**Methods**:
+- Handles WebSocket connections for features requiring bidirectional communication beyond SSE capabilities (e.g., more complex chat features, real-time collaboration).
