@@ -20,14 +20,15 @@ import {
   FaVenusMars
 } from "react-icons/fa";
 
+// Import UploadButton
+import { UploadButton } from "@/utils/uploadthing"; // Adjust path if needed
+
 export default function AdminProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadLoading, setUploadLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,7 +41,6 @@ export default function AdminProfilePage() {
   });
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -168,98 +168,6 @@ export default function AdminProfilePage() {
     }
   };
 
-  const handleProfilePictureClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Check file size
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification(false, "File is too large. Maximum size is 5MB.");
-      return;
-    }
-
-    // Check file type
-    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!validTypes.includes(file.type)) {
-      showNotification(false, "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.");
-      return;
-    }
-
-    // Preview the selected image
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleUploadImage = async () => {
-    if (!fileInputRef.current?.files?.[0]) return;
-    
-    setUploadLoading(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
-    
-    try {
-      // Create form data with the actual File object
-      const formData = new FormData();
-      formData.append('profileImage', fileInputRef.current.files[0]);
-      
-      console.log("Uploading profile image...");
-      
-      const uploadResponse = await fetch('/api/admin/profile-image', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      console.log("Upload response status:", uploadResponse.status);
-      
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        console.error("Upload response error:", errorData);
-        throw new Error(errorData.error || 'Failed to upload profile image');
-      }
-      
-      const data = await uploadResponse.json();
-      console.log("Upload success data:", data);
-      
-      // Update the profile image state
-      setProfileImage(data.imageUrl);
-      
-      // Update session with new image
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          image: data.imageUrl
-        }
-      });
-      
-      showNotification(true, data.message || '✅ Profile picture updated successfully! Your photo has been saved.');
-      setImagePreview(null);
-      // Scroll to top to ensure notification is visible
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      showNotification(false, 'Failed to upload profile picture. Please try again.');
-    } finally {
-      setUploadLoading(false);
-    }
-  };
-
-  const cancelImageUpload = () => {
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
@@ -302,17 +210,9 @@ export default function AdminProfilePage() {
             
             {/* Profile picture display/upload */}
             <div className="flex flex-col items-center">
-              <div 
-                className="group relative mb-4 h-40 w-40 cursor-pointer overflow-hidden rounded-full border-4 border-gray-200"
-                onClick={handleProfilePictureClick}
-              >
-                {imagePreview ? (
-                  <img 
-                    src={imagePreview} 
-                    alt="Profile Preview" 
-                    className="h-full w-full object-cover"
-                  />
-                ) : profileImage ? (
+              {/* Current Profile Image Display */}
+              <div className="relative mb-4 h-40 w-40 overflow-hidden rounded-full border-4 border-gray-200">
+                {profileImage ? (
                   <Image 
                     src={profileImage} 
                     alt="Profile" 
@@ -327,59 +227,47 @@ export default function AdminProfilePage() {
                     <FaUser className="h-20 w-20 text-gray-400" />
                   </div>
                 )}
-                
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 transition-opacity group-hover:opacity-100">
-                  <FaImage className="h-10 w-10 text-white" />
-                </div>
               </div>
               
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/jpeg,image/png,image/gif,image/webp"
-                className="hidden"
+              {/* UploadThing Button */}
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={(res) => {
+                  if (res && res.length > 0) {
+                    const newImageUrl = res[0].url;
+                    setProfileImage(newImageUrl);
+                    update({
+                      ...session,
+                      user: {
+                        ...session?.user,
+                        image: newImageUrl
+                      }
+                    });
+                    showNotification(true, "✅ Profile picture updated successfully!");
+                  } else {
+                    showNotification(false, "Upload completed but no URL received.");
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  console.error(`ERROR! ${error.message}`, error);
+                  showNotification(false, `Upload Failed: ${error.message}`);
+                }}
+                appearance={{
+                  button: "ut-button:bg-indigo-600 ut-button:hover:bg-indigo-700 ut-button:ut-uploading:bg-indigo-700/50 ut-button:transition-all ut-button:duration-300",
+                  container: "w-full flex justify-center",
+                  allowedContent: "text-gray-500 text-xs hidden",
+                }}
+                content={{
+                  button({ ready, isUploading }) {
+                    if (isUploading) return <div className="flex items-center"><FaSpinner className="animate-spin h-4 w-4 mr-2" /> Uploading...</div>;
+                    if (ready) return <div className="flex items-center"><FaUpload className="h-4 w-4 mr-2" /> Change Picture</div>;
+                    return "Getting ready...";
+                  },
+                }}
               />
               
-              {imagePreview ? (
-                <div className="mt-2 flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={handleUploadImage}
-                    disabled={uploadLoading}
-                    className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  >
-                    {uploadLoading ? (
-                      <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <FaUpload className="mr-2 h-4 w-4" />
-                    )}
-                    Upload
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={cancelImageUpload}
-                    disabled={uploadLoading}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  >
-                    <FaTimes className="mr-2 h-4 w-4" />
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleProfilePictureClick}
-                  className="mt-2 inline-flex items-center rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  <FaImage className="mr-2 h-4 w-4" />
-                  Change Picture
-                </button>
-              )}
-              
               <p className="mt-2 text-xs text-gray-500">
-                Click on the image to upload a new profile picture. Max size: 5MB.
+                Upload a new profile picture. Max 4MB.
               </p>
             </div>
           </div>

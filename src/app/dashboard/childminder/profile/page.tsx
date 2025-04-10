@@ -32,14 +32,15 @@ import {
   selectWithIconClass
 } from '@/components/ui/InputStyles';
 
+// Import UploadButton
+import { UploadButton } from "@/utils/uploadthing"; // Adjust path if needed
+
 export default function ChildminderProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadLoading, setUploadLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Basic profile information
   const [formData, setFormData] = useState({
@@ -82,7 +83,6 @@ export default function ChildminderProfilePage() {
   });
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -397,82 +397,6 @@ export default function ChildminderProfilePage() {
     }
   };
 
-  const handleProfilePictureClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Preview the selected image
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleUploadImage = async () => {
-    if (!imagePreview) return;
-    
-    setUploadLoading(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
-    
-    try {
-      // Convert base64 to blob
-      const response = await fetch(imagePreview);
-      const blob = await response.blob();
-      
-      // Create form data for upload
-      const formData = new FormData();
-      formData.append('profileImage', blob);
-      
-      const uploadResponse = await fetch('/api/user/profile-image', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload profile image');
-      }
-      
-      const data = await uploadResponse.json();
-      
-      // Update the profile image state
-      setProfileImage(data.imageUrl);
-      
-      // Update session with new image
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          image: data.imageUrl
-        }
-      });
-      
-      showNotification(true, '✅ Profile picture updated successfully! Your photo has been saved.');
-      setImagePreview(null);
-      // Scroll to top to ensure notification is visible
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (error) {
-      showNotification(false, 'Failed to upload profile picture. Please try again.');
-      console.error('Error uploading profile picture:', error);
-    } finally {
-      setUploadLoading(false);
-    }
-  };
-
-  const cancelImageUpload = () => {
-    setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
@@ -543,72 +467,64 @@ export default function ChildminderProfilePage() {
         <div className="md:col-span-1">
           <div className="rounded-lg bg-white p-6 shadow-md">
             <div className="mb-4 flex flex-col items-center">
-              <div 
-                onClick={handleProfilePictureClick}
-                className="relative mb-4 h-40 w-40 cursor-pointer overflow-hidden rounded-full border-4 border-gray-200 hover:opacity-90"
-              >
-                {imagePreview ? (
-                  <Image 
-                    src={imagePreview} 
-                    alt="Profile Preview" 
-                    fill 
-                    className="object-cover" 
-                  />
-                ) : profileImage ? (
+              {/* Current Profile Image Display */}
+              <div className="relative mb-4 h-40 w-40 overflow-hidden rounded-full border-4 border-gray-200">
+                {profileImage ? (
                   <Image 
                     src={profileImage} 
                     alt="Profile" 
                     fill 
                     className="object-cover" 
+                    unoptimized={!profileImage.startsWith('/')} // Assuming UploadThing URLs are absolute
+                    priority
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gray-100">
                     <FaUser className="h-20 w-20 text-gray-400" />
                   </div>
                 )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 opacity-0 transition hover:opacity-100">
-                  <FaImage className="h-10 w-10 text-white" />
-                </div>
               </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
               
-              {imagePreview && (
-                <div className="flex w-full space-x-2">
-                  <button
-                    onClick={handleUploadImage}
-                    disabled={uploadLoading}
-                    className="flex-1 rounded-md bg-violet-600 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:bg-violet-400"
-                  >
-                    {uploadLoading ? (
-                      <span className="flex items-center justify-center">
-                        <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center">
-                        <FaUpload className="mr-2 h-4 w-4" />
-                        Upload
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={cancelImageUpload}
-                    className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
+              {/* UploadThing Button */}
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={(res) => {
+                  if (res && res.length > 0) {
+                    const newImageUrl = res[0].url;
+                    setProfileImage(newImageUrl);
+                    update({
+                      ...session,
+                      user: {
+                        ...session?.user,
+                        image: newImageUrl
+                      }
+                    });
+                    showNotification(true, "✅ Profile picture updated successfully!");
+                  } else {
+                    showNotification(false, "Upload completed but no URL received.");
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  console.error(`ERROR! ${error.message}`, error);
+                  showNotification(false, `Upload Failed: ${error.message}`);
+                }}
+                appearance={{
+                  button: "ut-button:bg-violet-600 ut-button:hover:bg-violet-700 ut-button:ut-uploading:bg-violet-700/50 ut-button:transition-all ut-button:duration-300 w-full",
+                  container: "w-full flex justify-center mt-2",
+                  allowedContent: "text-gray-500 text-xs hidden",
+                }}
+                content={{
+                  button({ ready, isUploading }) {
+                    if (isUploading) return <div className="flex items-center justify-center"><FaSpinner className="animate-spin h-4 w-4 mr-2" /> Uploading...</div>;
+                    if (ready) return <div className="flex items-center justify-center"><FaUpload className="h-4 w-4 mr-2" /> Change Picture</div>;
+                    return "Getting ready...";
+                  },
+                }}
+              />
             </div>
             
             <p className="mt-4 text-center text-sm text-gray-600">
-              Upload a professional photo for your profile. Parents will see this image when searching for childminders.
+              Upload a professional photo. Max 4MB.
             </p>
           </div>
         </div>
