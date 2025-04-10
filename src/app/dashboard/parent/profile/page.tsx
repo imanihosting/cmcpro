@@ -241,9 +241,13 @@ export default function ParentProfilePage() {
         eircode: formData.address.eircode
       };
       
+      // Construct data selectively, excluding profileImage
       const dataToSubmit = {
-        ...formData,
+        name: formData.name,
+        email: formData.email, // Email is typically needed for identification or ignored by API
+        phoneNumber: formData.phoneNumber,
         address: cleanedAddress
+        // DO NOT include profileImage here
       };
 
       const response = await fetch('/api/user/profile', {

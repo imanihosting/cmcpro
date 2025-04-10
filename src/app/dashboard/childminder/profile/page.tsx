@@ -327,13 +327,37 @@ export default function ChildminderProfilePage() {
         eircode: formData.address.eircode
       };
       
+      // Construct data selectively, excluding profileImage and non-existent fields
       const dataToSubmit = {
-        ...formData,
+        name: formData.name,
+        email: formData.email, // Include email (API likely ignores or uses for identification)
+        phoneNumber: formData.phoneNumber,
+        bio: formData.bio,
+        // Childminder specific fields that EXIST in formData:
+        ageGroupsServed: formData.ageGroupsServed,
+        careTypes: formData.careTypes,
+        childrenFirstCert: formData.childrenFirstCert,
+        educationLevel: formData.educationLevel,
+        firstAidCert: formData.firstAidCert,
+        gardaVetted: formData.gardaVetted,
+        languagesSpoken: formData.languagesSpoken,
+        mealsProvided: formData.mealsProvided,
+        otherQualifications: formData.otherQualifications,
+        pickupDropoff: formData.pickupDropoff,
+        qualifications: formData.qualifications,
+        specialNeedsExp: formData.specialNeedsExp,
+        specialNeedsDetails: formData.specialNeedsDetails,
+        specialties: formData.specialties,
+        tuslaRegistered: formData.tuslaRegistered,
+        tuslaRegistrationNumber: formData.tuslaRegistrationNumber,
+        // Address object (cleaned)
         address: cleanedAddress,
+        // Type conversions for fields that EXIST in formData:
         rate: formData.rate ? parseFloat(formData.rate) : null,
         yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience.toString(), 10) : null,
         maxChildrenCapacity: formData.maxChildrenCapacity ? parseInt(formData.maxChildrenCapacity.toString(), 10) : null,
-        firstAidCertExpiry: formData.firstAidCertExpiry ? new Date(formData.firstAidCertExpiry).toISOString() : null
+        firstAidCertExpiry: formData.firstAidCertExpiry ? new Date(formData.firstAidCertExpiry).toISOString() : null,
+        // DO NOT include profileImage, location, availability, rateDetails
       };
 
       const response = await fetch('/api/user/profile', {
