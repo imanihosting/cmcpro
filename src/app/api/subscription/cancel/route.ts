@@ -66,13 +66,15 @@ export async function POST(req: Request) {
       }
     });
 
-    // Update the user's subscription status to ensure proper routing
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        subscriptionStatus: 'FREE',
-      }
-    });
+    // Update the user's subscription status only if cancelling immediately
+    if (cancelImmediately) {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          subscriptionStatus: 'FREE',
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -83,7 +85,7 @@ export async function POST(req: Request) {
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
       },
-      subscriptionStatus: 'FREE'
+      subscriptionStatus: cancelImmediately ? 'FREE' : session.user.subscriptionStatus
     });
   } catch (error: any) {
     console.error('Error canceling subscription:', error);
