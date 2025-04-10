@@ -37,6 +37,13 @@ interface Childminder {
   bio: string | null;
   image: string | null;
   location: string | null;
+  address?: {
+    streetAddress: string;
+    city: string;
+    county: string;
+    eircode: string | null;
+    formatted: string;
+  } | null;
   contact: {
     email: string;
     phoneNumber: string | null;
@@ -144,6 +151,13 @@ const mockChildminder: Childminder = {
   bio: "Experienced childminder with 7 years of experience caring for children of all ages. I provide a safe, nurturing environment where children can learn and grow.",
   image: "https://randomuser.me/api/portraits/women/68.jpg",
   location: "Dublin, Ireland",
+  address: {
+    streetAddress: "123 Main St",
+    city: "Dublin",
+    county: "Dublin",
+    eircode: "D01 ABCD",
+    formatted: "Dublin, Dublin"
+  },
   contact: {
     email: "sarah.johnson@example.com",
     phoneNumber: "+353 1 234 5678"
@@ -256,6 +270,7 @@ export default function ChildminderProfilePage({ params }: { params: { id: strin
           bio: apiData.bio,
           image: apiData.image || apiData.profileImage,
           location: apiData.location,
+          address: apiData.address || null,
           contact: {
             email: apiData.contact?.email || apiData.email,
             phoneNumber: apiData.contact?.phoneNumber || apiData.phoneNumber
@@ -523,10 +538,10 @@ export default function ChildminderProfilePage({ params }: { params: { id: strin
             {/* Basic info */}
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                {childminder.location && (
+                {(childminder.address?.formatted || childminder.location) && (
                   <div className="flex items-center">
                     <FaMapMarkerAlt className="mr-1 h-4 w-4 text-gray-400" />
-                    <span>{childminder.location}</span>
+                    <span>{childminder.address?.formatted || childminder.location}</span>
                   </div>
                 )}
                 
@@ -662,6 +677,20 @@ export default function ChildminderProfilePage({ params }: { params: { id: strin
                 <div className="flex items-center">
                   <FaPhone className="mr-2 h-5 w-5 text-gray-400" />
                   <span>{childminder.contact.phoneNumber}</span>
+                </div>
+              )}
+              
+              {childminder.address && (
+                <div>
+                  <h4 className="mb-2 text-sm font-medium text-gray-700">Address:</h4>
+                  <div className="pl-2 space-y-1 text-gray-700">
+                    <p>{childminder.address.streetAddress}</p>
+                    <p>{childminder.address.city}</p>
+                    <p>{childminder.address.county}</p>
+                    {childminder.address.eircode && (
+                      <p>Eircode: {childminder.address.eircode}</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

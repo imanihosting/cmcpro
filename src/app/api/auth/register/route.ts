@@ -7,7 +7,16 @@ import { sendWelcomeEmail } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, role } = await req.json();
+    // Extract all needed fields from the request
+    const { 
+      name, 
+      email, 
+      password, 
+      role, 
+      phone, 
+      rate, 
+      address 
+    } = await req.json();
 
     // Validate input
     if (!name || !email || !password || !role) {
@@ -37,6 +46,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // For childminders, validate additional required fields
+    if (role === User_role.childminder) {
+      if (!phone || !rate) {
+        return NextResponse.json(
+          { error: "Missing required childminder fields" },
+          { status: 400 }
+        );
+      }
+      
+      // Validate address fields
+      if (!address || !address.streetAddress || !address.city || !address.county) {
+        return NextResponse.json(
+          { error: "Missing required address fields" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     const now = new Date();
@@ -62,23 +89,67 @@ export async function POST(req: NextRequest) {
       ? "TRIALING" as User_subscriptionStatus 
       : "PENDING_SUBSCRIPTION" as User_subscriptionStatus;
 
-    // Create the user
-    const userId = uuidv4();
+    // Set up user data
+    const userData: any = {
+      id: uuidv4(),
+      name,
+      email,
+      role: role as User_role,
+      hashed_password: hashedPassword,
+      trialActivated: isTrialEnabled,
+      trialStartDate: isTrialEnabled ? now : null,
+      trialEndDate: isTrialEnabled ? trialEndDate : null,
+      subscriptionStatus,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    // Add childminder-specific fields
+    if (role === User_role.childminder) {
+      userData.phoneNumber = phone;
+      userData.rate = rate;
+      
+      // Store address in location field (as a JSON string)
+      // This provides backward compatibility until the Address model is fully deployed
+      userData.location = JSON.stringify({
+        streetAddress: address.streetAddress,
+        city: address.city,
+        county: address.county,
+        eircode: address.eircode || null
+      });
+    }
+
+    // Create the user 
     const user = await db.user.create({
-      data: {
-        id: userId,
-        name,
-        email,
-        role: role as User_role,
-        hashed_password: hashedPassword,
-        trialActivated: isTrialEnabled,
-        trialStartDate: isTrialEnabled ? now : null,
-        trialEndDate: isTrialEnabled ? trialEndDate : null,
-        subscriptionStatus,
-        createdAt: now,
-        updatedAt: now,
-      },
+      data: userData
     });
+
+    // If childminder, try to create address record
+    // This will work once the Address model is deployed
+    if (role === User_role.childminder && address) {
+      try {
+        // @ts-ignore - Ignore TypeScript error until Prisma client is regenerated
+        const addressModel = db.address;
+        if (addressModel) {
+          await addressModel.create({
+            data: {
+              id: uuidv4(),
+              userId: user.id,
+              streetAddress: address.streetAddress,
+              city: address.city,
+              county: address.county,
+              eircode: address.eircode || null,
+              createdAt: now,
+              updatedAt: now
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error creating address entry, the Address model may not exist yet:", error);
+        // If the Address model doesn't exist yet, we'll just log the error
+        // but still allow the user registration to succeed
+      }
+    }
 
     // Send welcome email
     await sendWelcomeEmail(user);

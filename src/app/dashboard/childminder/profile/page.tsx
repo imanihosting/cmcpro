@@ -46,7 +46,12 @@ export default function ChildminderProfilePage() {
     name: "",
     email: "",
     phoneNumber: "",
-    location: "",
+    address: {
+      streetAddress: "",
+      city: "",
+      county: "",
+      eircode: ""
+    },
     bio: "",
     
     // Professional profile fields
@@ -100,12 +105,93 @@ export default function ChildminderProfilePage() {
         
         const userData = await response.json();
         
+        // Process address from various formats
+        let streetAddress = "", city = "", county = "", eircode = "";
+        
+        // Parse address if it's in structured format
+        if (userData.address) {
+          // Direct assignment if values are simple strings
+          if (typeof userData.address.streetAddress === 'string' && !userData.address.streetAddress.startsWith('{')) {
+            streetAddress = userData.address.streetAddress;
+          } else {
+            // Try to parse if it looks like a JSON string
+            try {
+              if (typeof userData.address.streetAddress === 'string') {
+                const parsed = JSON.parse(userData.address.streetAddress.replace(/^{"|"}$/g, '').replace(/\\"/g, '"'));
+                streetAddress = parsed.streetAddress || '';
+              }
+            } catch (e) {
+              streetAddress = userData.address.streetAddress || '';
+            }
+          }
+
+          // City handling
+          if (typeof userData.address.city === 'string' && !userData.address.city.startsWith('"')) {
+            city = userData.address.city;
+          } else {
+            try {
+              if (typeof userData.address.city === 'string') {
+                const matches = userData.address.city.match(/"city":"([^"]+)"/);
+                city = matches && matches[1] ? matches[1] : '';
+              }
+            } catch (e) {
+              city = userData.address.city || '';
+            }
+          }
+
+          // County is usually a simple string
+          county = userData.address.county || '';
+
+          // Eircode handling
+          if (typeof userData.address.eircode === 'string' && !userData.address.eircode.startsWith('"')) {
+            eircode = userData.address.eircode;
+          } else {
+            try {
+              if (typeof userData.address.eircode === 'string') {
+                const matches = userData.address.eircode.match(/"eircode":"([^"]+)"/);
+                eircode = matches && matches[1] ? matches[1] : '';
+              }
+            } catch (e) {
+              eircode = userData.address.eircode || '';
+            }
+          }
+        } 
+        // Fallback to location string if needed
+        else if (userData.location) {
+          try {
+            // Try to parse JSON string
+            if (userData.location.startsWith('{') && userData.location.endsWith('}')) {
+              const parsedLocation = JSON.parse(userData.location);
+              streetAddress = parsedLocation.streetAddress || '';
+              city = parsedLocation.city || '';
+              county = parsedLocation.county || '';
+              eircode = parsedLocation.eircode || '';
+            } else {
+              // Simple comma-separated format
+              const parts = userData.location.split(',');
+              streetAddress = parts[0] ? parts[0].trim() : '';
+              city = parts[1] ? parts[1].trim() : '';
+              county = parts[2] ? parts[2].trim() : '';
+              eircode = parts[3] ? parts[3].trim() : '';
+            }
+          } catch (e) {
+            // If parsing fails, use whole string as streetAddress
+            streetAddress = userData.location;
+          }
+        }
+        
         // Handle potential data conversions as needed
         setFormData({
           name: userData.name || "",
           email: userData.email || "",
           phoneNumber: userData.phoneNumber || "",
-          location: userData.location || "",
+          // Use cleaned address values
+          address: {
+            streetAddress,
+            city,
+            county,
+            eircode
+          },
           bio: userData.bio || "",
           
           // Professional profile fields
@@ -145,7 +231,15 @@ export default function ChildminderProfilePage() {
           setFormData(prevData => ({
             ...prevData,
             name: session.user.name || "",
-            email: session.user.email || ""
+            email: session.user.email || "",
+            phoneNumber: session.user.phoneNumber || "",
+            address: {
+              streetAddress: session.user.address ? session.user.address.streetAddress || "" : "",
+              city: session.user.address ? session.user.address.city || "" : "",
+              county: session.user.address ? session.user.address.county || "" : "",
+              eircode: session.user.address ? session.user.address.eircode || "" : ""
+            },
+            bio: session.user.bio || ""
           }));
           setProfileImage(session.user.image || null);
         }
@@ -165,6 +259,15 @@ export default function ChildminderProfilePage() {
       setFormData(prevData => ({
         ...prevData,
         [name]: checked
+      }));
+    } else if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prevData => ({
+        ...prevData,
+        [parent]: {
+          ...(prevData as any)[parent],
+          [child]: value
+        }
       }));
     } else {
       setFormData(prevData => ({
@@ -216,8 +319,17 @@ export default function ChildminderProfilePage() {
     setErrorMessage(null);
 
     try {
+      // Make sure address values are plain strings, not JSON fragments
+      const cleanedAddress = {
+        streetAddress: formData.address.streetAddress,
+        city: formData.address.city,
+        county: formData.address.county,
+        eircode: formData.address.eircode
+      };
+      
       const dataToSubmit = {
         ...formData,
+        address: cleanedAddress,
         rate: formData.rate ? parseFloat(formData.rate) : null,
         yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience.toString(), 10) : null,
         maxChildrenCapacity: formData.maxChildrenCapacity ? parseInt(formData.maxChildrenCapacity.toString(), 10) : null,
@@ -548,21 +660,108 @@ export default function ChildminderProfilePage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="location" className="mb-1 block text-sm font-medium text-gray-700">
-                    Location
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <FaMapMarkerAlt className="h-5 w-5 text-gray-400" />
+                  <h3 className="mb-2 block text-sm font-medium text-gray-700">
+                    Address
+                  </h3>
+                  
+                  {/* Street Address */}
+                  <div className="mb-3">
+                    <label htmlFor="address.streetAddress" className="mb-1 block text-sm font-medium text-gray-700">
+                      Street Address
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <FaMapMarkerAlt className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        id="address.streetAddress"
+                        name="address.streetAddress"
+                        value={formData.address.streetAddress}
+                        onChange={handleChange}
+                        className={inputWithIconClass}
+                        placeholder="123 Main Street"
+                      />
                     </div>
+                  </div>
+                  
+                  {/* City/Town */}
+                  <div className="mb-3">
+                    <label htmlFor="address.city" className="mb-1 block text-sm font-medium text-gray-700">
+                      City/Town
+                    </label>
                     <input
                       type="text"
-                      id="location"
-                      name="location"
-                      value={formData.location}
+                      id="address.city"
+                      name="address.city"
+                      value={formData.address.city}
                       onChange={handleChange}
-                      className={inputWithIconClass}
-                      placeholder="e.g. Dublin 4, Ireland"
+                      className={textareaClass}
+                      placeholder="Dublin"
+                    />
+                  </div>
+                  
+                  {/* County */}
+                  <div className="mb-3">
+                    <label htmlFor="address.county" className="mb-1 block text-sm font-medium text-gray-700">
+                      County
+                    </label>
+                    <select
+                      id="address.county"
+                      name="address.county"
+                      value={formData.address.county}
+                      onChange={handleChange}
+                      className={selectWithIconClass}
+                    >
+                      <option value="">Select a county</option>
+                      <option value="Antrim">Antrim</option>
+                      <option value="Armagh">Armagh</option>
+                      <option value="Carlow">Carlow</option>
+                      <option value="Cavan">Cavan</option>
+                      <option value="Clare">Clare</option>
+                      <option value="Cork">Cork</option>
+                      <option value="Derry">Derry</option>
+                      <option value="Donegal">Donegal</option>
+                      <option value="Down">Down</option>
+                      <option value="Dublin">Dublin</option>
+                      <option value="Fermanagh">Fermanagh</option>
+                      <option value="Galway">Galway</option>
+                      <option value="Kerry">Kerry</option>
+                      <option value="Kildare">Kildare</option>
+                      <option value="Kilkenny">Kilkenny</option>
+                      <option value="Laois">Laois</option>
+                      <option value="Leitrim">Leitrim</option>
+                      <option value="Limerick">Limerick</option>
+                      <option value="Longford">Longford</option>
+                      <option value="Louth">Louth</option>
+                      <option value="Mayo">Mayo</option>
+                      <option value="Meath">Meath</option>
+                      <option value="Monaghan">Monaghan</option>
+                      <option value="Offaly">Offaly</option>
+                      <option value="Roscommon">Roscommon</option>
+                      <option value="Sligo">Sligo</option>
+                      <option value="Tipperary">Tipperary</option>
+                      <option value="Tyrone">Tyrone</option>
+                      <option value="Waterford">Waterford</option>
+                      <option value="Westmeath">Westmeath</option>
+                      <option value="Wexford">Wexford</option>
+                      <option value="Wicklow">Wicklow</option>
+                    </select>
+                  </div>
+                  
+                  {/* Eircode */}
+                  <div>
+                    <label htmlFor="address.eircode" className="mb-1 block text-sm font-medium text-gray-700">
+                      Eircode
+                    </label>
+                    <input
+                      type="text"
+                      id="address.eircode"
+                      name="address.eircode"
+                      value={formData.address.eircode}
+                      onChange={handleChange}
+                      className={textareaClass}
+                      placeholder="e.g. D01 F5P2"
                     />
                   </div>
                 </div>

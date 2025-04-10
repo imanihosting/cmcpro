@@ -63,6 +63,14 @@ export async function GET(request: Request, { params }: RouteParams) {
         specialties: true,
         maxChildrenCapacity: true,
         createdAt: true,
+        Address: {
+          select: {
+            streetAddress: true,
+            city: true,
+            county: true,
+            eircode: true
+          }
+        },
         RecurringAvailability: {
           select: {
             dayOfWeek: true,
@@ -134,6 +142,13 @@ export async function GET(request: Request, { params }: RouteParams) {
       bio: childminder.bio,
       image: childminder.profileImage,
       location: childminder.location,
+      address: childminder.Address ? {
+        streetAddress: childminder.Address.streetAddress,
+        city: childminder.Address.city,
+        county: childminder.Address.county,
+        eircode: childminder.Address.eircode,
+        formatted: `${childminder.Address.streetAddress}, ${childminder.Address.city}, ${childminder.Address.county}${childminder.Address.eircode ? ', ' + childminder.Address.eircode : ''}`
+      } : null,
       contact: {
         email: childminder.email,
         phoneNumber: childminder.phoneNumber,

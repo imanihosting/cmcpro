@@ -420,7 +420,9 @@ model User {
   lastMinuteRadius                            Int?                      @default(5)
   lastOnline                                  DateTime?
   Account                                     Account[]
+  Address                                     Address?
   Availability                                Availability[]
+  BackupSchedule                              BackupSchedule[]
   Booking_Booking_childminderIdToUser         Booking[]                 @relation("Booking_childminderIdToUser")
   Booking_Booking_parentIdToUser              Booking[]                 @relation("Booking_parentIdToUser")
   ChatMessage                                 ChatMessage[]
@@ -451,6 +453,7 @@ model User {
   Session                                     Session[]
   Subscription                                Subscription?
   SupportTicket                               SupportTicket[]
+  SystemBackup                                SystemBackup[]
   UserActivityLog                             UserActivityLog[]
   UserNote_UserNote_adminIdToUser             UserNote[]                @relation("UserNote_adminIdToUser")
   UserNote_UserNote_userIdToUser              UserNote[]                @relation("UserNote_userIdToUser")
@@ -627,6 +630,62 @@ model LastMinuteOneTimeSlot {
   @@index([date])
 }
 
+model Address {
+  id            String   @id
+  userId        String   @unique
+  streetAddress String   @db.VarChar(255)
+  city          String   @db.VarChar(100)
+  county        String
+  eircode       String?  @db.VarChar(8)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([county])
+  @@index([eircode])
+}
+
+model BackupSchedule {
+  id              String                   @id
+  name            String
+  frequency       BackupSchedule_frequency
+  day             Int?
+  time            String
+  retentionPeriod Int
+  isActive        Boolean                  @default(true)
+  lastRun         DateTime?
+  nextRun         DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime
+  createdBy       String?
+  User            User?                    @relation(fields: [createdBy], references: [id])
+
+  @@index([createdBy])
+  @@index([frequency])
+  @@index([isActive])
+  @@index([nextRun])
+}
+
+model SystemBackup {
+  id          String              @id
+  type        SystemBackup_type
+  status      SystemBackup_status
+  startTime   DateTime
+  endTime     DateTime?
+  size        BigInt?
+  location    String?
+  notes       String?             @db.Text
+  initiatedBy String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime
+  User        User?               @relation(fields: [initiatedBy], references: [id])
+
+  @@index([initiatedBy])
+  @@index([startTime])
+  @@index([status])
+  @@index([type])
+}
+
 enum Report_type {
   USER_BEHAVIOR
   TECHNICAL_ISSUE
@@ -716,4 +775,22 @@ enum User_subscriptionStatus {
   TRIALING
   TRIAL_EXPIRED
   PENDING_SUBSCRIPTION
+}
+
+enum SystemBackup_type {
+  MANUAL
+  SCHEDULED
+  AUTOMATIC
+}
+
+enum BackupSchedule_frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SystemBackup_status {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
 }
