@@ -55,10 +55,22 @@ export async function POST(req: NextRequest) {
         );
       }
       
-      // Validate address fields
+      // Validate address fields for childminders (required)
       if (!address || !address.streetAddress || !address.city || !address.county) {
         return NextResponse.json(
           { error: "Missing required address fields" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // For parents, validate address fields if provided (not required)
+    if (role === User_role.parent && address) {
+      // If any address field is provided, make sure the required ones (street, city, county) are all provided
+      if ((address.streetAddress || address.city || address.county) && 
+          (!address.streetAddress || !address.city || !address.county)) {
+        return NextResponse.json(
+          { error: "Please complete all address fields or leave them all empty" },
           { status: 400 }
         );
       }
@@ -108,15 +120,11 @@ export async function POST(req: NextRequest) {
     if (role === User_role.childminder) {
       userData.phoneNumber = phone;
       userData.rate = rate;
-      
-      // Store address in location field (as a JSON string)
-      // This provides backward compatibility until the Address model is fully deployed
-      userData.location = JSON.stringify({
-        streetAddress: address.streetAddress,
-        city: address.city,
-        county: address.county,
-        eircode: address.eircode || null
-      });
+    }
+    
+    // Add formatted location string for any user with address (for backward compatibility)
+    if (address && (address.streetAddress || address.city || address.county)) {
+      userData.location = `${address.streetAddress || ''}, ${address.city || ''}, ${address.county || ''}${address.eircode ? ', ' + address.eircode : ''}`;
     }
 
     // Create the user 
@@ -124,30 +132,25 @@ export async function POST(req: NextRequest) {
       data: userData
     });
 
-    // If childminder, try to create address record
-    // This will work once the Address model is deployed
-    if (role === User_role.childminder && address) {
+    // If user provided address info, create address record
+    if (address && (address.streetAddress || address.city || address.county)) {
       try {
-        // @ts-ignore - Ignore TypeScript error until Prisma client is regenerated
-        const addressModel = db.address;
-        if (addressModel) {
-          await addressModel.create({
-            data: {
-              id: uuidv4(),
-              userId: user.id,
-              streetAddress: address.streetAddress,
-              city: address.city,
-              county: address.county,
-              eircode: address.eircode || null,
-              createdAt: now,
-              updatedAt: now
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error creating address entry, the Address model may not exist yet:", error);
-        // If the Address model doesn't exist yet, we'll just log the error
-        // but still allow the user registration to succeed
+        // @ts-ignore - Use ts-ignore until Prisma client is regenerated
+        await db.address.create({
+          data: {
+            id: uuidv4(),
+            userId: user.id,
+            streetAddress: address.streetAddress || '',
+            city: address.city || '',
+            county: address.county || '',
+            eircode: address.eircode || null,
+            createdAt: now,
+            updatedAt: now
+          }
+        });
+      } catch (addressError) {
+        console.warn("Could not create Address record, it may not be fully set up:", addressError);
+        // Continue execution even if Address creation fails
       }
     }
 

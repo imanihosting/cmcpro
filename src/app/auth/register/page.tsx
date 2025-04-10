@@ -79,6 +79,14 @@ export default function RegisterPage() {
         role,
       };
 
+      // Add address for all users
+      formData.address = {
+        streetAddress,
+        city,
+        county,
+        eircode
+      };
+
       // Add childminder specific fields
       if (role === User_role.childminder) {
         if (!phone || !streetAddress || !city || !county || !rate) {
@@ -87,13 +95,14 @@ export default function RegisterPage() {
           return;
         }
         formData.phone = phone;
-        formData.address = {
-          streetAddress,
-          city,
-          county,
-          eircode
-        };
         formData.rate = parseFloat(rate);
+      } else if (role === User_role.parent) {
+        // Only validate address fields for parents if they've started filling them out
+        if ((streetAddress || city || county) && (!streetAddress || !city || !county)) {
+          setError("Please complete all address fields or leave them all empty");
+          setIsLoading(false);
+          return;
+        }
       }
 
       const response = await fetch("/api/auth/register", {
@@ -335,7 +344,135 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Childminder Specific Fields */}
+                {/* Address Fields - For all users */}
+                <div className="sm:col-span-2">
+                  <h3 className="mb-2 font-medium text-gray-700">
+                    Address {role === User_role.childminder && <span className="text-red-500">*</span>}
+                  </h3>
+                  
+                  {/* Street Address Field */}
+                  <div className="mb-3">
+                    <label
+                      htmlFor="streetAddress"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Street Address {role === User_role.childminder && <span className="text-red-500">*</span>}
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                        <FaMapMarkerAlt className="h-5 w-5" />
+                      </div>
+                      <input
+                        id="streetAddress"
+                        name="streetAddress"
+                        type="text"
+                        required={role === User_role.childminder}
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        className={inputWithIconClass}
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* City Field */}
+                  <div className="mb-3">
+                    <label
+                      htmlFor="city"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      City/Town {role === User_role.childminder && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      id="city"
+                      name="city"
+                      type="text"
+                      required={role === User_role.childminder}
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className={textareaClass}
+                      placeholder="Dublin"
+                    />
+                  </div>
+                  
+                  {/* County Field */}
+                  <div className="mb-3">
+                    <label
+                      htmlFor="county"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      County {role === User_role.childminder && <span className="text-red-500">*</span>}
+                    </label>
+                    <select
+                      id="county"
+                      name="county"
+                      required={role === User_role.childminder}
+                      value={county}
+                      onChange={(e) => setCounty(e.target.value)}
+                      className={textareaClass}
+                    >
+                      <option value="">Select a county</option>
+                      <option value="Antrim">Antrim</option>
+                      <option value="Armagh">Armagh</option>
+                      <option value="Carlow">Carlow</option>
+                      <option value="Cavan">Cavan</option>
+                      <option value="Clare">Clare</option>
+                      <option value="Cork">Cork</option>
+                      <option value="Derry">Derry</option>
+                      <option value="Donegal">Donegal</option>
+                      <option value="Down">Down</option>
+                      <option value="Dublin">Dublin</option>
+                      <option value="Fermanagh">Fermanagh</option>
+                      <option value="Galway">Galway</option>
+                      <option value="Kerry">Kerry</option>
+                      <option value="Kildare">Kildare</option>
+                      <option value="Kilkenny">Kilkenny</option>
+                      <option value="Laois">Laois</option>
+                      <option value="Leitrim">Leitrim</option>
+                      <option value="Limerick">Limerick</option>
+                      <option value="Longford">Longford</option>
+                      <option value="Louth">Louth</option>
+                      <option value="Mayo">Mayo</option>
+                      <option value="Meath">Meath</option>
+                      <option value="Monaghan">Monaghan</option>
+                      <option value="Offaly">Offaly</option>
+                      <option value="Roscommon">Roscommon</option>
+                      <option value="Sligo">Sligo</option>
+                      <option value="Tipperary">Tipperary</option>
+                      <option value="Tyrone">Tyrone</option>
+                      <option value="Waterford">Waterford</option>
+                      <option value="Westmeath">Westmeath</option>
+                      <option value="Wexford">Wexford</option>
+                      <option value="Wicklow">Wicklow</option>
+                    </select>
+                  </div>
+                  
+                  {/* Eircode Field */}
+                  <div>
+                    <label
+                      htmlFor="eircode"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Eircode
+                    </label>
+                    <input
+                      id="eircode"
+                      name="eircode"
+                      type="text"
+                      value={eircode}
+                      onChange={(e) => setEircode(e.target.value)}
+                      className={textareaClass}
+                      placeholder="e.g. D01 F5P2"
+                    />
+                    {role === User_role.parent && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Adding your Eircode helps find childminders in your area through precise location matching
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Childminder-specific fields */}
                 {role === User_role.childminder && (
                   <>
                     {/* Phone Number Field */}
@@ -387,127 +524,6 @@ export default function RegisterPage() {
                           onChange={(e) => setRate(e.target.value)}
                           className={inputWithIconClass}
                           placeholder="15.00"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Address Fields */}
-                    <div className="sm:col-span-2">
-                      <h3 className="mb-2 font-medium text-gray-700">Address <span className="text-red-500">*</span></h3>
-                      
-                      {/* Street Address Field */}
-                      <div className="mb-3">
-                        <label
-                          htmlFor="streetAddress"
-                          className="mb-1 block text-sm font-medium text-gray-700"
-                        >
-                          Street Address <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                            <FaMapMarkerAlt className="h-5 w-5" />
-                          </div>
-                          <input
-                            id="streetAddress"
-                            name="streetAddress"
-                            type="text"
-                            required
-                            value={streetAddress}
-                            onChange={(e) => setStreetAddress(e.target.value)}
-                            className={inputWithIconClass}
-                            placeholder="123 Main Street"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* City Field */}
-                      <div className="mb-3">
-                        <label
-                          htmlFor="city"
-                          className="mb-1 block text-sm font-medium text-gray-700"
-                        >
-                          City/Town <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="city"
-                          name="city"
-                          type="text"
-                          required
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          className={textareaClass}
-                          placeholder="Dublin"
-                        />
-                      </div>
-                      
-                      {/* County Field */}
-                      <div className="mb-3">
-                        <label
-                          htmlFor="county"
-                          className="mb-1 block text-sm font-medium text-gray-700"
-                        >
-                          County <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          id="county"
-                          name="county"
-                          required
-                          value={county}
-                          onChange={(e) => setCounty(e.target.value)}
-                          className={textareaClass}
-                        >
-                          <option value="">Select a county</option>
-                          <option value="Antrim">Antrim</option>
-                          <option value="Armagh">Armagh</option>
-                          <option value="Carlow">Carlow</option>
-                          <option value="Cavan">Cavan</option>
-                          <option value="Clare">Clare</option>
-                          <option value="Cork">Cork</option>
-                          <option value="Derry">Derry</option>
-                          <option value="Donegal">Donegal</option>
-                          <option value="Down">Down</option>
-                          <option value="Dublin">Dublin</option>
-                          <option value="Fermanagh">Fermanagh</option>
-                          <option value="Galway">Galway</option>
-                          <option value="Kerry">Kerry</option>
-                          <option value="Kildare">Kildare</option>
-                          <option value="Kilkenny">Kilkenny</option>
-                          <option value="Laois">Laois</option>
-                          <option value="Leitrim">Leitrim</option>
-                          <option value="Limerick">Limerick</option>
-                          <option value="Longford">Longford</option>
-                          <option value="Louth">Louth</option>
-                          <option value="Mayo">Mayo</option>
-                          <option value="Meath">Meath</option>
-                          <option value="Monaghan">Monaghan</option>
-                          <option value="Offaly">Offaly</option>
-                          <option value="Roscommon">Roscommon</option>
-                          <option value="Sligo">Sligo</option>
-                          <option value="Tipperary">Tipperary</option>
-                          <option value="Tyrone">Tyrone</option>
-                          <option value="Waterford">Waterford</option>
-                          <option value="Westmeath">Westmeath</option>
-                          <option value="Wexford">Wexford</option>
-                          <option value="Wicklow">Wicklow</option>
-                        </select>
-                      </div>
-                      
-                      {/* Eircode Field */}
-                      <div>
-                        <label
-                          htmlFor="eircode"
-                          className="mb-1 block text-sm font-medium text-gray-700"
-                        >
-                          Eircode
-                        </label>
-                        <input
-                          id="eircode"
-                          name="eircode"
-                          type="text"
-                          value={eircode}
-                          onChange={(e) => setEircode(e.target.value)}
-                          className={textareaClass}
-                          placeholder="e.g. D01 F5P2"
                         />
                       </div>
                     </div>
