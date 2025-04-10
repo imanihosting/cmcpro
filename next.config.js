@@ -28,7 +28,6 @@ const nextConfig = {
   // Configuration for API routes
   experimental: {
     serverComponentsExternalPackages: ['prisma', '@prisma/client'],
-    appDir: true,
     serverActions: {
       bodySizeLimit: '4mb',
     },

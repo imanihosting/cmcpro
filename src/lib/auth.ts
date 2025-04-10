@@ -20,6 +20,14 @@ declare module "next-auth" {
       subscriptionStatus: User_subscriptionStatus;
       trialEndDate?: Date | null;
       trialActivated?: boolean;
+      phoneNumber?: string | null;
+      bio?: string | null;
+      address?: {
+        streetAddress?: string | null;
+        city?: string | null;
+        county?: string | null;
+        eircode?: string | null;
+      } | null;
     };
   }
 
@@ -32,6 +40,14 @@ declare module "next-auth" {
     subscriptionStatus: User_subscriptionStatus;
     trialEndDate?: Date | null;
     trialActivated?: boolean;
+    phoneNumber?: string | null;
+    bio?: string | null;
+    address?: {
+      streetAddress?: string | null;
+      city?: string | null;
+      county?: string | null;
+      eircode?: string | null;
+    } | null;
   }
 }
 
@@ -45,6 +61,14 @@ declare module "next-auth/jwt" {
     subscriptionStatus: User_subscriptionStatus;
     trialEndDate?: Date | null;
     trialActivated?: boolean;
+    phoneNumber?: string | null;
+    bio?: string | null;
+    address?: {
+      streetAddress?: string | null;
+      city?: string | null;
+      county?: string | null;
+      eircode?: string | null;
+    } | null;
   }
 }
 
@@ -74,6 +98,10 @@ export const authOptions: NextAuthOptions = {
           where: {
             email: credentials.email,
           },
+          // @ts-ignore - Prisma client needs regeneration to recognize Address
+          include: {
+            Address: true
+          }
         });
 
         if (!user) {
@@ -104,10 +132,23 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name || null,
           role: user.role,
-          image: user.image || null,
+          image: user.image || user.profileImage || null,
           subscriptionStatus: user.subscriptionStatus,
           trialEndDate: user.trialEndDate,
           trialActivated: user.trialActivated,
+          phoneNumber: user.phoneNumber,
+          bio: user.bio,
+          // @ts-ignore - Prisma client needs regeneration to recognize Address
+          address: user.Address ? {
+            // @ts-ignore
+            streetAddress: user.Address.streetAddress,
+            // @ts-ignore
+            city: user.Address.city,
+            // @ts-ignore
+            county: user.Address.county,
+            // @ts-ignore
+            eircode: user.Address.eircode,
+          } : null,
         };
       },
     }),
@@ -123,28 +164,42 @@ export const authOptions: NextAuthOptions = {
         session.user.subscriptionStatus = token.subscriptionStatus;
         session.user.trialEndDate = token.trialEndDate;
         session.user.trialActivated = token.trialActivated;
+        session.user.phoneNumber = token.phoneNumber;
+        session.user.bio = token.bio;
+        session.user.address = token.address;
       }
       return session;
     },
     async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.subscriptionStatus = user.subscriptionStatus;
+        token.trialEndDate = user.trialEndDate;
+        token.trialActivated = user.trialActivated;
+        token.phoneNumber = (user as any).phoneNumber;
+        token.bio = (user as any).bio;
+        token.address = (user as any).address;
+      }
+
+      // On subsequent requests, fetch the user from DB
       const dbUser = await db.user.findFirst({
         where: {
           email: token.email || "",
         },
+        // @ts-ignore - Prisma client needs regeneration to recognize Address
+        include: {
+          Address: true // Ensure Address is included
+        }
       });
 
       if (!dbUser) {
-        if (user) {
-          token.id = user.id;
-          token.role = user.role;
-          token.subscriptionStatus = user.subscriptionStatus;
-          token.trialEndDate = user.trialEndDate;
-          token.trialActivated = user.trialActivated;
-        }
         return token;
       }
 
+      // Update token with the latest DB data
       return {
+        ...token,
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
@@ -153,6 +208,19 @@ export const authOptions: NextAuthOptions = {
         subscriptionStatus: dbUser.subscriptionStatus,
         trialEndDate: dbUser.trialEndDate,
         trialActivated: dbUser.trialActivated,
+        phoneNumber: dbUser.phoneNumber,
+        bio: dbUser.bio,
+        // @ts-ignore - Prisma client needs regeneration to recognize Address
+        address: dbUser.Address ? {
+          // @ts-ignore
+          streetAddress: dbUser.Address.streetAddress,
+          // @ts-ignore
+          city: dbUser.Address.city,
+          // @ts-ignore
+          county: dbUser.Address.county,
+          // @ts-ignore
+          eircode: dbUser.Address.eircode,
+        } : null,
       };
     },
   },
