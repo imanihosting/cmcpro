@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import * as crypto from 'crypto';
-
-// Helper function to generate a secure, time-limited URL for document access
-function generateSecureDocumentUrl(documentId: string, fileName: string, expiry = 300) { // Default 5 minutes
-  const timestamp = Math.floor(Date.now() / 1000) + expiry;
-  const hmac = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret');
-  const data = `${documentId}:${timestamp}`;
-  const signature = hmac.update(data).digest('hex');
-  
-  // Return a URL that will be validated by the download endpoint
-  return `/api/admin/documents/download?id=${documentId}&expires=${timestamp}&signature=${signature}`;
-}
 
 export async function GET(
   request: NextRequest,
@@ -64,15 +51,6 @@ export async function GET(
       );
     }
     
-    // Verify the file actually exists in the filesystem
-    const relativeFilePath = document.url;
-    const absoluteFilePath = join(process.cwd(), 'public', relativeFilePath);
-    
-    const fileExists = existsSync(absoluteFilePath);
-    
-    // Generate a secure, time-limited download URL
-    const secureDownloadUrl = generateSecureDocumentUrl(document.id, document.name);
-    
     // Format the response data
     const documentDetails = {
       id: document.id,
@@ -97,8 +75,7 @@ export async function GET(
         name: document.User_Document_reviewerIdToUser.name || 'Unknown',
         email: document.User_Document_reviewerIdToUser.email,
       } : null,
-      downloadUrl: fileExists ? secureDownloadUrl : null,
-      fileExists: fileExists,
+      downloadUrl: document.url || null,
     };
     
     // Log document view activity

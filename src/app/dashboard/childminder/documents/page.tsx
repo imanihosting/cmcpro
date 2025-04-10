@@ -21,6 +21,9 @@ import {
   FaInfoCircle
 } from "react-icons/fa";
 
+// Import UploadButton
+import { UploadButton } from "@/utils/uploadthing"; // Adjust path if needed
+
 interface Document {
   id: string;
   name: string;
@@ -35,6 +38,12 @@ interface Document {
   expirationDate: string | null;
   documentIdentifier: string | null;
   issuingAuthority: string | null;
+}
+
+interface UploadedFileData {
+  documentId: string;
+  documentUrl: string;
+  fileName: string;
 }
 
 const documentTypes = [
@@ -59,11 +68,10 @@ const documentCategories = [
 export default function DocumentsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [isSubmittingMetadata, setIsSubmittingMetadata] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -77,7 +85,7 @@ export default function DocumentsPage() {
     documentIdentifier: "",
     issuingAuthority: ""
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFileData, setUploadedFileData] = useState<UploadedFileData | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -125,8 +133,9 @@ export default function DocumentsPage() {
       documentIdentifier: "",
       issuingAuthority: ""
     });
-    setSelectedFile(null);
+    setUploadedFileData(null);
     setError(null);
+    setSuccessMessage(null);
   };
 
   const closeUploadModal = () => {
@@ -141,97 +150,63 @@ export default function DocumentsPage() {
     }));
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-      // Auto-fill name if it's empty
-      if (!uploadForm.name) {
-        const fileName = e.target.files[0].name.split('.')[0];
-        setUploadForm(prev => ({
-          ...prev,
-          name: fileName
-        }));
-      }
-    }
-  };
-
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedFile) {
-      setError('Please select a file to upload');
+    if (!uploadedFileData) {
+      setError('Please upload a file first using the button below.');
       return;
     }
     
     if (!uploadForm.name || !uploadForm.type) {
-      setError('Name and document type are required');
+      setError('Document name and type are required');
       return;
     }
     
     try {
-      setUploading(true);
+      setIsSubmittingMetadata(true);
       setError(null);
       
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('name', uploadForm.name);
-      formData.append('type', uploadForm.type);
-      formData.append('category', uploadForm.category);
-      if (uploadForm.description) {
-        formData.append('description', uploadForm.description);
-      }
-      if (uploadForm.expirationDate) {
-        formData.append('expirationDate', uploadForm.expirationDate);
-      }
-      if (uploadForm.documentIdentifier) {
-        formData.append('documentIdentifier', uploadForm.documentIdentifier);
-      }
-      if (uploadForm.issuingAuthority) {
-        formData.append('issuingAuthority', uploadForm.issuingAuthority);
-      }
+      const metadataToSubmit = { ...uploadForm };
       
-      const response = await fetch('/api/user/documents', {
-        method: 'POST',
-        body: formData
+      const response = await fetch(`/api/user/documents/${uploadedFileData.documentId}`, {
+        method: 'PUT', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(metadataToSubmit)
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload document');
+        throw new Error(errorData.error || 'Failed to update document metadata');
       }
       
-      const result = await response.json();
-      
-      // Close modal and refresh documents
-      setIsUploadModalOpen(false);
+      setSuccessMessage('Document uploaded and details saved successfully!');
+      closeUploadModal();
       fetchDocuments();
       
-      // Show success message
-      setSuccessMessage('Document uploaded successfully and is pending review');
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      
-    } catch (error: any) {
-      console.error('Error uploading document:', error);
-      setError(error.message || 'Failed to upload document. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'An unknown error occurred while saving document details');
+      console.error("Error submitting document metadata:", err);
     } finally {
-      setUploading(false);
+      setIsSubmittingMetadata(false);
     }
   };
 
   const handleDeleteDocument = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) {
+    if (!confirm('Are you sure you want to delete this document? This will also remove the file from storage.')) {
       return;
     }
     
     try {
-      const response = await fetch(`/api/user/documents?id=${id}`, {
+      const response = await fetch(`/api/user/documents/${id}`, {
         method: 'DELETE'
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete document');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete document');
       }
       
       // Remove from local state
@@ -243,9 +218,9 @@ export default function DocumentsPage() {
         setSuccessMessage(null);
       }, 5000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting document:', error);
-      setError('Failed to delete document. Please try again.');
+      setError(error.message || 'Failed to delete document. Please try again.');
       setTimeout(() => {
         setError(null);
       }, 5000);
@@ -519,192 +494,238 @@ export default function DocumentsPage() {
 
       {/* Upload Modal */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Upload Document</h2>
-              <button 
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-75 p-4 transition-opacity duration-300 ease-in-out">
+          <form onSubmit={handleUploadSubmit} className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-lg bg-white p-6 shadow-xl sm:p-8">
+            {/* Modal Header */}
+            <div className="mb-6 flex items-center justify-between border-b pb-4">
+              <h3 className="text-xl font-semibold text-gray-900">Upload New Document</h3>
+              <button
+                type="button"
                 onClick={closeUploadModal}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                disabled={isSubmittingMetadata}
               >
+                <span className="sr-only">Close</span>
                 <FaTimes className="h-5 w-5" />
               </button>
             </div>
-            
-            <form onSubmit={handleUploadSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-                  {error}
+
+            {/* Error Display */}
+            {error && (
+              <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3">
+                <p className="text-sm font-medium text-red-700">{error}</p>
+              </div>
+            )}
+
+            {/* Scrollable Form Content */} 
+            <div className="flex-grow space-y-5 overflow-y-auto pr-2"> 
+              {/* --- UPLOADTHING BUTTON SECTION --- */}
+              <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+                <label className="mb-2 block text-sm font-semibold text-gray-800">1. Select Document File</label>
+                {uploadedFileData ? (
+                  <div className="flex items-center justify-between rounded-md border border-green-300 bg-green-100 p-3">
+                    <div className="flex min-w-0 items-center">
+                      <FaCheck className="mr-2 h-5 w-5 flex-shrink-0 text-green-600" />
+                      <p className="truncate text-sm font-medium text-green-800">
+                        {uploadedFileData.fileName}
+                      </p>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setUploadedFileData(null)} 
+                      className="ml-3 flex-shrink-0 rounded bg-white p-1 text-xs font-medium text-red-600 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hover:text-red-800"
+                      disabled={isSubmittingMetadata}
+                    >
+                      Replace
+                    </button>
+                  </div>
+                ) : (
+                  <UploadButton
+                    endpoint="documentUploader"
+                    onClientUploadComplete={(res) => {
+                      if (res && res.length > 0) {
+                        console.log("Upload Res:", res);
+                        // Ensure serverData exists before accessing properties
+                        if (res[0].serverData?.documentId) {
+                          setUploadedFileData({
+                            documentId: res[0].serverData.documentId,
+                            documentUrl: res[0].serverData.documentUrl,
+                            fileName: res[0].name
+                          });
+                          // Auto-fill name if empty
+                          if (!uploadForm.name) {
+                             setUploadForm(prev => ({ ...prev, name: res[0].name.split('.').slice(0,-1).join('.') || res[0].name }));
+                          }
+                          setError(null); // Clear previous errors
+                        } else {
+                           setError("Upload succeeded but key data was missing from server response.");
+                           console.error("Missing serverData in response:", res[0]);
+                        }
+                      } else {
+                        setError("Upload succeeded but no data received from server.");
+                      }
+                    }}
+                    onUploadError={(error: Error) => {
+                      console.error(`UPLOAD ERROR! ${error.message}`, error);
+                      setError(`File Upload Failed: ${error.message}`);
+                      setUploadedFileData(null);
+                    }}
+                    appearance={{
+                      container: "w-full mt-1",
+                      allowedContent: "text-gray-500 text-xs mt-1.5"
+                    }}
+                    content={{
+                      button({ ready, isUploading }) {
+                        if (isUploading) return <div className="flex items-center justify-center"><FaSpinner className="animate-spin h-4 w-4 mr-2" /> Uploading...</div>;
+                        if (ready) return "Choose File";
+                        return "Getting ready...";
+                      },
+                    }}
+                  />
+                )}
+                <p className="mt-1.5 text-xs text-gray-500">Max 8MB. Allowed: PDF, DOCX, PNG, JPG.</p>
+              </div>
+              
+              {/* --- METADATA FORM FIELDS SECTION --- */}
+              <div className="space-y-4 border-t pt-4">
+                <label className="block text-sm font-semibold text-gray-800">2. Document Details</label>
+                {/* Name */}
+                <div>
+                  <label htmlFor="name" className="mb-1 block text-xs font-medium text-gray-600">Document Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={uploadForm.name}
+                    onChange={handleUploadFormChange}
+                    required
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                    placeholder="e.g., Garda Vetting Certificate 2024"
+                  />
                 </div>
-              )}
-              
-              <div className="rounded-md border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
-                <input
-                  id="file-upload"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  ref={fileInputRef}
-                />
-                <div 
-                  className="flex flex-col items-center justify-center cursor-pointer" 
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <FaFileUpload className="h-10 w-10 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">
-                    {selectedFile ? (
-                      <>
-                        <span className="font-semibold text-indigo-600">{selectedFile.name}</span> ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-semibold text-indigo-600">Click to upload</span> or drag and drop
-                      </>
-                    )}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    PDF, PNG, JPG, GIF up to 10MB
-                  </p>
+
+                {/* Type */}
+                <div>
+                  <label htmlFor="type" className="mb-1 block text-xs font-medium text-gray-600">Document Type <span className="text-red-500">*</span></label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={uploadForm.type}
+                    onChange={handleUploadFormChange}
+                    required
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                  >
+                    <option value="" disabled>Select type...</option>
+                    {documentTypes.map(dt => (
+                      <option key={dt.value} value={dt.value}>{dt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label htmlFor="category" className="mb-1 block text-xs font-medium text-gray-600">Category</label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={uploadForm.category}
+                    onChange={handleUploadFormChange}
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                  >
+                    {documentCategories.map(dc => (
+                      <option key={dc.value} value={dc.value}>{dc.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Description */}
+                <div>
+                  <label htmlFor="description" className="mb-1 block text-xs font-medium text-gray-600">Description (Optional)</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    rows={2}
+                    value={uploadForm.description}
+                    onChange={handleUploadFormChange}
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                    placeholder="Add any relevant details about the document"
+                  />
+                </div>
+                
+                {/* Expiration Date */}
+                <div>
+                  <label htmlFor="expirationDate" className="mb-1 block text-xs font-medium text-gray-600">Expiration Date (Optional)</label>
+                  <input
+                    type="date"
+                    id="expirationDate"
+                    name="expirationDate"
+                    value={uploadForm.expirationDate}
+                    onChange={handleUploadFormChange}
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                  />
+                </div>
+
+                {/* Document Identifier */}
+                <div>
+                  <label htmlFor="documentIdentifier" className="mb-1 block text-xs font-medium text-gray-600">Document ID/Number (Optional)</label>
+                  <input
+                    type="text"
+                    id="documentIdentifier"
+                    name="documentIdentifier"
+                    value={uploadForm.documentIdentifier}
+                    onChange={handleUploadFormChange}
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                    placeholder="e.g., Certificate number, Garda Vetting ID"
+                  />
+                </div>
+
+                {/* Issuing Authority */}
+                <div>
+                  <label htmlFor="issuingAuthority" className="mb-1 block text-xs font-medium text-gray-600">Issuing Authority (Optional)</label>
+                  <input
+                    type="text"
+                    id="issuingAuthority"
+                    name="issuingAuthority"
+                    value={uploadForm.issuingAuthority}
+                    onChange={handleUploadFormChange}
+                    disabled={isSubmittingMetadata}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-70"
+                    placeholder="e.g., National Vetting Bureau, QQI"
+                  />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Document Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={uploadForm.name}
-                  onChange={handleUploadFormChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  placeholder="e.g., First Aid Certificate"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                  Document Type *
-                </label>
-                <select
-                  name="type"
-                  id="type"
-                  value={uploadForm.type}
-                  onChange={handleUploadFormChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  required
-                >
-                  <option value="">Select document type</option>
-                  {documentTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  id="category"
-                  value={uploadForm.category}
-                  onChange={handleUploadFormChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                >
-                  {documentCategories.map(category => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  id="description"
-                  value={uploadForm.description}
-                  onChange={handleUploadFormChange}
-                  rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                  placeholder="Add any additional details about this document"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Expiration Date</label>
-                <input
-                  type="date"
-                  name="expirationDate"
-                  value={uploadForm.expirationDate}
-                  onChange={handleUploadFormChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  If this document has an expiration date, please enter it. You'll receive reminders when it's about to expire.
-                </p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Document Identifier</label>
-                <input
-                  type="text"
-                  name="documentIdentifier"
-                  value={uploadForm.documentIdentifier}
-                  onChange={handleUploadFormChange}
-                  placeholder="Certificate number, reference, etc."
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Issuing Authority</label>
-                <input
-                  type="text"
-                  name="issuingAuthority"
-                  value={uploadForm.issuingAuthority}
-                  onChange={handleUploadFormChange}
-                  placeholder="Organization that issued this document"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                />
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  onClick={closeUploadModal}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  disabled={uploading}
-                >
-                  {uploading ? (
-                    <>
-                      <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <FaFileUpload className="mr-2 h-4 w-4" />
-                      Upload
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Modal Footer */}
+            <div className="mt-6 flex flex-shrink-0 justify-end space-x-3 border-t pt-5">
+              <button
+                type="button"
+                onClick={closeUploadModal}
+                disabled={isSubmittingMetadata}
+                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:opacity-70"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!uploadedFileData || isSubmittingMetadata} 
+                className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmittingMetadata ? (
+                  <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FaFileUpload className="mr-2 h-4 w-4" /> 
+                )}
+                {isSubmittingMetadata ? "Saving Details..." : "Save Document Details"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

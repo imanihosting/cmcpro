@@ -127,6 +127,7 @@ model Document {
   name                           String
   type                           String
   url                            String
+  fileKey                        String?
   createdAt                      DateTime        @default(now())
   updatedAt                      DateTime
   category                       String?
