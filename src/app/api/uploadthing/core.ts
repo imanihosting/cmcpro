@@ -35,7 +35,7 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
       console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
+      console.log("file ufsUrl", file.ufsUrl);
 
       try {
         // Update the user's profileImage in the database
@@ -44,14 +44,14 @@ export const ourFileRouter = {
             id: metadata.userId,
           },
           data: {
-            profileImage: file.url, // Save the URL returned by UploadThing
+            profileImage: file.ufsUrl,
             updatedAt: new Date(),
           },
         });
         console.log("User profile image updated in database for userId:", metadata.userId);
 
         // Return the necessary info to the client
-        return { uploadedBy: metadata.userId, imageUrl: file.url };
+        return { uploadedBy: metadata.userId, imageUrl: file.ufsUrl };
 
       } catch (dbError) {
         console.error("Database update failed after upload:", dbError);
@@ -60,7 +60,7 @@ export const ourFileRouter = {
         // For now, we'll still return success to the client but log the error.
         // Throwing an error here might be better to signal failure more clearly.
         // throw new UploadThingError("Failed to update database after upload."); 
-        return { uploadedBy: metadata.userId, imageUrl: file.url, dbError: "Failed to update profile image in database." };
+        return { uploadedBy: metadata.userId, imageUrl: file.ufsUrl, dbError: "Failed to update profile image in database." };
       }
     }),
 } satisfies FileRouter;
