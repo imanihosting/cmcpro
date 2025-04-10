@@ -16,7 +16,8 @@ import {
   FaHeart, 
   FaRegHeart,
   FaArrowLeft,
-  FaSpinner
+  FaSpinner,
+  FaIdCard
 } from 'react-icons/fa';
 
 // Days of week for availability display
@@ -666,29 +667,53 @@ export default function ChildminderProfilePage({ params }: { params: { id: strin
           
           {/* Contact information */}
           <div className="rounded-lg bg-white p-6 shadow">
-            <h3 className="mb-4 text-lg font-medium text-gray-900">Contact Information</h3>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <FaEnvelope className="mr-2 h-5 w-5 text-gray-400" />
-                <span>{childminder.contact.email}</span>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 flex items-center">
+              <FaIdCard className="mr-2 h-5 w-5 text-violet-500" />
+              Contact Information
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Email:</h4>
+                <div className="flex items-center pl-2">
+                  <FaEnvelope className="mr-2 h-5 w-5 text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-800">{childminder.contact.email}</span>
+                </div>
               </div>
               
               {childminder.contact.phoneNumber && (
-                <div className="flex items-center">
-                  <FaPhone className="mr-2 h-5 w-5 text-gray-400" />
-                  <span>{childminder.contact.phoneNumber}</span>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Phone:</h4>
+                  <div className="flex items-center pl-2">
+                    <FaPhone className="mr-2 h-5 w-5 text-gray-500 flex-shrink-0" />
+                    <span className="text-gray-800">{childminder.contact.phoneNumber}</span>
+                  </div>
                 </div>
               )}
               
               {childminder.address && (
-                <div>
-                  <h4 className="mb-2 text-sm font-medium text-gray-700">Address:</h4>
-                  <div className="pl-2 space-y-1 text-gray-700">
-                    <p>{childminder.address.streetAddress}</p>
-                    <p>{childminder.address.city}</p>
-                    <p>{childminder.address.county}</p>
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                    <FaMapMarkerAlt className="mr-2 h-5 w-5 text-gray-500" />
+                    Address:
+                  </h4>
+                  <div className="pl-2 space-y-2 text-gray-800">
+                    <div className="flex">
+                      <span className="w-24 text-gray-600 flex-shrink-0">Street:</span>
+                      <span>{childminder.address.streetAddress}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="w-24 text-gray-600 flex-shrink-0">City/Town:</span>
+                      <span>{childminder.address.city}</span>
+                    </div>
+                    <div className="flex">
+                      <span className="w-24 text-gray-600 flex-shrink-0">County:</span>
+                      <span>{childminder.address.county}</span>
+                    </div>
                     {childminder.address.eircode && (
-                      <p>Eircode: {childminder.address.eircode}</p>
+                      <div className="flex">
+                        <span className="w-24 text-gray-600 flex-shrink-0">Eircode:</span>
+                        <span>{childminder.address.eircode}</span>
+                      </div>
                     )}
                   </div>
                 </div>
