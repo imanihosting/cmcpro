@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FaEnvelope, FaLock, FaSpinner, FaBaby, FaTools } from "react-icons/fa";
+import { FcGoogle } from 'react-icons/fc';
 import { inputWithIconClass, checkboxClass } from '@/components/ui/InputStyles';
 import Logo from "@/components/Logo";
 
@@ -360,6 +361,28 @@ export default function LoginPage() {
                 </button>
               </div>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Sign-in Button */}
+            <div>
+              <button
+                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-3 px-4 font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70"
+              >
+                <FcGoogle className="mr-2 h-5 w-5" />
+                Sign in with Google
+              </button>
+            </div>
           </div>
           
           <div className="mt-6 text-center text-sm">

@@ -103,14 +103,6 @@ Manage the current user's profile.
 - `PATCH`: Update profile information
   - Accepts various profile fields like bio, contact info, etc.
 
-### `/api/user/profile-image`
-Manage the user's profile image.
-
-**Methods**:
-- `POST`: Upload a new profile image
-  - Supports image upload with validation
-- `DELETE`: Remove the current profile image
-
 ### `/api/user/password`
 Change the current user's password.
 
@@ -633,13 +625,20 @@ Utility endpoint to fix subscription status issues.
 
 ## Documents & Compliance
 
-### `/api/user/documents`
-Manage user documents.
+**Note:** Document and image uploads (e.g., profile pictures) are now handled directly by the frontend using UploadThing components (`<UploadButton>`, `<UploadDropzone>`). These components interact with the `/api/uploadthing` endpoint managed by the `uploadthing` library, utilizing the file routers defined in `src/app/api/uploadthing/core.ts` (`imageUploader`, `documentUploader`). The endpoints below are for managing the *metadata* associated with documents after they have been uploaded via UploadThing, or for deleting documents.
+
+### `/api/user/documents/[documentId]`
+Manage metadata for a specific document or delete it.
 
 **Methods**:
-- `GET`: List user documents
-- `POST`: Upload a new document
-  - Accepts document files with validation
+- `PUT`: Update document metadata (e.g., name, description). This should be called after a document is successfully uploaded via UploadThing to save its details to the database.
+  - **Body**: `{ name: string, description?: string }`
+  - **Returns**: Updated document record.
+- `DELETE`: Delete a document record and its associated file.
+  - **Important**: This requires a two-step process:
+    1. Delete the file from UploadThing storage using the `fileKey`. (**TODO**: Implement UploadThing deletion logic in the backend endpoint).
+    2. Delete the document record from the database.
+  - **Returns**: Success message or error.
 
 ### `/api/admin/documents`
 Admin management of documents.

@@ -20,6 +20,7 @@ import {
   FaCheck,
   FaInfoCircle
 } from "react-icons/fa";
+import { FcGoogle } from 'react-icons/fc';
 import {
   inputWithIconClass,
   textareaClass,
@@ -574,6 +575,28 @@ export default function RegisterPage() {
                 </button>
               </div>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or register with</span>
+              </div>
+            </div>
+
+            {/* Google Sign-up Button */}
+            <div>
+              <button
+                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                disabled={isLoading}
+                className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white py-3 px-4 font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70"
+              >
+                <FcGoogle className="mr-2 h-5 w-5" />
+                Register with Google
+              </button>
+            </div>
           </div>
         </div>
 
