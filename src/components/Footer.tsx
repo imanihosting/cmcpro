@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
-import Logo from "@/components/Logo";
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -11,7 +11,12 @@ export default function Footer() {
         <div className="flex flex-col items-center text-center">
           <div className="mb-6">
             <Link href="/" className="mb-3 flex justify-center">
-              <Logo />
+              <Image 
+                src="/images/footer-logo.png" 
+                alt="ChildminderConnect Footer Logo"
+                width={200}
+                height={35}
+              />
             </Link>
             <p className="mb-4 text-sm sm:text-base">
               Connecting parents with trusted childminders in your local area.
