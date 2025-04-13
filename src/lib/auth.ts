@@ -280,7 +280,11 @@ export const sendPasswordResetEmail = async (email: string) => {
     const content = `
       <p>You have requested to reset your password.</p>
       <p>Click the button below to reset your password:</p>
-      <p><a href="${resetLink}" style="display: inline-block; background-color: #7c3aed; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="${resetLink}" style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+      </div>
+      <p>If the button above doesn't work, you can also copy and paste this link into your browser:</p>
+      <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 4px;"><a href="${resetLink}">${resetLink}</a></p>
       <p>If you did not request this password reset, please ignore this email.</p>
       <p>This link will expire in 1 hour.</p>
     `;

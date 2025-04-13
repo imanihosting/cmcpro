@@ -60,9 +60,11 @@ export async function POST(req: NextRequest) {
           <h1>Reset Your Password</h1>
           <p>Hello ${user.name || 'there'},</p>
           <p>You recently requested to reset your password for your Childminder Connect account. Click the button below to reset it:</p>
-          <p style="text-align: center; margin: 25px 0;">
-            <a href="${resetLink}" style="background-color: #0070f3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
-          </p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${resetLink}" style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+          </div>
+          <p>If the button above doesn't work, you can also copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 4px;"><a href="${resetLink}">${resetLink}</a></p>
           <p>If you did not request a password reset, please ignore this email or contact support if you have concerns.</p>
           <p>This link will expire in 24 hours.</p>
           <p>Best regards,<br>The Childminder Connect Team</p>
