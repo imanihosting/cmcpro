@@ -185,17 +185,88 @@ async function sendExpirationNotification(
         subject: title,
         text: message,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>${title}</h2>
-            <p>${message}</p>
-            <p>Document Details:</p>
-            <ul>
-              <li><strong>Name:</strong> ${document.name}</li>
-              <li><strong>Type:</strong> ${document.type}</li>
-              <li><strong>Expiration Date:</strong> ${document.expirationDate.toLocaleDateString()}</li>
-            </ul>
-            <p>Please log in to your account to upload a renewed document.</p>
-          </div>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+              }
+              .header {
+                background-color: #7c3aed;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px 5px 0 0;
+              }
+              .logo {
+                display: flex;
+                align-items: center;
+              }
+              .logo-icon {
+                width: 32px;
+                height: 32px;
+                margin-right: 10px;
+              }
+              .logo-text {
+                color: white;
+                font-weight: bold;
+                font-size: 20px;
+              }
+              .content {
+                padding: 20px;
+              }
+              .info {
+                background-color: #f3f4f6;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 15px;
+              }
+              .footer {
+                margin-top: 20px;
+                font-size: 12px;
+                color: #666;
+                text-align: center;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">
+                  <img class="logo-icon" src="${process.env.NEXT_PUBLIC_APP_URL}/images/logo.svg" alt="ChildminderConnect Logo" />
+                  <span class="logo-text">ChildminderConnect</span>
+                </div>
+              </div>
+              <div class="content">
+                <h2>${title}</h2>
+                <p>${message}</p>
+                <div class="info">
+                  <p><strong>Document Details:</strong></p>
+                  <ul>
+                    <li><strong>Name:</strong> ${document.name}</li>
+                    <li><strong>Type:</strong> ${document.type}</li>
+                    <li><strong>Expiration Date:</strong> ${document.expirationDate.toLocaleDateString()}</li>
+                  </ul>
+                </div>
+                <p>Please log in to your account to upload a renewed document.</p>
+                <p>Thank you,<br>The Childminder Connect Team</p>
+              </div>
+              <div class="footer">
+                <p>This is an automated message. Please do not reply to this email.</p>
+                <p>&copy; ${new Date().getFullYear()} Childminder Connect. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `
       });
     }

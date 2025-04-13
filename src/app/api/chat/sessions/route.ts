@@ -146,17 +146,31 @@ async function sendAdminNotificationEmail(chatSession: any, user: any) {
           border-radius: 5px;
         }
         .header {
-          background-color: #4f46e5;
+          background-color: #7c3aed;
           color: white;
           padding: 15px 20px;
           border-radius: 5px 5px 0 0;
+        }
+        .logo {
+          display: flex;
+          align-items: center;
+        }
+        .logo-icon {
+          width: 32px;
+          height: 32px;
+          margin-right: 10px;
+        }
+        .logo-text {
+          color: white;
+          font-weight: bold;
+          font-size: 20px;
         }
         .content {
           padding: 20px;
         }
         .button {
           display: inline-block;
-          background-color: #4f46e5;
+          background-color: #7c3aed;
           color: white;
           padding: 10px 20px;
           text-decoration: none;
@@ -180,9 +194,13 @@ async function sendAdminNotificationEmail(chatSession: any, user: any) {
     <body>
       <div class="container">
         <div class="header">
-          <h2>New Live Chat Request</h2>
+          <div class="logo">
+            <img class="logo-icon" src="${process.env.NEXT_PUBLIC_APP_URL}/images/logo.svg" alt="ChildminderConnect Logo" />
+            <span class="logo-text">ChildminderConnect</span>
+          </div>
         </div>
         <div class="content">
+          <h2>New Live Chat Request</h2>
           <p>A new chat session has been initiated${user ? ` by ${user.name || user.email}` : ` by a visitor`}.</p>
           
           <div class="info">
@@ -194,11 +212,11 @@ async function sendAdminNotificationEmail(chatSession: any, user: any) {
           
           <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/admin/chat" class="button">Respond to Chat</a>
           
-          <p>Thank you,<br>ChildminderConnect Platform</p>
+          <p>Thank you,<br>The Childminder Connect Team</p>
         </div>
         <div class="footer">
           <p>This is an automated message. Please do not reply to this email.</p>
-          <p>&copy; ${new Date().getFullYear()} ChildminderConnect. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} Childminder Connect. All rights reserved.</p>
         </div>
       </div>
     </body>

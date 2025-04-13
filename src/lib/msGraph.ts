@@ -176,8 +176,8 @@ export async function sendNotificationEmail(user: User, subject: string, content
           align-items: center;
         }
         .logo-icon {
-          width: 28px;
-          height: 28px;
+          width: 32px;
+          height: 32px;
           margin-right: 10px;
         }
         .logo-text {
@@ -200,7 +200,7 @@ export async function sendNotificationEmail(user: User, subject: string, content
       <div class="container">
         <div class="header">
           <div class="logo">
-            <img class="logo-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48IS0tIUZvbnQgQXdlc29tZSBGcmVlIDYuNS4xIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlL2ZyZWUgQ29weXJpZ2h0IDIwMjQgRm9udGljb25zLCBJbmMuLS0+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0zMjAgMzUwLjZjLTYuNCA1LjEtMTUuMiA2LjY1LTIzLjIgNC4xMUMyODQgMzUwLjEgMjY3LjcgMzQ0LjkgMjU2IDMzNC43djE3LjMzYzAgNC40NDgtMy41ODQgOC4wMy04IDguMDNoLTY0Yy00LjQxNiAwLTgtMy41ODItOC04VjE2MGMwLTQuNDE4IDMuNTg0LTggOC04aDY0YzQuNDE2IDAgOCAzLjU4MiA4IDh2MTIxLjVjLjI4MTMtLjYyNTIgLjUzMTMtMS4yNSAuODQzOC0xLjg3NUM2My45OSAxOTAuNCAxOTYuOCAzOC4wNCAxODcuNSAzNy41OWM1OS4zLTExLjMgMTIwLjggMi45OTQgMTc1LjQgNTAuNDdsMTIuNzUgMTEuMWM0LjM0OSAzLjc2OSA0LjgyNSAxMC40MiAxLjA1NSAxNC43NmMtMy43NSA0LjM5OS0xMC4zOSA0Ljg3NC0xNC43NiAxLjA1NkwzNDkuMyAxMDQuMWMtMTEuNTgtOS41MzEtMjMuNjMtMTcuMjEtMzYtMjMuMTVjLTQzLjkyIDE0LjkyLTgzLjg2IDQyLjk0LTExNy4xIDgyLjM5Yy0yOC29tLTM0LjA1IDM1LjEyQTM0MS4zNSAzNDEuMzUgMCA1ms3Ni40MzhjNzguOTdzMjg1LjEtODUuMDQgMzAzLjItMTI1LjFjLTYuMDA2LTQ5LjgtMzAuNTktOTUuMzEtNzEuMjgtMTI3LjkDLTEuOTQtMS41ODQtMi43MjUtNC4zNzUtMS4yMzItNi4yMDNjMTIuMTYtMTQuODggMzUuNTktMTEuNzQgNDMuODEgNC42NTZDNDc0LjgxIDE2My4xIDQ5MCAyMTEuMiA0OTAgMjYwLjAxYzAgODguMzgtNzEuNjkgMTYzLjM5LTE2NC4yIDE2My4zOWMtMzAuMjYgMC01OC4zMS04LjU2Mi04My43NC0yMi44M0MyMjUuMSA0MDcuMyAyMDggNDExLjggMTk0LjkgNDAzLjJjLTEzLTguMzQ0LTE1LjM3LTI4LjMxLTcuODQ0LTQzLjFDMjAzLjggMzM1LjUgMjM2LjYgMzMzLjEgMjU2IDM0MS43djY0LjZjLTQxLjg3LTExLjI1LTc2LjMxLTQxLjA0LTkzLjQ2LTgxLjJDMTE3LjggMjgwLjggOTIuMzcgMjQxLjcgODAuNjggMTk2LjVjLTEuMjUtNC44MTIgMS43MTktOS43MTkgNi41MzEtMTEgNC44MTktMS4yMTkgOS43NSAxLjc4MSAxMSA2LjU5NEM5Ni43NCAyMDMuNCAxMDMuOSAyMTQuNiAxMTIuMiAyMjQuNmMuODEyNSAzLjA5NCAxLjYwMyA2LjIwMyAyLjUzMSA5LjI2NmMuMTk5MiAuNjc1OCAuNTExNyAxLjI2NiAuNzQ5OCAxLjkzOGMxLjAyIDMuMDk0IDIuOSA1LjgxMiA0LjEwOSA4LjgyOGEyMjguMDQgMjI4LjA0IDAgMCAwIDUuODEzIDE0LjAzYzEuMTggMi41NjMgMi41NzQgNC45ODggMy44NzMgNy40NjlhMS4wMSAxLjAxIDAgMCAxIC4xNDg0IC4yNDIyYy4xNzk3IC4zMzk4IC4yNjE3IC42OTkyIC40NjA5IDEuMDM5YTI0MC40MiAyNDAuNDIgMCAwIDAgNzkuNzMgOTMuMDZjMS4yOTMgLjgyMDMgMi44MTYgMS4xNjggNC4zMjQgMS40MThjLjI0MjIgLjAzOTEgLjQ4ODMgLjEwOTQgLjcwMzEgLjE0ODRjMS4yMiAuMTc5NyAyLjQzICjE5NyAzLjYzMyAuMzM5OGExMzYuMzYgMTM2LjM2IDAgMCAwinQwNy4yIDF2LTM3LjI3Yy01LjYwOSAzLjcwMy0xMS4yNSA3LjM0NC0xNi4xOCAxMS40MUMzMjguOSAzMzkgMzI1LjcgMzQ2LjEgMzIwIDM1MC42eiIvPjwvc3ZnPg==" alt="Baby Icon" />
+            <img class="logo-icon" src="${process.env.NEXT_PUBLIC_APP_URL}/images/logo.svg" alt="ChildminderConnect Logo" />
             <span class="logo-text">ChildminderConnect</span>
           </div>
         </div>
