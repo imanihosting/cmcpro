@@ -15,7 +15,13 @@ export async function POST(req: NextRequest) {
       role, 
       phone, 
       rate, 
-      address 
+      address,
+      // Extract certification fields
+      firstAidCertified,
+      childrenFirstCertified,
+      gardaVetted,
+      eccLevel5,
+      tuslaRegistered
     } = await req.json();
 
     // Validate input
@@ -120,6 +126,13 @@ export async function POST(req: NextRequest) {
     if (role === User_role.childminder) {
       userData.phoneNumber = phone;
       userData.rate = rate;
+      // Use the field names that Prisma currently recognizes
+      userData.firstAidCert = firstAidCertified || false; // Map new frontend name to old database field
+      userData.childrenFirstCert = childrenFirstCertified || false; // Map new frontend name to old database field
+      userData.gardaVetted = gardaVetted || false; // This one seems to be recognized
+      userData.tuslaRegistered = tuslaRegistered || false; // This one should be recognized
+      // Remove eccLevel5 for now since it's not recognized by Prisma yet
+      // userData.eccLevel5 = eccLevel5 || false;
     }
     
     // Add formatted location string for any user with address (for backward compatibility)

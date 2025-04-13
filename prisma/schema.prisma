@@ -127,7 +127,6 @@ model Document {
   name                           String
   type                           String
   url                            String
-  fileKey                        String?
   createdAt                      DateTime        @default(now())
   updatedAt                      DateTime
   category                       String?
@@ -141,6 +140,7 @@ model Document {
   issuingAuthority               String?
   lastReminderDate               DateTime?
   reminderSent                   Boolean         @default(false)
+  fileKey                        String?         @db.VarChar(255)
   User_Document_reviewerIdToUser User?           @relation("Document_reviewerIdToUser", fields: [reviewerId], references: [id])
   User_Document_userIdToUser     User            @relation("Document_userIdToUser", fields: [userId], references: [id])
 
@@ -420,6 +420,8 @@ model User {
   lastMinuteAvailable                         Boolean                   @default(false)
   lastMinuteRadius                            Int?                      @default(5)
   lastOnline                                  DateTime?
+  childrenFirstCertified                      Boolean?                  @default(false)
+  eccLevel5                                   Boolean?                  @default(false)
   Account                                     Account[]
   Address                                     Address?
   Availability                                Availability[]

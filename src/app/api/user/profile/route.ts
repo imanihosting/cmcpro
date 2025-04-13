@@ -64,7 +64,8 @@ export async function GET(req: NextRequest) {
       specialties: true,
       tuslaRegistered: true,
       tuslaRegistrationNumber: true,
-      yearsOfExperience: true
+      yearsOfExperience: true,
+      eccLevel5: true
     } : {};
 
     const user = await prisma.user.findUnique({
@@ -83,10 +84,37 @@ export async function GET(req: NextRequest) {
     }
 
     // Extract and rename address for easier client-side consumption
-    const responseData = {
+    const responseData: any = {
       ...user,
       address: user.Address || null
     };
+
+    // Map old field names to new field names for the frontend
+    if (userRole === 'childminder') {
+      // If the old fields exist in the response, map them to the new field names
+      if ('firstAidCert' in user && user.firstAidCert !== null) {
+        responseData.firstAidCertified = user.firstAidCert;
+      }
+      if ('childrenFirstCert' in user && user.childrenFirstCert !== null) {
+        responseData.childrenFirstCertified = user.childrenFirstCert;
+      }
+      // Make sure tuslaRegistered is properly mapped
+      if ('tuslaRegistered' in user && user.tuslaRegistered !== null) {
+        responseData.tuslaRegistered = user.tuslaRegistered;
+      }
+      // Keep original field for reference but make it non-enumerable
+      if ('firstAidCert' in responseData && 'childrenFirstCert' in responseData) {
+        Object.defineProperties(responseData, {
+          firstAidCert: { enumerable: false, value: responseData.firstAidCert },
+          childrenFirstCert: { enumerable: false, value: responseData.childrenFirstCert },
+        });
+      }
+      
+      // Now that eccLevel5 is selected, ensure it has a boolean value
+      if (!('eccLevel5' in responseData) || responseData.eccLevel5 === null) {
+        responseData.eccLevel5 = false;
+      }
+    }
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -123,7 +151,35 @@ export async function PUT(req: NextRequest) {
     }
 
     // Extract address data from the request
-    const { email, address, ...updatableData } = data;
+    const { email, address, firstAidCertified, childrenFirstCertified, eccLevel5, tuslaRegistered, ...updatableData } = data;
+
+    // Make a copy of the incoming checkbox values for our response
+    // This ensures we send back what the user selected even if it can't be saved to DB
+    const checkboxValues = {
+      firstAidCertified,
+      childrenFirstCertified,
+      tuslaRegistered,
+      eccLevel5
+    };
+
+    // Map the new field names to the old ones Prisma recognizes
+    if (firstAidCertified !== undefined) {
+      updatableData.firstAidCert = firstAidCertified;
+    }
+    
+    if (childrenFirstCertified !== undefined) {
+      updatableData.childrenFirstCert = childrenFirstCertified;
+    }
+    
+    // We need to explicitly include tuslaRegistered in updatableData
+    if (tuslaRegistered !== undefined) {
+      updatableData.tuslaRegistered = tuslaRegistered;
+    }
+    
+    // The column does exist in the database, so we should save it
+    if (eccLevel5 !== undefined) {
+      updatableData.eccLevel5 = eccLevel5;
+    }
 
     // Format location string for backward compatibility
     if (address) {
@@ -284,10 +340,15 @@ export async function PUT(req: NextRequest) {
     });
 
     // Format the response to include address in more accessible way
-    const responseData = {
+    const responseData: any = {
       ...userWithAddress,
       address: userWithAddress?.Address || null
     };
+
+    // Add back any new fields that may not exist in the database yet
+    if (eccLevel5 !== undefined) {
+      responseData.eccLevel5 = eccLevel5;
+    }
 
     // Send profile update notification
     await sendProfileUpdateNotification(responseData as any, 'PROFILE');

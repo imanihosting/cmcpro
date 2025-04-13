@@ -18,14 +18,16 @@ import {
   FaExclamationTriangle,
   FaShieldAlt,
   FaCheck,
-  FaInfoCircle
+  FaInfoCircle,
+  FaFirstAid,
+  FaCertificate
 } from "react-icons/fa";
 import { FcGoogle } from 'react-icons/fc';
 import {
   inputWithIconClass,
   textareaClass,
   textareaWithIconClass,
-  checkboxClass
+  checkboxClass,
 } from '@/components/ui/InputStyles';
 import Logo from "@/components/Logo";
 import { useSession } from "next-auth/react";
@@ -43,6 +45,14 @@ export default function RegisterPage() {
   const [eircode, setEircode] = useState("");
   const [rate, setRate] = useState("");
   const [role, setRole] = useState<User_role>(User_role.parent);
+
+  // New state for childminder certifications
+  const [firstAidCertified, setFirstAidCertified] = useState(false);
+  const [childrenFirstCertified, setChildrenFirstCertified] = useState(false);
+  const [gardaVetted, setGardaVetted] = useState(false);
+  const [eccLevel5, setEccLevel5] = useState(false);
+  const [tuslaRegistered, setTuslaRegistered] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSafetyNotice, setShowSafetyNotice] = useState(false);
@@ -97,6 +107,12 @@ export default function RegisterPage() {
         }
         formData.phone = phone;
         formData.rate = parseFloat(rate);
+        // Add certification flags
+        formData.firstAidCertified = firstAidCertified;
+        formData.childrenFirstCertified = childrenFirstCertified;
+        formData.gardaVetted = gardaVetted;
+        formData.eccLevel5 = eccLevel5;
+        formData.tuslaRegistered = tuslaRegistered;
       } else if (role === User_role.parent) {
         // Only validate address fields for parents if they've started filling them out
         if ((streetAddress || city || county) && (!streetAddress || !city || !county)) {
@@ -527,6 +543,89 @@ export default function RegisterPage() {
                           placeholder="15.00"
                         />
                       </div>
+                    </div>
+
+                    {/* Certifications/Checks */}
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Certifications & Checks (Optional)
+                      </label>
+                      <div className="space-y-3">
+                        {/* First Aid */}
+                        <div className="flex items-center">
+                          <input
+                            id="firstAidCertified"
+                            name="firstAidCertified"
+                            type="checkbox"
+                            checked={firstAidCertified}
+                            onChange={(e) => setFirstAidCertified(e.target.checked)}
+                            className={checkboxClass}
+                          />
+                          <label htmlFor="firstAidCertified" className="ml-2 block text-sm text-gray-700 flex items-center">
+                            <FaFirstAid className="mr-2 h-4 w-4 text-red-500" /> First Aid Certified
+                          </label>
+                        </div>
+                        {/* Children First */}
+                        <div className="flex items-center">
+                          <input
+                            id="childrenFirstCertified"
+                            name="childrenFirstCertified"
+                            type="checkbox"
+                            checked={childrenFirstCertified}
+                            onChange={(e) => setChildrenFirstCertified(e.target.checked)}
+                            className={checkboxClass}
+                          />
+                          <label htmlFor="childrenFirstCertified" className="ml-2 block text-sm text-gray-700 flex items-center">
+                            <FaCertificate className="mr-2 h-4 w-4 text-blue-500" /> Children First Trained
+                          </label>
+                        </div>
+                        {/* Garda Vetting */}
+                        <div className="flex items-center">
+                          <input
+                            id="gardaVetted"
+                            name="gardaVetted"
+                            type="checkbox"
+                            checked={gardaVetted}
+                            onChange={(e) => setGardaVetted(e.target.checked)}
+                            className={checkboxClass}
+                          />
+                          <label htmlFor="gardaVetted" className="ml-2 block text-sm text-gray-700 flex items-center">
+                            <FaShieldAlt className="mr-2 h-4 w-4 text-green-500" /> Garda Vetted
+                          </label>
+                        </div>
+                        {/* ECC Level 5 */}
+                        <div className="flex items-center">
+                          <input
+                            id="eccLevel5"
+                            name="eccLevel5"
+                            type="checkbox"
+                            checked={eccLevel5}
+                            onChange={(e) => setEccLevel5(e.target.checked)}
+                            className={checkboxClass}
+                          />
+                          <label htmlFor="eccLevel5" className="ml-2 block text-sm text-gray-700 flex items-center">
+                            <FaCertificate className="mr-2 h-4 w-4 text-purple-500" /> ECCE Level 5+ Qualification
+                          </label>
+                        </div>
+                        {/* Tusla Registered */}
+                        <div className="flex items-center">
+                          <input
+                            id="tuslaRegistered"
+                            name="tuslaRegistered"
+                            type="checkbox"
+                            checked={tuslaRegistered}
+                            onChange={(e) => setTuslaRegistered(e.target.checked)}
+                            className={checkboxClass}
+                          />
+                          <label htmlFor="tuslaRegistered" className="ml-2 block text-sm text-gray-700 flex items-center">
+                            <FaCertificate className="mr-2 h-4 w-4 text-teal-500" /> Tusla Registered
+                          </label>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-500">
+                        <FaInfoCircle className="inline mr-1 mb-0.5 h-3 w-3" />
+                        Providing this information helps build trust with parents. You can manage documentation in your profile later.
+                      </p>
                     </div>
                   </>
                 )}

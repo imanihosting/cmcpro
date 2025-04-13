@@ -99,8 +99,8 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Email</h3>
                   <p className="mt-1 text-gray-600">
-                    <a href="mailto:info@childminderconnect.com" className="hover:text-indigo-600">
-                      info@childminderconnect.com
+                    <a href="mailto:support@childminderconnect.com" className="hover:text-indigo-600">
+                      support@childminderconnect.com
                     </a>
                   </p>
                   <p className="text-sm text-gray-500">We aim to respond within 24 hours</p>

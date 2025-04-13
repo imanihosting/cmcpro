@@ -66,14 +66,15 @@ export default function ChildminderProfilePage() {
     careTypes: [], // Will store as JSON array
     
     // Certifications and credentials
-    childrenFirstCert: false,
-    firstAidCert: false,
+    childrenFirstCertified: false,
+    firstAidCertified: false,
     firstAidCertExpiry: "",
     gardaVetted: false,
     tuslaRegistered: false,
     tuslaRegistrationNumber: "",
     educationLevel: "",
     otherQualifications: "",
+    eccLevel5: false,
     
     // Additional services
     mealsProvided: false,
@@ -205,14 +206,15 @@ export default function ChildminderProfilePage() {
           careTypes: userData.careTypes || [],
           
           // Certifications and credentials
-          childrenFirstCert: userData.childrenFirstCert || false,
-          firstAidCert: userData.firstAidCert || false,
+          childrenFirstCertified: userData.childrenFirstCertified || false,
+          firstAidCertified: userData.firstAidCertified || false,
           firstAidCertExpiry: userData.firstAidCertExpiry ? new Date(userData.firstAidCertExpiry).toISOString().split('T')[0] : "",
           gardaVetted: userData.gardaVetted || false,
           tuslaRegistered: userData.tuslaRegistered || false,
           tuslaRegistrationNumber: userData.tuslaRegistrationNumber || "",
           educationLevel: userData.educationLevel || "",
           otherQualifications: userData.otherQualifications || "",
+          eccLevel5: userData.eccLevel5 || false,
           
           // Additional services
           mealsProvided: userData.mealsProvided || false,
@@ -252,27 +254,21 @@ export default function ChildminderProfilePage() {
   }, [status, session, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    const fieldName = name as keyof typeof formData;
     
     if (type === 'checkbox') {
-      const { checked } = e.target as HTMLInputElement;
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
-        [name]: checked
+        [fieldName]: checked,
       }));
-    } else if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prevData => ({
-        ...prevData,
-        [parent]: {
-          ...(prevData as any)[parent],
-          [child]: value
-        }
-      }));
+    } else if (fieldName === 'address') {
+        // Special handling for nested address object (if needed, though direct update might suffice)
+        // This part might need adjustment based on how address fields are named/structured
     } else {
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
-        [name]: value
+        [fieldName]: value,
       }));
     }
   };
@@ -336,20 +332,19 @@ export default function ChildminderProfilePage() {
         // Childminder specific fields that EXIST in formData:
         ageGroupsServed: formData.ageGroupsServed,
         careTypes: formData.careTypes,
-        childrenFirstCert: formData.childrenFirstCert,
-        educationLevel: formData.educationLevel,
-        firstAidCert: formData.firstAidCert,
+        childrenFirstCertified: formData.childrenFirstCertified,
+        firstAidCertified: formData.firstAidCertified,
         gardaVetted: formData.gardaVetted,
         languagesSpoken: formData.languagesSpoken,
         mealsProvided: formData.mealsProvided,
         otherQualifications: formData.otherQualifications,
         pickupDropoff: formData.pickupDropoff,
-        qualifications: formData.qualifications,
         specialNeedsExp: formData.specialNeedsExp,
         specialNeedsDetails: formData.specialNeedsDetails,
         specialties: formData.specialties,
         tuslaRegistered: formData.tuslaRegistered,
         tuslaRegistrationNumber: formData.tuslaRegistrationNumber,
+        eccLevel5: formData.eccLevel5,
         // Address object (cleaned)
         address: cleanedAddress,
         // Type conversions for fields that EXIST in formData:
@@ -729,47 +724,6 @@ export default function ChildminderProfilePage() {
               
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label htmlFor="qualifications" className="mb-1 block text-sm font-medium text-gray-700">
-                    Qualifications
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <FaGraduationCap className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      id="qualifications"
-                      name="qualifications"
-                      value={formData.qualifications}
-                      onChange={handleChange}
-                      className={inputWithIconClass}
-                      placeholder="e.g. Early Childhood Education"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="educationLevel" className="mb-1 block text-sm font-medium text-gray-700">
-                    Education Level
-                  </label>
-                  <select
-                    id="educationLevel"
-                    name="educationLevel"
-                    value={formData.educationLevel}
-                    onChange={handleChange}
-                    className={selectWithIconClass}
-                  >
-                    <option value="">Select Education Level</option>
-                    <option value="Secondary School">Secondary School</option>
-                    <option value="Certificate">Certificate</option>
-                    <option value="Diploma">Diploma</option>
-                    <option value="Bachelor's">Bachelor's Degree</option>
-                    <option value="Master's">Master's Degree</option>
-                    <option value="PhD">PhD</option>
-                  </select>
-                </div>
-                
-                <div>
                   <label htmlFor="yearsOfExperience" className="mb-1 block text-sm font-medium text-gray-700">
                     Years of Experience
                   </label>
@@ -852,6 +806,121 @@ export default function ChildminderProfilePage() {
                       placeholder="e.g. Montessori, Arts, Music"
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Certifications and Credentials Card */}
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <h2 className="mb-4 text-xl font-semibold text-gray-800">Certifications and Credentials</h2>
+              
+              <div className="space-y-4">
+                {/* First Aid Cert */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="firstAidCertified"
+                    name="firstAidCertified"
+                    checked={formData.firstAidCertified}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <label htmlFor="firstAidCertified" className="ml-3 block text-sm text-gray-700">
+                    First Aid Certified
+                  </label>
+                </div>
+                
+                {/* First Aid Expiry */}
+                {formData.firstAidCertified && (
+                  <div className="ml-7">
+                    <label htmlFor="firstAidCertExpiry" className="mb-1 block text-xs font-medium text-gray-600">
+                      Expiry Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      id="firstAidCertExpiry"
+                      name="firstAidCertExpiry"
+                      value={formData.firstAidCertExpiry}
+                      onChange={handleChange}
+                      className="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500 sm:text-sm"
+                    />
+                  </div>
+                )}
+
+                {/* Children First Cert */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="childrenFirstCertified"
+                    name="childrenFirstCertified"
+                    checked={formData.childrenFirstCertified}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <label htmlFor="childrenFirstCertified" className="ml-3 block text-sm text-gray-700">
+                    Children First Trained
+                  </label>
+                </div>
+
+                {/* Garda Vetted */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="gardaVetted"
+                    name="gardaVetted"
+                    checked={formData.gardaVetted}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <label htmlFor="gardaVetted" className="ml-3 block text-sm text-gray-700">
+                    Garda Vetted
+                  </label>
+                </div>
+                
+                {/* ECC Level 5 */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="eccLevel5"
+                    name="eccLevel5"
+                    checked={formData.eccLevel5}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <label htmlFor="eccLevel5" className="ml-3 block text-sm text-gray-700">
+                    ECCE Level 5+ Qualification
+                  </label>
+                </div>
+
+                {/* Tusla Registered */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="tuslaRegistered"
+                    name="tuslaRegistered"
+                    checked={formData.tuslaRegistered}
+                    onChange={handleChange}
+                    className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <label htmlFor="tuslaRegistered" className="ml-3 block text-sm text-gray-700">
+                    Tusla Registered
+                  </label>
+                </div>
+
+                {/* Tusla Registration Number */}
+                <div>
+                  <label htmlFor="tuslaRegistrationNumber" className="mb-1 block text-sm font-medium text-gray-700">
+                    Tusla Registration Number
+                  </label>
+                  <input
+                    type="text"
+                    id="tuslaRegistrationNumber"
+                    name="tuslaRegistrationNumber"
+                    value={formData.tuslaRegistrationNumber}
+                    onChange={handleChange}
+                    className={inputWithIconClass}
+                    placeholder="e.g. 12345678"
+                  />
                 </div>
               </div>
             </div>

@@ -43,9 +43,8 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="theme-color" content="#4f46e5" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/baby-icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/baby-icon.svg" />
+        <link rel="icon" href="/icons/logo-icon.svg" type="image/svg+xml" sizes="any" />
+        <link rel="apple-touch-icon" href="/icons/logo-icon.svg" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
