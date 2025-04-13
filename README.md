@@ -39,7 +39,7 @@ The platform enables:
 
 - **Frontend**: Next.js, React, TailwindCSS
 - **Backend**: Node.js, Next.js API routes
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: MySQL with Prisma ORM
 - **Authentication**: NextAuth.js
 - **Payment Processing**: Stripe
 - **File Storage**: UploadThing
@@ -51,7 +51,7 @@ The platform enables:
 ### Prerequisites
 - Node.js (v18.x or higher)
 - npm or yarn
-- PostgreSQL database
+- MySQL database
 - Stripe account (for payment processing)
 - Microsoft Azure account (for Microsoft Graph API)
 
@@ -74,7 +74,7 @@ yarn install
 Create a `.env.local` file in the root directory with the following variables:
 ```
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/childminder_connect"
+DATABASE_URL="mysql://username:password@localhost:3306/childminder_connect"
 
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
@@ -113,7 +113,7 @@ yarn dev
 
 ### Database Setup
 
-The platform uses Prisma ORM with PostgreSQL. To initialize the database:
+The platform uses Prisma ORM with MySQL. To initialize the database:
 
 ```bash
 # Apply migrations
